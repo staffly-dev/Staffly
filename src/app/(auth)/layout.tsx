@@ -1,3 +1,10 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata ={
+  title: "HRMS Auth",
+  description: "Auth page",
+};
+
 export default function AuthLayout({
   children,
 }: {
