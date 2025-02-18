@@ -5,8 +5,18 @@ import Link from "next/link";
 import Image from "next/image";
 import arrowLeft from "/public/icons/arrow-left.svg";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 
 export default function ForgetPasswordPage() {
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Add your password reset logic here
+
+    // After successful password reset, redirect to congrats page
+    router.push("/reset/change");
+  };
   return (
     <div className="m-auto lg:m-0 lg:w-[45%] px-2 md:px-6 lg:px-8 py-6">
       <Link href="/sign-in">
@@ -32,7 +42,7 @@ export default function ForgetPasswordPage() {
           </p>
         </div>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
               <Input
@@ -42,11 +52,9 @@ export default function ForgetPasswordPage() {
               />
             </div>
           </div>
-          {/* <Link href="/reset-password"> */}
-            <Button className="w-full h-12 text-base font-medium">
-              Send OTP
-            </Button>
-          {/* </Link> */}
+          <Button className="w-full h-12 text-base font-medium">
+            Send OTP
+          </Button>
         </form>
       </div>
     </div>

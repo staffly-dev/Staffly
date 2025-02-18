@@ -3,8 +3,8 @@ import "./globals.css";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "HRMS",
-  description: "Human Resource Management System",
+  title: "Raizero HRMS",
+  description: "Raizero Human Resource Management System",
 };
 
 export default function RootLayout({

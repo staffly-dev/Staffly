@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
-export const metadata: Metadata ={
-  title: "HRMS Auth",
+export const metadata: Metadata = {
+  title: "Raizero HRMS Auth",
   description: "Auth page",
 };
 

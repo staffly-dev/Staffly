@@ -98,10 +98,7 @@ export default function SignInPage() {
                 Remember me
               </label>
             </div>
-            <Link
-              href="/reset-password"
-              className="text-primary hover:underline"
-            >
+            <Link href="/reset" className="text-primary hover:underline">
               Forgot password?
             </Link>
           </div>
