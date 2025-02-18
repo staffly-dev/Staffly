@@ -15,7 +15,7 @@ export default function ForgetPasswordPage() {
     // Add your password reset logic here
 
     // After successful password reset, redirect to congrats page
-    router.push("/reset/change");
+    router.push("/reset/code");
   };
   return (
     <div className="m-auto lg:m-0 lg:w-[45%] px-2 md:px-6 lg:px-8 py-6">
