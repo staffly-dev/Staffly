@@ -17,7 +17,9 @@ export default function AuthLayout({
           <div className="auth-bg" />
         </div>
       </div>
-      {children}
+      <div className="m-auto w-[96%] md:w-[72%] lg:w-[45%] lg:m-0 px-2 md:px-6">
+        {children}
+      </div>
     </div>
   );
 }

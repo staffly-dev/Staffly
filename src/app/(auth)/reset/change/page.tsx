@@ -19,7 +19,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="w-[45%] px-8 py-6">
+    <div className="">
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-semibold">Reset Password</h2>

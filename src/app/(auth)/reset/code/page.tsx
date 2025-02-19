@@ -10,7 +10,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { REGEXP_ONLY_DIGITS, } from "input-otp";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 
 export default function OtpCode() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function OtpCode() {
   };
 
   return (
-    <div className="m-auto lg:m-0 lg:w-[45%] px-2 md:px-6 lg:px-8 py-6">
+    <div className="">
       <Link href="/sign-in">
         <div className="flex gap-1 items-center mb-8">
           <div className="relative w-5 h-5">
@@ -51,7 +51,7 @@ export default function OtpCode() {
           <div className="space-y-4">
             <div>
               <InputOTP maxLength={5} pattern={REGEXP_ONLY_DIGITS}>
-                <InputOTPGroup className="justify-between gap-6 mx-auto">
+                <InputOTPGroup className="justify-between gap-4 md:gap-6 mx-auto">
                   <InputOTPSlot index={0} />
                   <InputOTPSlot index={1} />
                   <InputOTPSlot index={2} />

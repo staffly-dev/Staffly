@@ -11,7 +11,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="m-auto lg:m-0 lg:w-[45%] px-2 md:px-6 lg:px-8 py-6">
+    <div className="">
       <div className="flex gap-3 items-center mb-8">
         <div className="relative w-10 h-10">
           <Image src={logo} alt="HRMS Logo" fill className="object-contain" />

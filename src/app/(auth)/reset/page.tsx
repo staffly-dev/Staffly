@@ -18,7 +18,7 @@ export default function ForgetPasswordPage() {
     router.push("/reset/code");
   };
   return (
-    <div className="m-auto lg:m-0 lg:w-[45%] px-2 md:px-6 lg:px-8 py-6">
+    <div className="">
       <Link href="/sign-in">
         <div className="flex gap-1 items-center mb-8">
           <div className="relative w-5 h-5">
