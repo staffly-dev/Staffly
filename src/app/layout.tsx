@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 import { Metadata } from "next";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 export const metadata: Metadata = {
   title: "Raizero HRMS",
@@ -21,7 +22,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <DashboardLayout>{children}</DashboardLayout>
         </ThemeProvider>
       </body>
     </html>
