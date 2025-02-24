@@ -27,8 +27,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        <h2 className="text-xl">Hello Robert 👋</h2>
-        <p className="text-muted-foreground">Good Morning</p>
+        <h2 className="text-xl font-semibold">Hello Robert 👋</h2>
+        <p className="text-sm text-muted-foreground">Good Morning</p>
       </div>
 
       <div className="flex items-center gap-4 ml-auto">
@@ -37,7 +37,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           <Input
             type="search"
             placeholder="Search..."
-            className="pl-8 bg-muted"
+            className="pl-8"
           />
         </div>
 
@@ -58,8 +58,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                   className="rounded-full"
                 />
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium">Robert Allen</p>
-                  <p className="text-xs text-muted-foreground">HR Manager</p>
+                  <p className="text-sm font-medium leading-none">Robert Allen</p>
+                  <p className="text-xs text-muted-foreground mt-1">HR Manager</p>
                 </div>
               </div>
               <ChevronDown className="h-4 w-4 opacity-50" />
