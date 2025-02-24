@@ -1,82 +1,63 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Bell, ChevronDown, Menu, Search } from "lucide-react";
 import Image from "next/image";
+import { Input } from "../ui/input";
+import { CiSearch } from "react-icons/ci";
+import { IoMdNotificationsOutline } from "react-icons/io";
+import { Select, SelectItem, SelectTrigger, SelectContent } from "../ui/select";
 
-interface NavbarProps {
-  onMenuClick: () => void;
+function morningOrAfternoon() {
+  const date = new Date();
+  const hours = date.getHours();
+  if (hours < 12) return "Morning";
+  if (hours >= 12 && hours < 17) return "Afternoon";
+  return "Evening";
 }
 
-export function Navbar({ onMenuClick }: NavbarProps) {
+export function Navbar() {
   return (
-    <nav className="h-16 border-b px-6 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-4 lg:hidden">
-        <Button variant="ghost" size="icon" onClick={onMenuClick}>
-          <Menu className="h-5 w-5" />
-        </Button>
+    <header className="flex justify-between items-center py-4">
+      <div className="flex flex-col w-fit">
+        <h2 className="font-bold">Hello Mazin 👋🏻</h2>
+        <p className="text-muted-foreground text-sm">
+          Good {morningOrAfternoon()}
+        </p>
       </div>
-
-      <div className="flex items-center gap-4">
-        <h2 className="text-xl font-semibold">Hello Robert 👋</h2>
-        <p className="text-sm text-muted-foreground">Good Morning</p>
-      </div>
-
-      <div className="flex items-center gap-4 ml-auto">
-        <div className="relative max-w-md w-full hidden md:block">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex items-center justify-center gap-4">
+        <div className="w-60 relative">
           <Input
             type="search"
+            name="search"
+            id="search"
             placeholder="Search..."
-            className="pl-8"
+            className="w-full pl-8 pr-4"
           />
+          <CiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2" />
         </div>
-
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
-        </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/imgs/avatar.jpg"
-                  alt="Robert Allen"
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-                <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium leading-none">Robert Allen</p>
-                  <p className="text-xs text-muted-foreground mt-1">HR Manager</p>
-                </div>
-              </div>
-              <ChevronDown className="h-4 w-4 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center justify-center bg-muted-foreground rounded-xl p-2">
+          <IoMdNotificationsOutline className="text-2xl" />
+        </div>
+        <div className="flex items-center gap-2 justify-center border rounded-xl p-1">
+          <Image
+            src="/imgs/logo.png"
+            alt="Avatar"
+            className="rounded-xl"
+            width={24}
+            height={32}
+          />
+          <div className="flex flex-col">
+            <div className="flex gap-1 justify-center items-center">
+              <h3 className="font-bold">Mazin Emad</h3>
+              <Select>
+                <SelectTrigger className="w-fit h-fit p-0 border-none outline-none" />
+                <SelectContent>
+                  <SelectItem value="Profile">Profile</SelectItem>
+                  <SelectItem value="Log Out">Log Out</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs">FrontEnd Dev</p>
+          </div>
+        </div>
       </div>
-    </nav>
+    </header>
   );
 }
