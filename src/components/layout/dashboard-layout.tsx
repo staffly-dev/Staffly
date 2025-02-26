@@ -14,12 +14,3 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-//  <div className="flex min-h-screen">
-//    {/* Sidebar (Fixed) */}
-//    <aside className="w-64 bg-white shadow-lg fixed h-full">
-//      <Sidebar />
-//    </aside>
-
-//    {/* Main Content (Takes Remaining Space) */}
-//    <main className="ml-64 flex-1 p-6 bg-gray-100">{children}</main>
-//  </div>;
