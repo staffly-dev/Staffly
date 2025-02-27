@@ -22,7 +22,7 @@ const menuItems = [
   {
     title: "Dashboard",
     icon: MdDashboard,
-    href: "/",
+    href: "/dashboard",
   },
   {
     title: "All Employees",

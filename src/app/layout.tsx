@@ -1,14 +1,13 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 import { Metadata } from "next";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 
 export const metadata: Metadata = {
   title: "Raizero HRMS",
-  description: "Raizero Human Resource Management System",
+  description: "Raizero Human Resource Management System, Dashboard page",
 };
 
-export default function RootLayout({
+export default function DashLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -22,7 +21,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <DashboardLayout>{children}</DashboardLayout>
+          {children}
         </ThemeProvider>
       </body>
     </html>
