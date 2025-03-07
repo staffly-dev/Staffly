@@ -22,7 +22,7 @@ const menuItems = [
   {
     title: "Dashboard",
     icon: MdDashboard,
-    href: "/",
+    href: "/dashboard",
   },
   {
     title: "All Employees",
@@ -75,46 +75,48 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex flex-col border-r pl-4 pr-6 h-screen">
-      <div className="p-4">
-        <div className="flex items-center gap-2">
-          <Image
-            src="/imgs/logo.png"
-            alt="HRMS Logo"
-            width={40}
-            height={40}
-            className="object-contain"
-          />
-          <span className="font-semibold text-xl">HRMS</span>
+    <aside className="p-3 h-screen ">
+      <div className="flex flex-col rounded-lg bg-primary-foreground h-full pl-2 pr-4">
+        <div className="p-4">
+          <div className="flex items-center gap-2">
+            <Image
+              src="/imgs/logo.png"
+              alt="HRMS Logo"
+              width={40}
+              height={40}
+              className="object-contain"
+            />
+            <span className="font-semibold text-xl">HRMS</span>
+          </div>
         </div>
-      </div>
 
-      <div className="flex-1 overflow-y-auto py-4">
-        <nav className="grid gap-1 px-2">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center rounded-br-lg rounded-tr-lg gap-3 px-3 py-2 transition-colors",
-                  isActive
-                    ? "bg-primary/20 border-l-4 border-primary"
-                    : "hover:bg-primary/10"
-                )}
-              >
-                <item.icon
-                  className={cn("h-4 w-4", isActive && "text-primary")}
-                />
-                {item.title}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-      <div className="mt-auto pb-6">
-        <DarkLightSwitch />
+        <div className="flex-1 overflow-y-auto py-4">
+          <nav className="grid gap-1 px-2">
+            {menuItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center rounded-br-lg rounded-tr-lg gap-3 px-3 py-2 transition-colors",
+                    isActive
+                      ? "bg-primary/20 border-l-4 border-primary"
+                      : "hover:bg-primary/10"
+                  )}
+                >
+                  <item.icon
+                    className={cn("h-4 w-4", isActive && "text-primary")}
+                  />
+                  {item.title}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+        <div className="mt-auto pb-6">
+          <DarkLightSwitch />
+        </div>
       </div>
     </aside>
   );

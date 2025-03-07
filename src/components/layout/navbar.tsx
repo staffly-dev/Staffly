@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { Input } from "../ui/input";
 import { CiSearch } from "react-icons/ci";
@@ -28,14 +30,14 @@ export function Navbar() {
             name="search"
             id="search"
             placeholder="Search..."
-            className="w-full pl-8 pr-4"
+            className="w-full pl-8 pr-4 outline-hrms-gray/20 border-hrms-gray/20"
           />
           <CiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2" />
         </div>
-        <div className="flex items-center justify-center bg-muted-foreground rounded-xl p-2">
+        <div className="flex items-center justify-center bg-hrms-gray/10 rounded-xl p-2 cursor-pointer">
           <IoMdNotificationsOutline className="text-2xl" />
         </div>
-        <div className="flex items-center gap-2 justify-center border rounded-xl p-1">
+        <div className="flex items-center gap-2 justify-center border border-hrms-gray/20 rounded-xl p-1">
           <Image
             src="/imgs/logo.png"
             alt="Avatar"

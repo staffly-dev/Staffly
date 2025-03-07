@@ -3,14 +3,14 @@ import { Sidebar } from "./sidebar";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen">
-      <div className="flex">
+    <div className="flex min-h-screen">
+      <div className="fixed">
         <Sidebar />
-        <main className="flex-1 lg:px-6 px-4">
-          <Navbar />
-          <div className="py-4">{children}</div>
-        </main>
       </div>
+      <main className="ml-56 flex-1 lg:px-6 px-4">
+        <Navbar />
+        <div className="py-4">{children}</div>
+      </main>
     </div>
   );
 }
