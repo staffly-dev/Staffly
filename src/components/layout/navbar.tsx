@@ -1,27 +1,15 @@
-"use client";
-
 import Image from "next/image";
 import { Input } from "../ui/input";
 import { CiSearch } from "react-icons/ci";
 import { IoMdNotificationsOutline } from "react-icons/io";
 import { Select, SelectItem, SelectTrigger, SelectContent } from "../ui/select";
-
-function morningOrAfternoon() {
-  const date = new Date();
-  const hours = date.getHours();
-  if (hours < 12) return "Morning";
-  if (hours >= 12 && hours < 17) return "Afternoon";
-  return "Evening";
-}
+import { Breadcrumbs } from "../BreadCrumb";
 
 export function Navbar() {
   return (
     <header className="flex justify-between items-center py-4">
       <div className="flex flex-col w-fit">
-        <h2 className="font-bold">Hello Mazin 👋🏻</h2>
-        <p className="text-muted-foreground text-sm">
-          Good {morningOrAfternoon()}
-        </p>
+        <Breadcrumbs />
       </div>
       <div className="flex items-center justify-center gap-4">
         <div className="w-60 relative">

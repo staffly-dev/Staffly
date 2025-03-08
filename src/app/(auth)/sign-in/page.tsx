@@ -6,12 +6,31 @@ import Image from "next/image";
 import logo from "/public/imgs/logo.png";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/context/authContext";
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      toast.success("Successfully logged in!");
+    } catch (error) {
+      toast.error("Login failed. Please check your credentials." + error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
-    <div className="">
+    <div>
       <div className="flex gap-3 items-center mb-8">
         <div className="relative w-10 h-10">
           <Image src={logo} alt="HRMS Logo" fill className="object-contain" />
@@ -21,25 +40,29 @@ export default function SignInPage() {
 
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-semibold">Welcome back 👋</h2>
+          <h2 className="text-2xl font-semibold">Welcome Back 👋</h2>
           <p className="text-muted-foreground mt-1">
             Please sign in to your account
           </p>
         </div>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
               <Input
                 type="email"
                 placeholder="Email Address"
                 className="h-12"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="h-12"
               />
               <button
@@ -103,8 +126,13 @@ export default function SignInPage() {
             </Link>
           </div>
 
-          <Button className="w-full h-12 text-base font-medium">Sign In</Button>
-
+          <Button
+            className="w-full h-12 text-base font-medium"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
           <p className="text-center text-muted-foreground">
             Don&apos;t have an account?
             <Link href="/sign-up" className="text-primary hover:underline">

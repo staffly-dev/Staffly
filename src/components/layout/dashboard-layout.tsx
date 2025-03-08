@@ -9,7 +9,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </div>
       <main className="ml-56 flex-1 lg:px-6 px-4">
         <Navbar />
-        <div className="py-4">{children}</div>
+        <div className="pb-4 ">{children}</div>
       </main>
     </div>
   );

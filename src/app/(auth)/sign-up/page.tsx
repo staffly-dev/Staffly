@@ -6,9 +6,64 @@ import Image from "next/image";
 import logo from "/public/imgs/logo.png";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/context/authContext";
+
+function validation(name: string, email: string, password: string) {
+  if (!name || !email || !password) {
+    return "Please fill all the fields";
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return "Please enter a valid email";
+  }
+  if (password.length < 6) {
+    return "Password must be at least 6 characters long";
+  }
+  return null;
+}
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [agree, setAgree] = useState(false);
+  const { signup } = useAuth();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const error = validation(formData.name, formData.email, formData.password);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    if (!agree) {
+      toast.error("Please agree to the Terms of Service and Privacy Policy");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await signup(formData.email, formData.password, formData.name);
+      toast.success("Account created successfully!");
+    } catch (error) {
+      toast.error(`${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="">
@@ -27,16 +82,26 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <Input type="text" placeholder="Full Name" className="h-12" />
+              <Input
+                type="text"
+                placeholder="Full Name"
+                className="h-12"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+              />
             </div>
             <div>
               <Input
                 type="email"
                 placeholder="Email Address"
                 className="h-12"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
               />
             </div>
             <div className="relative">
@@ -44,6 +109,9 @@ export default function SignUpPage() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 className="h-12"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
               />
               <button
                 type="button"
@@ -90,15 +158,23 @@ export default function SignUpPage() {
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
+              name="agree"
               id="remember"
-              className="rounded border-gray-300"
+              className="rounded cursor-pointer border-gray-300"
+              checked={agree}
+              onChange={(e) => setAgree(e.target.checked)}
             />
             <label htmlFor="remember" className="text-sm text-muted-foreground">
               I agree to the Terms of Service and Privacy Policy
             </label>
           </div>
 
-          <Button className="w-full h-12 text-base font-medium">Sign Up</Button>
+          <Button
+            className="w-full h-12 text-base font-medium"
+            disabled={loading}
+          >
+            {loading ? "Creating account..." : "Sign up"}
+          </Button>
 
           <p className="text-center text-muted-foreground">
             Already have an account?{" "}
