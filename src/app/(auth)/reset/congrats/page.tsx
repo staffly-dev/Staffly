@@ -10,7 +10,7 @@ export default function CongratsPage() {
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center">
-      <Card className="w-[400px] text-center p-6">
+      <Card className="w-[400px] text-center p-6 bg-background">
         <CardContent className="space-y-4 pt-6">
           <div className="relative w-20 h-20 mx-auto">
             <Image

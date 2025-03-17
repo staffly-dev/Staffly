@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -16,9 +17,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
-  verifyEmail: (token: string) => Promise<void>;
+  verifyEmail: (code: string) => Promise<void>;
   forgetPassword: (email: string) => Promise<void>;
-  resetPassword: (token: string, newPassword: string) => Promise<void>;
+  resetPassword: (token: string, password: string) => Promise<void>;
   checkAuth: () => Promise<void>;
 }
 
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // useEffect(() => {
   //   checkAuth();
+  //   console.log(user);
   // }, []);
 
   const checkAuth = async () => {
@@ -46,9 +48,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
       } else {
         setUser(null);
+        throw new Error("Auth check failed");
       }
     } catch (error) {
-      console.error("Auth check failed:", error);
+      toast.error("auth-check error:" + error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -68,16 +71,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Login failed");
+        throw new Error(error.message);
       }
 
       const userData = await response.json();
-      setUser(userData);
+      console.log("data from login: ", userData);
       router.push("/dashboard");
     } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unexpected error occurred");
     } finally {
+      await checkAuth();
       setLoading(false);
     }
   };
@@ -90,7 +96,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          role: "user",
+          Branch: "alx",
+          photo: "none",
+          isVerified: false,
+        }),
       });
 
       if (!response.ok) {
@@ -100,11 +114,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const userData = await response.json();
       console.log(userData);
-      setUser(userData);
-      // router.push("/verify-email"); // Redirect to email verification page
+      await checkAuth();
     } catch (error) {
-      console.error("Signup failed:", error);
-      throw error;
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -121,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Logout failed");
       }
 
-      setUser(null);
+      await checkAuth();
       router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -131,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const verifyEmail = async (token: string) => {
+  const verifyEmail = async (code: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/verify-email`, {
         method: "POST",
@@ -139,19 +154,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ code }),
       });
 
       if (!response.ok) {
         const error = await response.json();
+        console.log("Email verification failed:", error);
         throw new Error(error.message || "Email verification failed");
       }
 
-      await checkAuth(); // Refresh user data after verification
-      router.push("/dashboard");
+      const result = await response.json();
+      console.log("Verification result:", result);
+
+      await checkAuth();
     } catch (error) {
-      console.error("Email verification failed:", error);
-      throw error;
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -164,11 +184,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ email }),
       });
 
       if (!response.ok) {
         const error = await response.json();
+        console.log("Password reset request failed:", error);
         throw new Error(error.message || "Password reset request failed");
       }
 
@@ -176,21 +198,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log(res);
       console.log("Password reset request sent");
     } catch (error) {
-      console.error("Forgot password failed:", error);
-      throw error;
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  const resetPassword = async (token: string, newPassword: string) => {
+  const resetPassword = async (token: string, password: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/reset-password/${token}`, {
+      const response = await fetch(`${API_BASE_URL}/reset/${token}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ newPassword }),
+        credentials: "include",
+        body: JSON.stringify({ password }),
       });
 
       if (!response.ok) {
@@ -199,11 +224,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const res = await response.json();
-      console.log(res);
-      console.log("Password reset successful");
-    } catch (error) {
-      console.error("Reset password failed:", error);
-      throw error;
+      console.log("response:" + res);
+    }  catch (error) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }

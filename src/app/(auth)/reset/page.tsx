@@ -2,33 +2,47 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
-import arrowLeft from "/public/icons/arrow-left.svg";
+import { FaChevronLeft } from "react-icons/fa6";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useAuth } from "@/context/authContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  forgetPasswordSchema,
+  type ForgetFormData,
+} from "@/lib/validations/auth";
+import { cn } from "@/lib/utils";
 
 export default function ForgetPasswordPage() {
   const router = useRouter();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Add your password reset logic here
-
-    // After successful password reset, redirect to congrats page
-    router.push("/reset/code");
+  const { forgetPassword } = useAuth();
+  const {
+    handleSubmit,
+    register,
+    formState: { errors, isSubmitting },
+  } = useForm<ForgetFormData>({
+    resolver: zodResolver(forgetPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+  const onSubmit = async (data: ForgetFormData) => {
+    try {
+      await forgetPassword(data.email);
+      toast.success("Successfully logged in!");
+      router.push("/reset/change");
+    } catch (error) {
+      toast.error("Error: " + error);
+    }
   };
+
   return (
-    <div className="">
+    <div>
       <Link href="/sign-in">
         <div className="flex gap-1 items-center mb-8">
-          <div className="relative w-5 h-5">
-            <Image
-              src={arrowLeft}
-              alt="HRMS Logo"
-              fill
-              className="object-contain"
-            />
-          </div>
+          <FaChevronLeft className="w-4 h-4" />
           <h2 className="text-2l font-regular">Back</h2>
         </div>
       </Link>
@@ -42,18 +56,30 @@ export default function ForgetPasswordPage() {
           </p>
         </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
               <Input
-                type="email"
                 placeholder="Email Address"
                 className="h-12"
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
           </div>
-          <Button className="w-full h-12 text-base font-medium">
-            Send OTP
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "w-full h-12 text-base font-medium",
+              isSubmitting && "bg-primary/50"
+            )}
+          >
+            Send Link
           </Button>
         </form>
       </div>

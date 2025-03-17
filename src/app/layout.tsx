@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen" suppressHydrationWarning>
         <AuthProvider>
-          <Toaster />
+          <Toaster richColors />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

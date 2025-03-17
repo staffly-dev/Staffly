@@ -1,5 +1,3 @@
-"use client";
-
 import { StatusCards } from "@/components/dash-ui/StatusCards";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -12,15 +10,15 @@ export default function page() {
           <StatusCards />
         </div>
 
-        <DashboardCard title="Attendance Charts" className="dashboard-activity" >
+        <DashboardCard title="Attendance Charts" className="dashboard-activity">
           <div>blabla</div>
         </DashboardCard>
 
-        <DashboardCard title="My Schedule" className="dashboard-chart" >
+        <DashboardCard title="My Schedule" className="dashboard-chart">
           <div>blabla</div>
         </DashboardCard>
 
-        <DashboardCard title="Attendance Overview" className="dashboard-table" >
+        <DashboardCard title="Attendance Overview" className="dashboard-table">
           <div>blabla</div>
         </DashboardCard>
       </div>
@@ -28,12 +26,15 @@ export default function page() {
   );
 }
 
-
-function DashboardCard({title,className,children}: {
-  title: string,
-  className: string,
-  children: React.ReactNode
-}){
+function DashboardCard({
+  title,
+  className,
+  children,
+}: {
+  title: string;
+  className: string;
+  children: React.ReactNode;
+}) {
   return (
     <Card className={cn(className, "border-hrms-gray/20 bg-transparent")}>
       <div className="p-3">
@@ -41,5 +42,5 @@ function DashboardCard({title,className,children}: {
         {children}
       </div>
     </Card>
-  )
+  );
 }

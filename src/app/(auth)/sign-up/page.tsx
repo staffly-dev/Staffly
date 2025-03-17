@@ -8,56 +8,38 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/authContext";
-
-function validation(name: string, email: string, password: string) {
-  if (!name || !email || !password) {
-    return "Please fill all the fields";
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return "Please enter a valid email";
-  }
-  if (password.length < 6) {
-    return "Password must be at least 6 characters long";
-  }
-  return null;
-}
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signUpSchema, type SignUpFormData } from "@/lib/validations/auth";
+import { useRouter } from "next/navigation";
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
   const [loading, setLoading] = useState(false);
-  const [agree, setAgree] = useState(false);
   const { signup } = useAuth();
+  const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      agree: false,
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const error = validation(formData.name, formData.email, formData.password);
-    if (error) {
-      toast.error(error);
-      return;
-    }
-    if (!agree) {
-      toast.error("Please agree to the Terms of Service and Privacy Policy");
-      return;
-    }
-
+  const onSubmit = async (data: SignUpFormData) => {
     setLoading(true);
 
     try {
-      await signup(formData.email, formData.password, formData.name);
+      await signup(data.email, data.password, data.name);
       toast.success("Account created successfully!");
+      router.push("/code");
     } catch (error) {
       toast.error(`${error}`);
     } finally {
@@ -82,37 +64,40 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
               <Input
                 type="text"
                 placeholder="Full Name"
                 className="h-12"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
+                {...register("name")}
               />
+              {errors.name && (
+                <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
+              )}
             </div>
             <div>
               <Input
                 type="email"
                 placeholder="Email Address"
                 className="h-12"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+              )}
             </div>
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 className="h-12"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
+                {...register("password")}
               />
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+              )}
               <button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2"
@@ -158,12 +143,13 @@ export default function SignUpPage() {
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
-              name="agree"
               id="remember"
               className="rounded cursor-pointer border-gray-300"
-              checked={agree}
-              onChange={(e) => setAgree(e.target.checked)}
+              {...register("agree")}
             />
+            {errors.agree && (
+              <p className="text-sm text-red-500 mt-1">{errors.agree.message}</p>
+            )}
             <label htmlFor="remember" className="text-sm text-muted-foreground">
               I agree to the Terms of Service and Privacy Policy
             </label>
@@ -171,6 +157,7 @@ export default function SignUpPage() {
 
           <Button
             className="w-full h-12 text-base font-medium"
+            type="submit"
             disabled={loading}
           >
             {loading ? "Creating account..." : "Sign up"}

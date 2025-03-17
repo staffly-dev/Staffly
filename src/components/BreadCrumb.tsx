@@ -15,18 +15,69 @@ function getGreeting() {
   if (hours >= 12 && hours < 17) return "Afternoon";
   return "Evening";
 }
+function getSubTitle(pathname: string) {
+  const pages = {
+    dashboard: {
+      title: "Hello Mazin 👋🏻",
+      subtitle: "Good " + getGreeting(),
+    },
+    "all-departments": {
+      title: "All Departments",
+      subtitle: "All Department info",
+    },
+    "all-employees": {
+      title: "All Employees",
+      subtitle: "All Employees info",
+    },
+    attendance: {
+      title: "Attendance",
+      subtitle: "All Employees Attendance",
+    },
+    holidays: {
+      title: "Holidays",
+      subtitle: "All Holidays info",
+    },
+    jobs: {
+      title: "Jobs",
+      subtitle: "All Jobs Listed",
+    },
+    leaves: {
+      title: "Leaves",
+      subtitle: "All Leave info",
+    },
+    payroll: {
+      title: "Overtime",
+      subtitle: "All Employees Payroll",
+    },
+    settings: {
+      title: "Settings",
+      subtitle: "All Settings Report",
+    },
+    notifications: {
+      title: "Notifications",
+      subtitle: "All Notifications",
+    },
+    candidates: {
+      title: "Candidates",
+      subtitle: "Show All Candidates",
+    },
+  };
+  return pages[pathname as keyof typeof pages];
+}
 
 export function Breadcrumbs() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
-  const title = segments[segments.length - 1].split("-").join(" ");
-  const subtitle = title == "dashboard" ? `Good ${getGreeting()}` : null;
+  const unhandeldTitle = segments[segments.length - 1];
+  const subtitle = getSubTitle(unhandeldTitle)?.subtitle;
+  const title =
+    getSubTitle(unhandeldTitle)?.title || unhandeldTitle.split("-").join(" ");
 
   return (
     <>
       {subtitle ? (
         <>
-          <h2 className="font-bold">Hello Mazin 👋🏻</h2>
+          <h2 className="font-bold">{title}</h2>
           <p className="text-muted-foreground text-sm">{subtitle}</p>
         </>
       ) : (

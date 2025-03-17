@@ -8,20 +8,33 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/authContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signInSchema, type SignInFormData } from "@/lib/validations/auth";
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      remember: false,
+    },
+  });
+
+  const onSubmit = async (data: SignInFormData) => {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(data.email, data.password);
       toast.success("Successfully logged in!");
     } catch (error) {
       toast.error("Login failed. Please check your credentials." + error);
@@ -29,6 +42,7 @@ export default function SignInPage() {
       setLoading(false);
     }
   };
+
   return (
     <div>
       <div className="flex gap-3 items-center mb-8">
@@ -46,25 +60,29 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div>
               <Input
                 type="email"
                 placeholder="Email Address"
                 className="h-12"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+              )}
             </div>
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 className="h-12"
+                {...register("password")}
               />
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+              )}
               <button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2"
@@ -113,6 +131,7 @@ export default function SignInPage() {
                 type="checkbox"
                 id="remember"
                 className="rounded border-gray-300"
+                {...register("remember")}
               />
               <label
                 htmlFor="remember"

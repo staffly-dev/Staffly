@@ -1,9 +1,12 @@
 import Image from "next/image";
-import { Input } from "../ui/input";
-import { CiSearch } from "react-icons/ci";
-import { IoMdNotificationsOutline } from "react-icons/io";
-import { Select, SelectItem, SelectTrigger, SelectContent } from "../ui/select";
+import { IoMdNotificationsOutline, IoIosArrowDown } from "react-icons/io";
 import { Breadcrumbs } from "../BreadCrumb";
+import Link from "next/link";
+import { SearchInput } from "../searchInput";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
+import { HiOutlineLogout } from "react-icons/hi";
+import { CgProfile } from "react-icons/cg";
 
 export function Navbar() {
   return (
@@ -12,37 +15,47 @@ export function Navbar() {
         <Breadcrumbs />
       </div>
       <div className="flex items-center justify-center gap-4">
-        <div className="w-60 relative">
-          <Input
-            type="search"
-            name="search"
-            id="search"
-            placeholder="Search..."
-            className="w-full pl-8 pr-4 outline-hrms-gray/20 border-hrms-gray/20"
-          />
-          <CiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2" />
-        </div>
-        <div className="flex items-center justify-center bg-hrms-gray/10 rounded-xl p-2 cursor-pointer">
+        <SearchInput />
+        <Link
+          href="/notifications"
+          className="flex items-center justify-center bg-hrms-gray/10 rounded-xl p-2 cursor-pointer"
+        >
           <IoMdNotificationsOutline className="text-2xl" />
-        </div>
+        </Link>
         <div className="flex items-center gap-2 justify-center border border-hrms-gray/20 rounded-xl p-1">
           <Image
             src="/imgs/logo.png"
             alt="Avatar"
             className="rounded-xl"
-            width={24}
+            width={32}
             height={32}
           />
           <div className="flex flex-col">
             <div className="flex gap-1 justify-center items-center">
               <h3 className="font-bold">Mazin Emad</h3>
-              <Select>
-                <SelectTrigger className="w-fit h-fit p-0 border-none outline-none" />
-                <SelectContent>
-                  <SelectItem value="Profile">Profile</SelectItem>
-                  <SelectItem value="Log Out">Log Out</SelectItem>
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger>
+                  <IoIosArrowDown className="text-xl" />
+                </PopoverTrigger>
+                <PopoverContent className="w-40  border-hrms-gray/20">
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      href="/profile"
+                      className="w-fit flex items-center gap-2"
+                    >
+                      <CgProfile className="text-xl" />
+                      My Profile
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      className="text-red-500 p-0 w-fit hover:bg-transparent hover:text-red-700"
+                    >
+                      <HiOutlineLogout className="text-xl" />
+                      Logout
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             <p className="text-xs">FrontEnd Dev</p>
           </div>
