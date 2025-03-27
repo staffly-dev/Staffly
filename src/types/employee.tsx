@@ -6,4 +6,5 @@ export interface Employee {
   type: string;
   status: string;
   department: string;
+  email: string;
 }

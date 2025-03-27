@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Employee } from "@/types/employee";
 import { Pagination } from "@/components/Pagination";
 import { useState } from "react";
+import Link from "next/link";
 
 export function EmployeesTable({ employees }: { employees: Employee[] }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,7 +75,7 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
                 </td>
                 <td className="px-6 py-3">
                   <div className="flex gap-3">
-                    <button className="hover:text-primary">
+                    <Link href={`/all-employees/${employee.id}`} className="hover:text-primary">
                       <svg
                         className="h-5 w-5"
                         fill="none"
@@ -94,7 +95,7 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                         />
                       </svg>
-                    </button>
+                    </Link>
                     <button className="hover:text-primary">
                       <svg
                         className="h-5 w-5"
