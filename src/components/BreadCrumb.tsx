@@ -15,10 +15,10 @@ function getGreeting() {
   if (hours >= 12 && hours < 17) return "Afternoon";
   return "Evening";
 }
-function getSubTitle(pathname: string) {
+function getSubTitle(pathname: string, name?: string) {
   const pages = {
     dashboard: {
-      title: "Hello Mazin 👋🏻",
+      title: `Hello ${name} 👋🏻`,
       subtitle: "Good " + getGreeting(),
     },
     "all-departments": {
@@ -65,19 +65,20 @@ function getSubTitle(pathname: string) {
   return pages[pathname as keyof typeof pages];
 }
 
-export function Breadcrumbs() {
+export function Breadcrumbs({ name }: { name?: string }) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   const unhandeldTitle = segments[segments.length - 1];
-  const subtitle = getSubTitle(unhandeldTitle)?.subtitle;
+  const subtitle = getSubTitle(unhandeldTitle, name)?.subtitle;
   const title =
-    getSubTitle(unhandeldTitle)?.title || unhandeldTitle.split("-").join(" ");
+    getSubTitle(unhandeldTitle, name)?.title ||
+    unhandeldTitle.split("-").join(" ");
 
   return (
     <>
       {subtitle ? (
         <>
-          <h2 className="font-bold">{title}</h2>
+          <h2 className="font-bold capitalize">{title}</h2>
           <p className="text-muted-foreground text-sm">{subtitle}</p>
         </>
       ) : (

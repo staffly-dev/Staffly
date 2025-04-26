@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import { IoMdNotificationsOutline, IoIosArrowDown } from "react-icons/io";
 import { Breadcrumbs } from "../BreadCrumb";
@@ -7,12 +8,29 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { HiOutlineLogout } from "react-icons/hi";
 import { CgProfile } from "react-icons/cg";
+import { useAuth } from "@/context/authContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export function Navbar() {
+  const { user, loading, logout } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, router, loading]);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
   return (
     <header className="flex justify-between items-center py-4">
       <div className="flex flex-col w-fit">
-        <Breadcrumbs />
+        <Breadcrumbs name={user?.name.split(" ")[0]} />
       </div>
       <div className="flex items-center justify-center gap-4">
         <SearchInput />
@@ -32,7 +50,7 @@ export function Navbar() {
           />
           <div className="flex flex-col">
             <div className="flex gap-1 justify-center items-center">
-              <h3 className="font-bold">Mazin Emad</h3>
+              <h3 className="font-bold">{user?.name}</h3>
               <Popover>
                 <PopoverTrigger>
                   <IoIosArrowDown className="text-xl" />
@@ -47,6 +65,7 @@ export function Navbar() {
                       My Profile
                     </Link>
                     <Button
+                      onClick={handleLogout}
                       variant="ghost"
                       className="text-red-500 p-0 w-fit hover:bg-transparent hover:text-red-700"
                     >

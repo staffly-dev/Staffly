@@ -30,10 +30,7 @@ export default function CongratsPage() {
             </p>
           </div>
 
-          <Button
-            className="w-full h-12"
-            onClick={() => router.push("/sign-in")}
-          >
+          <Button className="w-full h-12" onClick={() => router.push("/login")}>
             Back to Login
           </Button>
         </CardContent>

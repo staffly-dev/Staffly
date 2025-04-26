@@ -21,11 +21,7 @@ export const employees: Employee[] = [
   })),
 ];
 
-export function EmployeesCard({
-  employees,
-}: {
-  employees: Employee[];
-}) {
+export function EmployeesCard({ employees }: { employees: Employee[] }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({
     departments: [],
@@ -74,7 +70,7 @@ export function EmployeesCard({
   });
 
   return (
-    <Card className="bg-transparent border-hrms-gray/20 container mx-auto p-6">
+    <Card className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <SearchInput />
         <div className="flex gap-4">
@@ -82,7 +78,7 @@ export function EmployeesCard({
           <Button
             variant="outline"
             onClick={() => setIsFilterOpen(true)}
-            className="border-hrms-gray/20 hover:bg-primary hover:text-white px-6 py-3 rounded-lg"
+            className="border-hrms-gray/20 hover:bg-primary hover:text-white px-6 py-3 rounded-lg transition-all duration-200"
           >
             <TbFilterPlus style={{ width: "20px", height: "20px" }} />
             Filter

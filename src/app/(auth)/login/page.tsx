@@ -70,7 +70,9 @@ export default function SignInPage() {
                 {...register("email")}
               />
               {errors.email && (
-                <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
             <div className="relative">
@@ -78,10 +80,13 @@ export default function SignInPage() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 className="h-12"
+                autoComplete=""
                 {...register("password")}
               />
               {errors.password && (
-                <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.password.message}
+                </p>
               )}
               <button
                 type="button"

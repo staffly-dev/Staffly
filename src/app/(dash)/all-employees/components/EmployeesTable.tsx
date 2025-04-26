@@ -18,7 +18,7 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
 
   return (
     <>
-      <div className="rounded-lg shadow-sm border border-hrms-gray/20">
+      <div>
         <table className="min-w-full divide-y divide-hrms-gray/20">
           <thead>
             <tr>
@@ -75,7 +75,10 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
                 </td>
                 <td className="px-6 py-3">
                   <div className="flex gap-3">
-                    <Link href={`/all-employees/${employee.id}`} className="hover:text-primary">
+                    <Link
+                      href={`/all-employees/${employee.id}`}
+                      className="hover:text-primary"
+                    >
                       <svg
                         className="h-5 w-5"
                         fill="none"

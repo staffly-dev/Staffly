@@ -32,26 +32,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // useEffect(() => {
-  //   checkAuth();
-  //   console.log(user);
-  // }, []);
+  useEffect(() => {
+    const fetchAuth = async () => {
+      await checkAuth();
+      console.log(user);
+    };
+
+    fetchAuth();
+  }, []);
 
   const checkAuth = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/check-auth`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
         credentials: "include",
       });
 
       if (response.ok) {
         const userData = await response.json();
-        setUser(userData);
+        setUser(userData.user);
+        console.log(userData?.user);
       } else {
+        const err = await response.json();
         setUser(null);
-        throw new Error("Auth check failed");
+        throw new Error("" + err.message);
       }
     } catch (error) {
-      toast.error("auth-check error:" + error);
+      toast.error("" + error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -225,7 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const res = await response.json();
       console.log("response:" + res);
-    }  catch (error) {
+    } catch (error) {
       if (error instanceof Error) {
         throw new Error(error.message);
       }

@@ -40,7 +40,7 @@ export default function ForgetPasswordPage() {
 
   return (
     <div>
-      <Link href="/sign-in">
+      <Link href="/login">
         <div className="flex gap-1 items-center mb-8">
           <FaChevronLeft className="w-4 h-4" />
           <h2 className="text-2l font-regular">Back</h2>

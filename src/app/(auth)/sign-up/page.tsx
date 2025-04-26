@@ -74,7 +74,9 @@ export default function SignUpPage() {
                 {...register("name")}
               />
               {errors.name && (
-                <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.name.message}
+                </p>
               )}
             </div>
             <div>
@@ -85,7 +87,9 @@ export default function SignUpPage() {
                 {...register("email")}
               />
               {errors.email && (
-                <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
             <div className="relative">
@@ -96,7 +100,9 @@ export default function SignUpPage() {
                 {...register("password")}
               />
               {errors.password && (
-                <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.password.message}
+                </p>
               )}
               <button
                 type="button"
@@ -148,7 +154,9 @@ export default function SignUpPage() {
               {...register("agree")}
             />
             {errors.agree && (
-              <p className="text-sm text-red-500 mt-1">{errors.agree.message}</p>
+              <p className="text-sm text-red-500 mt-1">
+                {errors.agree.message}
+              </p>
             )}
             <label htmlFor="remember" className="text-sm text-muted-foreground">
               I agree to the Terms of Service and Privacy Policy
@@ -165,7 +173,7 @@ export default function SignUpPage() {
 
           <p className="text-center text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/sign-in" className="text-primary hover:underline">
+            <Link href="/login" className="text-primary hover:underline">
               Sign In
             </Link>
           </p>

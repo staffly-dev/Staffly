@@ -21,10 +21,10 @@ export default function OtpCode() {
   const [value, setValue] = useState("");
   const { verifyEmail } = useAuth();
   const router = useRouter();
-  
+
   const {
     handleSubmit,
-    formState: { errors,isSubmitting },
+    formState: { errors, isSubmitting },
     setValue: setFormValue,
   } = useForm<OtpFormData>({
     resolver: zodResolver(otpSchema),
@@ -36,16 +36,16 @@ export default function OtpCode() {
   const onSubmit = async (data: OtpFormData) => {
     try {
       await verifyEmail(data.otp);
-      router.push("/sign-in");
+      router.push("/login");
       toast.success("OTP verified successfully!");
     } catch (error) {
-      toast.error(""+error);
+      toast.error("" + error);
     }
   };
 
   return (
     <div>
-      <Link href="/sign-in">
+      <Link href="/login">
         <div className="flex gap-1 items-center mb-8">
           <div className="relative w-5 h-5">
             <Image

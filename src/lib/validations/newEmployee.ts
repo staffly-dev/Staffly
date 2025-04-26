@@ -19,11 +19,15 @@ export const newEmployeeSchema = z.object({
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
 
-  // Step 1: Professional Information 
+  // Step 1: Professional Information
   employeeId: z.string().min(1, "Employee ID is required"),
   userName: z.string().min(1, "Username is required"),
-  workEmail: z.string().email("Invalid work email").min(1, "Work email is required"),
+  workEmail: z
+    .string()
+    .email("Invalid work email")
+    .min(1, "Work email is required"),
   department: z.string().min(1, "Department is required"),
+  status: z.string().min(1, "status is required"),
   joiningDate: z
     .string()
     .refine((date) => !isNaN(Date.parse(date)), "Invalid joining date"),
@@ -37,12 +41,12 @@ export const newEmployeeSchema = z.object({
   salarySlips: z.string().optional(),
   relivingLetter: z.string().optional(),
   experienceLetter: z.string().optional(),
-  
+
   // Step 3: Account Access
   emailAddress: z.string().optional(),
   skypeId: z.string().optional(),
   githubId: z.string().optional(),
   slackId: z.string().optional(),
-})
+});
 
 export type NewEmployeeFormData = z.infer<typeof newEmployeeSchema>;
