@@ -2,8 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
-import arrowLeft from "/public/icons/arrow-left.svg";
 import {
   InputOTP,
   InputOTPGroup,
@@ -17,6 +15,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/authContext";
 import { otpSchema, OtpFormData } from "@/lib/validations/auth";
 import { useRouter } from "next/navigation";
+import { FaChevronLeft } from "react-icons/fa6";
 export default function OtpCode() {
   const [value, setValue] = useState("");
   const { verifyEmail } = useAuth();
@@ -48,12 +47,7 @@ export default function OtpCode() {
       <Link href="/login">
         <div className="flex gap-1 items-center mb-8">
           <div className="relative w-5 h-5">
-            <Image
-              src={arrowLeft}
-              alt="HRMS Logo"
-              fill
-              className="object-contain"
-            />
+            <FaChevronLeft />
           </div>
           <h2 className="text-2l font-regular">Back</h2>
         </div>
