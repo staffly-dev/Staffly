@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CiSearch } from "react-icons/ci";
 import Link from "next/link";
+import { FaChevronRight } from "react-icons/fa6";
 
 interface Member {
   name: string;
@@ -178,15 +179,9 @@ export default function Page() {
                       </p>
                     </div>
                   </div>
-                  <button className="text-gray-400 hover:text-gray-500">
-                    <Image
-                      src="/icons/arrow-left.svg"
-                      alt="View"
-                      width={20}
-                      height={20}
-                      className="rotate-180"
-                    />
-                  </button>
+                  <Link href={"all-employees/mazin-1234"}>
+                    <FaChevronRight />
+                  </Link>
                 </div>
               ))}
             </div>

@@ -46,7 +46,7 @@ function getSubTitle(pathname: string, name?: string) {
       subtitle: "All Leave info",
     },
     payroll: {
-      title: "Overtime",
+      title: "Payroll",
       subtitle: "All Employees Payroll",
     },
     settings: {

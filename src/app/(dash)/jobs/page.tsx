@@ -7,6 +7,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/searchInput";
 import { CiCirclePlus } from "react-icons/ci";
+import { AddJobModal } from "./components/AddJobModal";
+
 const columns = [
   {
     id: "active",
@@ -78,6 +80,8 @@ const initialJobs: JobType[] = [
 
 export default function Page() {
   const [jobs, setJobs] = useState<JobType[]>(initialJobs);
+  const [isAddJobOpen, setIsAddJobOpen] = useState(false);
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
@@ -94,24 +98,50 @@ export default function Page() {
       )
     );
   }
+
+  const handleAddJob = (data: {
+    department: string;
+    title: string;
+    location: string;
+    amount: number;
+    type: "office" | "remote";
+  }) => {
+    const newJob: JobType = {
+      id: (jobs.length + 1).toString(),
+      title: data.title,
+      department: data.department,
+      description: `${data.title} description`,
+      status: "active",
+      location: data.location,
+      tags: [data.type === "office" ? "Office" : "Remote"],
+      salary: data.amount,
+    };
+    setJobs([...jobs, newJob]);
+  };
+
   return (
     <Card className="p-6">
       <div className="flex justify-between">
         <SearchInput placeholder="Search for a job" />
-        <Button>
+        <Button onClick={() => setIsAddJobOpen(true)}>
           <span>
             <CiCirclePlus />
           </span>
           Add New Job
         </Button>
       </div>
-      <div className="mt-4  flex gap-4">
+      <div className="mt-4 flex gap-4">
         <DndContext onDragEnd={handleDragEnd}>
           {columns.map((column) => (
             <Column key={column.title} column={column} jobs={jobs} />
           ))}
         </DndContext>
       </div>
+      <AddJobModal
+        open={isAddJobOpen}
+        onOpenChange={setIsAddJobOpen}
+        onSubmit={handleAddJob}
+      />
     </Card>
   );
 }
