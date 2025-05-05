@@ -1,9 +1,11 @@
+"use client";
 import { SearchInput } from "@/components/searchInput";
 import { Card } from "@/components/ui/card";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { CustomTableContainer } from "../all-employees/[employeeId]/page";
-import Image, { StaticImageData } from "next/image";
+import Image from "next/image";
 import { Pagination } from "@/components/Pagination";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Candidate = {
   id: string;
@@ -50,11 +52,28 @@ const data: Candidate[] = [
 ];
 
 export default function CandidatesPage() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [candidates, setCandidates] = useState(data);
+
+  useEffect(() => {
+    setCandidates(
+      data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    );
+  }, [currentPage, itemsPerPage]);
+
   return (
     <Card className="p-4">
       <SearchInput />
       <CandidatesTable candidates={data} />
-      {/* <Pagination/> */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(candidates.length / itemsPerPage)}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        totalItems={candidates.length}
+        onItemsPerPageChange={setItemsPerPage}
+      />
     </Card>
   );
 }
@@ -66,15 +85,39 @@ const colors = {
 };
 
 function CandidatesTable({ candidates }: { candidates: Candidate[] }) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const allSelected =
+    candidates.length > 0 && selectedIds.length === candidates.length;
+  const someSelected =
+    selectedIds.length > 0 && selectedIds.length < candidates.length;
+
+  const toggleAll = (checked: boolean) => {
+    setSelectedIds(checked ? candidates.map((cand) => cand.id) : []);
+  };
+
+  const toggleOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) =>
+      checked ? [...prev, id] : prev.filter((selectedId) => selectedId !== id)
+    );
+  };
+
   return (
     <CustomTableContainer>
       <thead className="sticky top-0 bg-background shadow-sm">
         <tr className="*:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
-          <th>select</th>
-          <th>Employee Name</th>
-          <th>CTC</th>
-          <th>Salary Per Month</th>
-          <th>Deduction</th>
+          <th>
+            <Checkbox
+              className="border-hrms-gray"
+              checked={someSelected ? "indeterminate" : allSelected}
+              onCheckedChange={toggleAll}
+            />
+          </th>
+          <th>Candidate</th>
+          <th>Applied For</th>
+          <th>Date</th>
+          <th>Email</th>
+          <th>Phone</th>
           <th>Status</th>
         </tr>
       </thead>
@@ -84,7 +127,15 @@ function CandidatesTable({ candidates }: { candidates: Candidate[] }) {
             key={cand.id}
             className="hover:bg-hrms-gray/20 *:px-6 *:py-3 *:capitalize"
           >
-            <td>select</td>
+            <td>
+              <Checkbox
+                className="border-hrms-gray"
+                checked={selectedIds.includes(cand.id)}
+                onCheckedChange={(checked) =>
+                  toggleOne(cand.id, Boolean(checked))
+                }
+              />
+            </td>
             <td>
               <div className="flex items-center gap-2">
                 <Image
