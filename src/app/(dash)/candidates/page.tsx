@@ -32,7 +32,7 @@ const data: Candidate[] = [
   {
     id: "2",
     name: "Mazin Emad",
-    state: "selected",
+    state: "rejected",
     avatar: "/imgs/avatar.png",
     job: "Front End",
     date: "July 14, 2023",
@@ -42,7 +42,7 @@ const data: Candidate[] = [
   {
     id: "3",
     name: "Mazin Emad",
-    state: "selected",
+    state: "in process",
     avatar: "/imgs/avatar.png",
     job: "Front End",
     date: "July 14, 2023",
