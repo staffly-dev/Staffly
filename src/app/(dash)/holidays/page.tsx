@@ -70,6 +70,16 @@ export default function HolidaysPage() {
         </Button>
       </div>
       <HolidaysTable holidays={data} />
+      <div className="flex gap-6">
+        <div className="flex gap-2 items-center">
+          <div className="w-2 h-2 rounded-full bg-primary"></div>
+          <p className="font-bold">Upcoming</p>
+        </div>
+        <div className="flex gap-2 items-center">
+          <div className="w-2 h-2 rounded-full bg-hrms-gray/20"></div>
+          <p className="font-bold">Past Event</p>
+        </div>
+      </div>
     </Card>
   );
 }
@@ -78,17 +88,19 @@ function HolidaysTable({ holidays }: { holidays: Holiday[] }) {
   return (
     <CustomTableContainer>
       <thead className="sticky top-0 bg-background shadow-sm">
-        <tr className="justify-between flex *:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
+        <tr className="ml-1 *:w-[26%] flex *:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
           <th>date</th>
           <th>day</th>
           <th>holiday name</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-hrms-gray/20">
+      <tbody className="*:border-b-2 *:border-b-hrms-gray/20">
         {holidays.map((leave) => (
           <tr
             key={leave.date}
-            className="flex flex-col-3 mt-2 border-l-4 border-l-primary hover:bg-hrms-gray/20 *:px-6 *:py-3 *:capitalize"
+            className={`flex *:w-[26%] flex-col-3 mt-2 border-l-4 ${
+              leave.upcoming ? "border-l-primary" : "border-l-hrms-gray/20"
+            } hover:bg-hrms-gray/20 *:px-6 *:py-3 *:capitalize`}
           >
             <td>{leave.date}</td>
             <td>{leave.day}</td>
