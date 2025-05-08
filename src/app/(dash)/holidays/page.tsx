@@ -60,7 +60,7 @@ const data: Holiday[] = [
 export default function HolidaysPage() {
   return (
     <Card className="p-6">
-      <div className="flex justify-between">
+      <div className="flex justify-between pb-4">
         <SearchInput />
         <Button>
           <span>
