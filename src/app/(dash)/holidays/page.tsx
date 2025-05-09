@@ -1,9 +1,40 @@
+"use client";
 import { SearchInput } from "@/components/searchInput";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import React, { useState } from "react";
 import { CiCirclePlus } from "react-icons/ci";
 import { CustomTableContainer } from "../all-employees/[employeeId]/page";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { cn } from "@/lib/utils";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 type Holiday = {
   day: string;
@@ -58,11 +89,22 @@ const data: Holiday[] = [
 ];
 
 export default function HolidaysPage() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [holidayName, setHolidayName] = useState("");
+  const [holidayDate, setHolidayDate] = useState(null);
+
+  const handleAddHoliday = () => {
+    // TODO: Add logic to save the new holiday
+    setIsOpen(false);
+    setHolidayName("");
+    setHolidayDate(null);
+  };
+
   return (
     <Card className="p-6">
       <div className="flex justify-between pb-4">
         <SearchInput />
-        <Button>
+        <Button onClick={() => setIsOpen(true)}>
           <span>
             <CiCirclePlus style={{ width: "20px", height: "20px" }} />
           </span>
@@ -80,6 +122,52 @@ export default function HolidaysPage() {
           <p className="font-bold">Past Event</p>
         </div>
       </div>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-sm rounded-2xl p-8 flex flex-col items-center gap-6 shadow-xl">
+          <DialogHeader className="w-full">
+            <DialogTitle className="text-lg font-bold mb-2 text-left w-full">
+              Add New Holiday
+            </DialogTitle>
+          </DialogHeader>
+          <div className="w-full flex flex-col gap-4">
+            <Input
+              id="name"
+              value={holidayName}
+              onChange={(e) => setHolidayName(e.target.value)}
+              placeholder="Holiday Name"
+              className="h-12 rounded-lg text-base placeholder:text-gray-400"
+            />
+            <div className="relative w-full">
+              <DatePicker
+                selected={holidayDate}
+                onChange={setHolidayDate}
+                placeholderText="Select Date"
+                dateFormat="PPP"
+                className="w-full h-12 rounded-lg border border-hrms-gray/20 px-3 text-base placeholder:text-gray-400 bg-white font-normal pr-10"
+                popperPlacement="bottom-start"
+                showPopperArrow={false}
+              />
+              <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+          <DialogFooter className="w-full flex gap-3 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              className="flex-1 h-11 rounded-lg border-gray-300"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddHoliday}
+              className="flex-1 h-11 rounded-lg bg-primary text-white hover:bg-primary/90"
+            >
+              Add
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -100,7 +188,7 @@ function HolidaysTable({ holidays }: { holidays: Holiday[] }) {
             key={leave.date}
             className={`flex *:w-[26%] flex-col-3 mt-2 border-l-4 ${
               leave.upcoming ? "border-l-primary" : "border-l-hrms-gray/20"
-            } hover:bg-hrms-gray/20 *:px-6 *:py-3 *:capitalize`}
+            } hover:bg-hrms-gray/20 *:px-6 *:py-2 *:capitalize`}
           >
             <td>{leave.date}</td>
             <td>{leave.day}</td>
