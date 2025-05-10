@@ -34,7 +34,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import "react-date-picker/dist/DatePicker.css";
+import "react-calendar/dist/Calendar.css";
+
+const FormSchema = z.object({
+  dob: z.date({
+    required_error: "A date of birth is required.",
+  }),
+});
 
 type Holiday = {
   day: string;
@@ -92,13 +99,22 @@ export default function HolidaysPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [holidayName, setHolidayName] = useState("");
   const [holidayDate, setHolidayDate] = useState(null);
+  const [holidays, setHolidays] = useState(data);
 
-  const handleAddHoliday = () => {
-    // TODO: Add logic to save the new holiday
-    setIsOpen(false);
-    setHolidayName("");
-    setHolidayDate(null);
-  };
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+  });
+
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    toast({
+      title: "You submitted the following values:",
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
+    });
+  }
 
   return (
     <Card className="p-6">
@@ -111,7 +127,7 @@ export default function HolidaysPage() {
           Add New Event
         </Button>
       </div>
-      <HolidaysTable holidays={data} />
+      <HolidaysTable holidays={holidays} />
       <div className="flex gap-6">
         <div className="flex gap-2 items-center">
           <div className="w-2 h-2 rounded-full bg-primary"></div>
@@ -125,47 +141,56 @@ export default function HolidaysPage() {
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-sm rounded-2xl p-8 flex flex-col items-center gap-6 shadow-xl">
-          <DialogHeader className="w-full">
-            <DialogTitle className="text-lg font-bold mb-2 text-left w-full">
-              Add New Holiday
-            </DialogTitle>
-          </DialogHeader>
-          <div className="w-full flex flex-col gap-4">
-            <Input
-              id="name"
-              value={holidayName}
-              onChange={(e) => setHolidayName(e.target.value)}
-              placeholder="Holiday Name"
-              className="h-12 rounded-lg text-base placeholder:text-gray-400"
-            />
-            <div className="relative w-full">
-              <DatePicker
-                selected={holidayDate}
-                onChange={setHolidayDate}
-                placeholderText="Select Date"
-                dateFormat="PPP"
-                className="w-full h-12 rounded-lg border border-hrms-gray/20 px-3 text-base placeholder:text-gray-400 bg-white font-normal pr-10"
-                popperPlacement="bottom-start"
-                showPopperArrow={false}
-              />
-              <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-          <DialogFooter className="w-full flex gap-3 mt-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-              className="flex-1 h-11 rounded-lg border-gray-300"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddHoliday}
-              className="flex-1 h-11 rounded-lg bg-primary text-white hover:bg-primary/90"
-            >
-              Add
-            </Button>
-          </DialogFooter>
+          <Form {...form}>
+            <form action="">
+              <DialogHeader className="w-full">
+                <DialogTitle className="text-lg font-bold mb-2 text-left w-full">
+                  Add New Holiday
+                </DialogTitle>
+              </DialogHeader>
+              <div className="w-full flex flex-col gap-4">
+                <Input
+                  id="name"
+                  value={holidayName}
+                  onChange={(e) => setHolidayName(e.target.value)}
+                  placeholder="Holiday Name"
+                  className="h-12 rounded-lg text-base placeholder:text-gray-400"
+                />
+                <div className="relative w-full">
+                  <label className="mb-1 font-medium text-sm">
+                    Holiday Date
+                  </label>
+                  <div className="relative">
+                    <DatePicker
+                      onChange={setHolidayDate}
+                      value={holidayDate}
+                      calendarIcon={null}
+                      clearIcon={null}
+                      format="y-MM-dd"
+                      className="w-full h-12 rounded-lg border border-hrms-gray/20 px-3 text-base placeholder:text-gray-400 bg-white font-normal pr-10"
+                      placeholderText="Select Date"
+                    />
+                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter className="w-full flex gap-3 mt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                  className="flex-1 h-11 rounded-lg border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={onSubmit}
+                  className="flex-1 h-11 rounded-lg bg-primary text-white hover:bg-primary/90"
+                >
+                  Add
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </Card>
