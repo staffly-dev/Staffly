@@ -77,7 +77,7 @@ export function NewEventDialog({
             <div className="relative">
               <DatePicker
                 selected={holidayDate}
-                onChange={(date: Date) => setHolidayDate(date)}
+                onChange={(date: Date | null) => setHolidayDate(date)}
                 dateFormat="MMMM d, yyyy"
                 className="w-full h-12 rounded-lg border border-hrms-gray/20 px-3 text-base placeholder:text-gray-400 bg-white font-normal pr-10 focus:ring-2 focus:ring-primary/20 focus:outline-none"
                 placeholderText="Select date"
