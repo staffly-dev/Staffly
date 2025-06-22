@@ -1,0 +1,39 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Version control
+.git
+.gitignore
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE specific files
+.idea
+.vscode
+*.swp
+*.swo
+
+# Build output
+dist
+build
+
+# Testing
+coverage
+
+# Logs
+logs
+*.log
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# undockerize folders
+.docs/
+.tasks/
+.temp/
+.vscode/
