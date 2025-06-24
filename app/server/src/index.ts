@@ -5,6 +5,7 @@ import { asyncHandler } from "./middlewares/asyncHandler.middleware";
 import { HTTPSTATUS } from "./config/http.config";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { Env } from "./config/env.config";
+import connectDatabase from "./config/database.config";
 
 const app = express();
 
@@ -22,7 +23,7 @@ app.get(
   '/',
   asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return res.status(HTTPSTATUS.OK).json({
-      message: "Healthy Response!",
+      status: "Healthy!",
     });
   })
 );
@@ -31,4 +32,5 @@ app.use(errorHandler);
 
 app.listen(Env.PORT, async () => {
   console.log(`Server listening on port ${Env.PORT} in ${Env.NODE_ENV}`);
+  await connectDatabase();
 });
