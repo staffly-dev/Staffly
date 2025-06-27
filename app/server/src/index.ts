@@ -7,6 +7,8 @@ import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { Env } from "./config/env.config";
 import connectDatabase from "./config/database.config";
 import helmet from "helmet";
+import authRoutes from "./routes/auth.route";
+import userRoutes from "./routes/user.route";
 
 const app = express();
 
@@ -44,6 +46,9 @@ app.get(
     });
   })
 );
+
+app.use(`/api/auth`, authRoutes);
+app.use(`/api/users`, userRoutes);
 
 app.use(errorHandler);
 

@@ -4,7 +4,8 @@ const envConfig = () => ({
   PORT: getEnv("PORT", "4004"),
   NODE_ENV: getEnv("NODE_ENV", "development"),
 
-  MONGO_URI: getEnv("MONGO_URI"),
+  MONGO_URI_RMOTE: getEnv("MONGO_URI_RMOTE"),
+  // MONGO_URI_LOCAL: getEnv("MONGO_URI_LOCAL"),
 
   JWT: {
     SECRET: getEnv("JWT_SECRET", "jwt_secret"),
@@ -20,6 +21,14 @@ const envConfig = () => ({
   ARCJET_ENV: getEnv("ARCJET_ENV"),
 
   FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "localhost"),
+
+  // Email configuration
+  EMAIL_HOST: process.env.EMAIL_HOST,
+  EMAIL_PORT: parseInt(process.env.EMAIL_PORT || "465"),
+  EMAIL_SECURE: process.env.EMAIL_SECURE === "true",
+  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
+  EMAIL_USER: process.env.EMAIL_USER || "stafflycompany@gmail.com",
+  EMAIL_FROM: process.env.EMAIL_FROM || "stafflycompany@gmail.com",
 });
 
 export const Env = envConfig();

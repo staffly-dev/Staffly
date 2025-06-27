@@ -27,6 +27,12 @@ export class BadRequestException extends AppError {
   }
 }
 
+export class ForbiddenException extends AppError {
+  constructor(message = "Forbidden") {
+    super(message, HTTPSTATUS.FORBIDDEN);
+  }
+}
+
 export class UnauthorizedException extends AppError {
   constructor(message = "Unauthorized Access") {
     super(message, HTTPSTATUS.UNAUTHORIZED);
