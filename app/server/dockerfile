@@ -1,11 +1,27 @@
-FROM node:20-bookworm-slim
+# Use a specific Node.js Alpine version for stability
+FROM node:20-alpine
 
+# Set working directory
 WORKDIR /app
 
+# Copy package files first for layer caching
 COPY package*.json ./
 
-RUN npm ci
+# Install dependencies (including devDependencies for TypeScript)
+RUN npm install
 
-COPY . .
+# Copy all source files
+COPY src/ ./src/
+COPY tsconfig.json ./
 
-CMD ["npm", "run", "dev"]
+# Build the TypeScript project
+RUN npm run build && cp ./package.json ./dist/
+
+# Prune dev dependencies to reduce image size (optional)
+RUN npm prune --production
+
+# Expose the port your app runs on
+EXPOSE 8000
+
+# Start the compiled application
+CMD ["npm", "start"]
