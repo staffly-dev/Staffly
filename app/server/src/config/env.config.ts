@@ -3,6 +3,8 @@ import { getEnv } from "../utils/get-env";
 const envConfig = () => ({
   PORT: getEnv("PORT", "4004"),
   NODE_ENV: getEnv("NODE_ENV", "development"),
+  SWAGGER_USER: getEnv("SWAGGER_USER", "staffly"),
+  SWAGGER_PASSWORD: getEnv("SWAGGER_PASSWORD", "defaultPass"),
 
   MONGO_URI_RMOTE: getEnv("MONGO_URI_RMOTE"),
   // MONGO_URI_LOCAL: getEnv("MONGO_URI_LOCAL"),

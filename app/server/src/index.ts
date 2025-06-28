@@ -7,8 +7,11 @@ import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { Env } from "./config/env.config";
 import connectDatabase from "./config/database.config";
 import helmet from "helmet";
+import { swaggerUi, swaggerSpec } from "./swagger";
+
 import authRoutes from "./routes/auth.route";
 import userRoutes from "./routes/user.route";
+import { swaggerAuth } from "./middlewares/swagger-auth.middleware";
 
 const app = express();
 
@@ -46,6 +49,12 @@ app.get(
     });
   })
 );
+
+if (Env.NODE_ENV !== 'production') {
+  app.use(`/api-docs`, swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+} else {
+  app.use(`/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 
 app.use(`/api/auth`, authRoutes);
 app.use(`/api/users`, userRoutes);
