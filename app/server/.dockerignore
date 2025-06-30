@@ -9,7 +9,7 @@ npm-debug.log
 # Environment
 .env
 .env.local
-.env.*.local
+.env.*
 
 # IDE specific files
 .idea
@@ -31,3 +31,10 @@ logs
 # Operating System
 .DS_Store
 Thumbs.db
+
+# Temporary files & folders
+tasks/
+temp/
+
+# Postman collections
+postman.json

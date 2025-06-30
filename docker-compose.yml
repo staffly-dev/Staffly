@@ -1,0 +1,33 @@
+name: staffly
+
+services:
+  database:
+    image: mongo:7.0.12
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - staffly
+
+  server:
+    build:
+      context: ./app/server
+      dockerfile: dockerfile
+    restart: unless-stopped
+    env_file: ./app/server/.env
+    volumes:
+      - ./app/server:/app
+      - /app/node_modules
+    ports:
+      - 4004:4004
+    networks:
+      - staffly
+    depends_on:
+      - database
+
+volumes:
+  mongo_data:
+networks:
+  staffly:
+    driver: bridge
