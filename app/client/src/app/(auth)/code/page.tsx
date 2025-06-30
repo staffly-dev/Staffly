@@ -12,13 +12,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useAuth } from "@/context/authContext";
+// import { useAuth } from "@/context/authContext";
 import { otpSchema, OtpFormData } from "@/lib/validations/auth";
 import { useRouter } from "next/navigation";
 import { FaChevronLeft } from "react-icons/fa6";
 export default function OtpCode() {
   const [value, setValue] = useState("");
-  const { verifyEmail } = useAuth();
+  // const { verifyEmail } = useAuth();
   const router = useRouter();
 
   const {
@@ -34,7 +34,8 @@ export default function OtpCode() {
 
   const onSubmit = async (data: OtpFormData) => {
     try {
-      await verifyEmail(data.otp);
+      // await verifyEmail(data.otp);
+      console.log(data);
       router.push("/login");
       toast.success("OTP verified successfully!");
     } catch (error) {

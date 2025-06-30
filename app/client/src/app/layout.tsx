@@ -1,7 +1,7 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 import { Metadata } from "next";
-import { AuthProvider } from "@/context/authContext";
+// import { AuthProvider } from "@/context/authContext";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
@@ -17,17 +17,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen" suppressHydrationWarning>
-        <AuthProvider>
-          <Toaster richColors />
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
-        </AuthProvider>
+        {/* <AuthProvider> */}
+        <Toaster richColors />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
+        {/* </AuthProvider> */}
       </body>
     </html>
   );

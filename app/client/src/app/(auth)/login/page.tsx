@@ -7,15 +7,17 @@ import logo from "/public/imgs/logo.png";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/authContext";
+// import { useAuth } from "@/context/authContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signInSchema, type SignInFormData } from "@/lib/validations/auth";
+import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const router = useRouter();
+  // const { login } = useAuth();
 
   const {
     register,
@@ -34,7 +36,9 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
-      await login(data.email, data.password);
+      // await login(data.email, data.password);
+      console.log(data);
+      router.push("/dashboard");
       toast.success("Successfully logged in!");
     } catch (error) {
       toast.error("Login failed. Please check your credentials." + error);

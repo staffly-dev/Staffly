@@ -13,7 +13,7 @@ import {
   MdWork,
   MdPersonOutline,
   MdEventNote,
-  MdCalendarToday,
+  // MdCalendarToday,
   MdSettings,
 } from "react-icons/md";
 import { DarkLightSwitch } from "./DarkLightSwitch";
@@ -59,11 +59,11 @@ const menuItems = [
     icon: MdEventNote,
     href: "/leaves",
   },
-  {
-    title: "Holidays",
-    icon: MdCalendarToday,
-    href: "/holidays",
-  },
+  // {
+  //   title: "Holidays",
+  //   icon: MdCalendarToday,
+  //   href: "/holidays",
+  // },
   {
     title: "Settings",
     icon: MdSettings,
@@ -93,7 +93,8 @@ export function Sidebar() {
         <div className="flex-1 overflow-y-auto py-4">
           <nav className="grid gap-1 px-2">
             {menuItems.map((item) => {
-              const isActive = (pathname === item.href || pathname.startsWith(item.href));
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/context/authContext";
+// import { useAuth } from "@/context/authContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -16,9 +16,9 @@ import { toast } from "sonner";
 export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const { resetPassword } = useAuth();
+  // const { resetPassword } = useAuth();
   const param = useParams();
-  const token = param.token as string;
+  // const token = param.token as string;
   const {
     register,
     handleSubmit,
@@ -32,7 +32,8 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (data: ChangeFormData) => {
     try {
-      await resetPassword( token, data.password);
+      // await resetPassword( token, data.password);
+      console.log(param, data);
       toast.success("Password changed Successfully");
       router.push("/reset/congrats");
     } catch (error) {
@@ -107,11 +108,9 @@ export default function ResetPasswordPage() {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className=
-              "w-full h-12 text-base font-medium"
-              
+            className="w-full h-12 text-base font-medium"
           >
-            {isSubmitting? "Loading..." : "Reset Password"}
+            {isSubmitting ? "Loading..." : "Reset Password"}
           </Button>
         </form>
       </div>

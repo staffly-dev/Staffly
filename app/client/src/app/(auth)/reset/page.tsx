@@ -6,7 +6,7 @@ import { FaChevronLeft } from "react-icons/fa6";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAuth } from "@/context/authContext";
+// import { useAuth } from "@/context/authContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 export default function ForgetPasswordPage() {
   const router = useRouter();
-  const { forgetPassword } = useAuth();
+  // const { forgetPassword } = useAuth();
   const {
     handleSubmit,
     register,
@@ -30,7 +30,8 @@ export default function ForgetPasswordPage() {
   });
   const onSubmit = async (data: ForgetFormData) => {
     try {
-      await forgetPassword(data.email);
+      // await forgetPassword(data.email);
+      console.log(data);
       toast.success("Successfully logged in!");
       router.push("/reset/change");
     } catch (error) {

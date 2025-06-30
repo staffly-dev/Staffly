@@ -7,7 +7,7 @@ import logo from "/public/imgs/logo.png";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/context/authContext";
+// import { useAuth } from "@/context/authContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema, type SignUpFormData } from "@/lib/validations/auth";
@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  // const { signup } = useAuth();
   const router = useRouter();
 
   const {
@@ -37,7 +37,8 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      await signup(data.email, data.password, data.name);
+      // await signup(data.email, data.password, data.name);
+      console.log(data);
       toast.success("Account created successfully!");
       router.push("/code");
     } catch (error) {
