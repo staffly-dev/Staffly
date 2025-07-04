@@ -22,7 +22,7 @@ const envConfig = () => ({
   ARCJET_KEY: getEnv("ARCJET_KEY"),
   ARCJET_ENV: getEnv("ARCJET_ENV"),
 
-  FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "localhost"),
+  FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "http://localhost:3000"),
 
   // Email configuration
   EMAIL_HOST: process.env.EMAIL_HOST,

@@ -37,7 +37,8 @@ app.use(
 
 app.use(
   cors({
-    origin: Env.FRONTEND_ORIGIN,
+    origin: [Env.FRONTEND_ORIGIN, "http://localhost:3000"],
+    credentials: true,
   })
 );
 
