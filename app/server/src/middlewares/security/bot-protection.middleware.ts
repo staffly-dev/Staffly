@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 /**
  * Configuration options for bot protection middleware
@@ -52,6 +53,14 @@ export function createBotProtectionMiddleware(
 
     const userAgent = req.get('User-Agent') || '';
     if (config.badUserAgents.some(pattern => pattern.test(userAgent))) {
+      logSecurityEvent({
+        ip: req.ip || req.connection.remoteAddress || 'unknown',
+        userAgent,
+        method: req.method,
+        route: req.originalUrl || req.path,
+        attackType: 'Bot',
+        details: { userAgent }
+      });
       res.status(403).json({ error: config.blockMessage, errorCode: 'BOT_BLOCKED' });
       return;
     }

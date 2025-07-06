@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 // Optional Redis import - will be undefined if redis is not installed
 let createClient: any;
@@ -174,6 +175,14 @@ export function createRateLimitMiddleware(
       // Check if rate limit exceeded
       if (data.count > limit) {
         res.set('Retry-After', retryAfter.toString());
+        logSecurityEvent({
+          ip: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent'),
+          method: req.method,
+          route: req.originalUrl || req.path,
+          attackType: 'Rate Limit',
+          details: { count: data.count, limit }
+        });
         config.handler(req, res);
         return;
       }

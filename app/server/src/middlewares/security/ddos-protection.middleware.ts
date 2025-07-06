@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 /**
  * DDoS Protection Configuration
@@ -41,7 +42,7 @@ const ipStore = new Map<string, { timestamps: number[]; banUntil?: number; banCo
 export function createDDOSProtectionMiddleware(userConfig: DDOSProtectionConfig = {}): RequestHandler {
   const config = { ...DEFAULT_CONFIG, ...userConfig };
 
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Skip protection for specified routes
     if (config.skipRoutes.some(pattern => {
       const regexPattern = pattern.replace(/\*/g, '.*');
@@ -64,6 +65,14 @@ export function createDDOSProtectionMiddleware(userConfig: DDOSProtectionConfig 
     // Blacklist check
     if (config.blacklist.includes(ip)) {
       config.logger('Blocked blacklisted IP', { ip });
+      await logSecurityEvent({
+        ip,
+        userAgent: req.get('User-Agent'),
+        method: req.method,
+        route: req.originalUrl || req.path,
+        attackType: 'DDoS (blacklist)',
+        details: {}
+      });
       res.status(429).json({ error: 'Too many requests (DDoS protection)', errorCode: 'DDOS_PROTECTION' });
       return;
     }
@@ -78,6 +87,14 @@ export function createDDOSProtectionMiddleware(userConfig: DDOSProtectionConfig 
     // Auto-ban check
     if (data.banUntil && now < data.banUntil) {
       config.logger('Auto-banned IP tried to access', { ip });
+      await logSecurityEvent({
+        ip,
+        userAgent: req.get('User-Agent'),
+        method: req.method,
+        route: req.originalUrl || req.path,
+        attackType: 'DDoS (auto-ban)',
+        details: { banUntil: data.banUntil }
+      });
       res.status(429).json({ error: 'Too many requests (auto-ban)', errorCode: 'DDOS_AUTOBAN' });
       return;
     }
@@ -90,6 +107,14 @@ export function createDDOSProtectionMiddleware(userConfig: DDOSProtectionConfig 
     if (data.timestamps.length > config.limit + config.burst) {
       data.banCount = (data.banCount || 0) + 1;
       config.logger('DDoS threshold exceeded', { ip, count: data.timestamps.length, banCount: data.banCount });
+      await logSecurityEvent({
+        ip,
+        userAgent: req.get('User-Agent'),
+        method: req.method,
+        route: req.originalUrl || req.path,
+        attackType: 'DDoS',
+        details: { count: data.timestamps.length, banCount: data.banCount }
+      });
       // Auto-ban if exceeded too many times
       if (data.banCount >= config.autoBanCount) {
         data.banUntil = now + config.autoBanTime;

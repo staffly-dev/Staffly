@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 /**
  * CORS Protection Configuration
@@ -123,6 +124,14 @@ export function createCORSProtectionMiddleware(userConfig: CORSConfig = {}): Req
       // Rate limit preflight requests
       if (origin && !checkPreflightRateLimit(origin, config)) {
         config.logger('Preflight rate limit exceeded', { origin });
+        logSecurityEvent({
+          ip: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent'),
+          method: req.method,
+          route: req.originalUrl || req.path,
+          attackType: 'CORS Preflight Rate Limit',
+          details: { origin }
+        });
         res.status(429).json({ error: 'Too many preflight requests', errorCode: 'CORS_PREFLIGHT_LIMIT' });
         return;
       }
@@ -130,6 +139,14 @@ export function createCORSProtectionMiddleware(userConfig: CORSConfig = {}): Req
       // Validate origin for preflight
       if (origin && !validateOrigin(origin, config)) {
         config.logger('Preflight blocked for origin', { origin });
+        logSecurityEvent({
+          ip: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent'),
+          method: req.method,
+          route: req.originalUrl || req.path,
+          attackType: 'CORS Preflight Blocked',
+          details: { origin }
+        });
         res.status(403).json({ error: 'Origin not allowed', errorCode: 'CORS_ORIGIN_BLOCKED' });
         return;
       }
@@ -163,6 +180,14 @@ export function createCORSProtectionMiddleware(userConfig: CORSConfig = {}): Req
       // Validate origin
       if (!validateOrigin(origin, config)) {
         config.logger('Request blocked for origin', { origin, method, path: req.path });
+        logSecurityEvent({
+          ip: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent'),
+          method: req.method,
+          route: req.originalUrl || req.path,
+          attackType: 'CORS Blocked',
+          details: { origin }
+        });
         res.status(403).json({ error: 'Origin not allowed', errorCode: 'CORS_ORIGIN_BLOCKED' });
         return;
       }

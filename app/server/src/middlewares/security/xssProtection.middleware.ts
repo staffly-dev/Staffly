@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { FilterXSS } from 'xss';
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 /**
  * Configuration interface for XSS protection middleware
@@ -135,7 +136,15 @@ class XSSProtectionMiddleware {
         if (sanitizationLog.totalSanitizations > 0) {
           this.config.logger(sanitizationLog);
           this.config.monitoringHook(sanitizationLog);
-          // Block the request if any sanitization occurred
+          // Log and save the XSS attack
+          logSecurityEvent({
+            ip: this.getClientIP(req),
+            userAgent: req.get('User-Agent'),
+            method: req.method,
+            route: req.originalUrl || req.path,
+            attackType: 'XSS',
+            details: sanitizationLog.sanitizedPaths
+          });
           res.status(400).json({
             error: 'XSS attempt detected',
             errorCode: 'XSS_DETECTED',

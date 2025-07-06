@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 /**
  * Configuration options for the NoSQL detection middleware
@@ -264,6 +265,15 @@ export function createNoSQLDetectionMiddleware(
       // If threats are detected, log and block the request
       if (allThreats.length > 0) {
         await logDetectionEvents(allThreats, config);
+        // Log and save the NoSQL injection attack
+        await logSecurityEvent({
+          ip: req.ip || req.connection.remoteAddress || 'unknown',
+          userAgent: req.get('User-Agent'),
+          method: req.method,
+          route: req.originalUrl || req.path,
+          attackType: 'NoSQL Injection',
+          details: allThreats
+        });
 
         // Calculate overall risk score
         const maxRiskScore = Math.max(...allThreats.map(t => t.riskScore));
