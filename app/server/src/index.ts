@@ -1,46 +1,48 @@
 import "dotenv/config";
-import cors from "cors";
 import express, { Request, Response, NextFunction } from 'express';
 import { asyncHandler } from "./middlewares/asyncHandler.middleware";
 import { HTTPSTATUS } from "./config/http.config";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { Env } from "./config/env.config";
 import connectDatabase from "./config/database.config";
-import helmet from "helmet";
 import { swaggerUi, swaggerSpec } from "./swagger";
 
 import authRoutes from "./routes/auth.route";
 import userRoutes from "./routes/user.route";
 import { swaggerAuth } from "./middlewares/swagger-auth.middleware";
 
+// Import comprehensive security stack
+import { applySecurityStack, securityStack } from "./middlewares/security";
+
 const app = express();
 
 app.use(express.json());
-
 app.use(express.urlencoded({ extended: true }));
 
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    hsts: {
-      maxAge: 63072000,
-      includeSubDomains: true,
-      preload: true,
-    },
-    frameguard: { action: "deny" },
-    noSniff: true,
-    hidePoweredBy: true,
-    xssFilter: false,
-    referrerPolicy: { policy: "no-referrer" },
-  })
-);
-
-app.use(
-  cors({
-    origin: [Env.FRONTEND_ORIGIN, "http://localhost:3000"],
-    credentials: true,
-  })
-);
+// Apply comprehensive security stack
+applySecurityStack(app, {
+  // Customize security layers as needed
+  cors: {
+    // Your CORS settings are already in .env
+  },
+  ddos: {
+    // Your DDoS settings are already in .env
+  },
+  bot: {
+    // Bot protection settings
+  },
+  rateLimit: {
+    // Rate limiting settings
+  },
+  noSQL: {
+    // NoSQL protection settings
+  },
+  xss: {
+    // XSS protection settings
+  },
+  // Skip specific layers if needed
+  // skipLayers: ['bot'], // Example: skip bot protection
+});
 
 app.get(
   '/',
@@ -64,5 +66,6 @@ app.use(errorHandler);
 
 app.listen(Env.PORT, async () => {
   console.log(`Server listening on port ${Env.PORT} in ${Env.NODE_ENV}`);
+  console.log(`🔒 Security stack enabled with ${securityStack.length} protection layers`);
   await connectDatabase();
 });
