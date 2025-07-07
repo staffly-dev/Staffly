@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
-import { logSecurityEvent } from '../../utils/securityLogger';
+import { logSecurityEvent } from '@/utils/securityLogger';
 
 /**
  * CORS Protection Configuration

@@ -9,7 +9,7 @@ import {
   resetPasswordController,
   logOutController,
   logOutAllDevicesController,
-} from "../controllers/auth.controller";
+} from "@/controllers/auth.controller";
 
 const authRoutes = Router();
 

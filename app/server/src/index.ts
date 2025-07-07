@@ -1,18 +1,19 @@
 import "dotenv/config";
 import express, { Request, Response, NextFunction } from 'express';
-import { asyncHandler } from "./middlewares/asyncHandler.middleware";
-import { HTTPSTATUS } from "./config/http.config";
-import { errorHandler } from "./middlewares/errorHandler.middleware";
-import { Env } from "./config/env.config";
-import connectDatabase from "./config/database.config";
-import { swaggerUi, swaggerSpec } from "./swagger";
+import { asyncHandler } from "@/middlewares/api/asyncHandler.middleware";
+import { HTTPSTATUS } from "@/config/http.config";
+import { errorHandler } from "@/middlewares/errors/errorHandler.middleware";
+import { Env } from "@/config/env.config";
+import connectDatabase from "@/config/database.config";
+import { swaggerUi, swaggerSpec } from "@/swagger";
 
-import authRoutes from "./routes/auth.route";
-import userRoutes from "./routes/user.route";
-import { swaggerAuth } from "./middlewares/swagger-auth.middleware";
+import authRoutes from "@/routes/auth.route";
+import userRoutes from "@/routes/user.route";
+import employeeRoutes from "@/routes/employees.route";
+import { swaggerAuth } from "@/middlewares/docs/swagger-docs.middleware";
 
 // Import comprehensive security stack
-import { applySecurityStack, securityStack } from "./middlewares/security";
+import { applySecurityStack, securityStack } from "@/middlewares/security";
 
 const app = express();
 
@@ -53,7 +54,7 @@ app.get(
   })
 );
 
-if (Env.NODE_ENV !== 'production') {
+if (Env.NODE_ENV !== 'development') {
   app.use(`/api-docs`, swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 } else {
   app.use(`/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -61,6 +62,7 @@ if (Env.NODE_ENV !== 'production') {
 
 app.use(`/api/auth`, authRoutes);
 app.use(`/api/users`, userRoutes);
+app.use(`/api/employees`, employeeRoutes);
 
 app.use(errorHandler);
 

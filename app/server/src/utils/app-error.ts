@@ -1,4 +1,4 @@
-import { HTTPSTATUS, HttpStatusCodeType } from "../config/http.config";
+import { HTTPSTATUS, HttpStatusCodeType } from "@/config/http.config";
 
 export class AppError extends Error {
   public statusCode: HttpStatusCodeType;

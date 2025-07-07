@@ -1,9 +1,9 @@
 import { ErrorRequestHandler, Response } from "express";
 import { Error } from "mongoose";
 import { z, ZodError } from "zod";
-import { HTTPSTATUS } from "../config/http.config";
-import { AppError } from "../utils/app-error";
-import { ErrorCodeEnum } from "../enums/error-code.enums";
+import { HTTPSTATUS } from "@/config/http.config";
+import { AppError } from "@/utils/app-error";
+import { ErrorCodeEnum } from "@/enums/error-code.enums";
 
 export const errorHandler: ErrorRequestHandler = (
   error,
