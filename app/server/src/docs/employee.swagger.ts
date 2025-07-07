@@ -7,12 +7,12 @@
 
 /**
  * @swagger
- * /employees:
+ * /employees/addEmployee:
  *   post:
  *     tags:
  *       - Employee
- *     summary: Create a new employee
- *     description: Adds a new employee to the system. Requires authentication.
+ *     summary: Add Employee
+ *     description: Creates a new employee in the system. Requires authentication.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -20,14 +20,99 @@
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/EmployeeInput'
+ *             type: object
+ *             properties:
+ *               profilePicture:
+ *                 type: string
+ *                 example: "https://s3.amazonaws.com/bucket/profile.jpg"
+ *               firstName:
+ *                 type: string
+ *                 example: "Ahmed"
+ *               lastName:
+ *                 type: string
+ *                 example: "Badawi"
+ *               mobileNumber:
+ *                 type: string
+ *                 example: "+201018562905"
+ *               emailAddress:
+ *                 type: string
+ *                 format: email
+ *                 example: "ahmed@badawi.com"
+ *               dateOfBrith:
+ *                 type: string
+ *                 format: date
+ *                 example: "1990-01-01"
+ *               maritalStatus:
+ *                 type: string
+ *                 example: "Single"
+ *               gender:
+ *                 type: string
+ *                 example: "Male"
+ *               nationality:
+ *                 type: string
+ *                 example: "American"
+ *               address:
+ *                 type: string
+ *                 example: "324 Royal Ln, Mesa, New Jersey"
+ *               city:
+ *                 type: string
+ *                 example: "Mesa"
+ *               state:
+ *                 type: string
+ *                 example: "New Jersey"
+ *               zipcode:
+ *                 type: string
+ *                 example: "45463"
+ *               employeeId:
+ *                 type: string
+ *                 example: "ABE12345"
+ *               userName:
+ *                 type: string
+ *                 example: "ahmed_badawi"
+ *               employeeType:
+ *                 type: string
+ *                 example: "Full-time"
+ *               department:
+ *                 type: string
+ *                 example: "Engineering"
+ *               designation:
+ *                 type: string
+ *                 example: "Project Manager"
+ *               workingDays:
+ *                 type: string
+ *                 example: "Monday-Friday"
+ *               joiningAt:
+ *                 type: string
+ *                 format: date
+ *                 example: "2022-07-19"
+ *               officeLocation:
+ *                 type: string
+ *                 example: "New York HQ"
+ *               employeeCv:
+ *                 type: string
+ *                 example: "https://s3.amazonaws.com/bucket/cv.pdf"
+ *               linkdeinLink:
+ *                 type: string
+ *                 example: "brooklyn_simmons"
+ *               githubLink:
+ *                 type: string
+ *                 example: "brooklyn_simmons"
+ *               slackUserName:
+ *                 type: string
+ *                 example: "brooklyn_simmons"
  *     responses:
  *       201:
  *         description: Employee created successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/EmployeeResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Employee created successfully"
+ *                 employee:
+ *                   $ref: '#/components/schemas/Employee'
  *       400:
  *         description: Validation error
  *       401:
@@ -36,11 +121,11 @@
 
 /**
  * @swagger
- * /employees:
+ * /employees/getAllEmployees:
  *   get:
  *     tags:
  *       - Employee
- *     summary: Get all employees
+ *     summary: Get All Employees
  *     description: Returns a list of all employees. Requires authentication.
  *     security:
  *       - bearerAuth: []
@@ -54,7 +139,7 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Employees fetched successfully
+ *                   example: "Employees fetched successfully"
  *                 employees:
  *                   type: array
  *                   items:
@@ -65,11 +150,11 @@
 
 /**
  * @swagger
- * /employees/{id}:
+ * /employees/getEmployee/{id}:
  *   get:
  *     tags:
  *       - Employee
- *     summary: Get an employee by ID
+ *     summary: Get Employee By ID
  *     description: Returns a single employee by their ID. Requires authentication.
  *     security:
  *       - bearerAuth: []
@@ -80,13 +165,20 @@
  *         schema:
  *           type: string
  *         description: The employee ID
+ *         example: "686a2aba2bcf79010745f38a"
  *     responses:
  *       200:
  *         description: Employee fetched successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/EmployeeResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Employee fetched successfully"
+ *                 employee:
+ *                   $ref: '#/components/schemas/Employee'
  *       401:
  *         description: Unauthorized
  *       404:
@@ -95,11 +187,11 @@
 
 /**
  * @swagger
- * /employees/{id}:
+ * /employees/updateEmployee/{id}:
  *   put:
  *     tags:
  *       - Employee
- *     summary: Update an employee
+ *     summary: Update Employee By ID
  *     description: Updates an employee's information. Requires authentication.
  *     security:
  *       - bearerAuth: []
@@ -110,19 +202,105 @@
  *         schema:
  *           type: string
  *         description: The employee ID
+ *         example: "686a2aba2bcf79010745f38a"
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/EmployeeInput'
+ *             type: object
+ *             properties:
+ *               profilePicture:
+ *                 type: string
+ *                 example: "https://s3.amazonaws.com/bucket/profile.jpg"
+ *               firstName:
+ *                 type: string
+ *                 example: "Ahmed"
+ *               lastName:
+ *                 type: string
+ *                 example: "Badawi"
+ *               mobileNumber:
+ *                 type: string
+ *                 example: "+201018562905"
+ *               emailAddress:
+ *                 type: string
+ *                 format: email
+ *                 example: "ahmed@badawi.com"
+ *               dateOfBrith:
+ *                 type: string
+ *                 format: date
+ *                 example: "1990-01-01"
+ *               maritalStatus:
+ *                 type: string
+ *                 example: "Single"
+ *               gender:
+ *                 type: string
+ *                 example: "male"
+ *               nationality:
+ *                 type: string
+ *                 example: "American"
+ *               address:
+ *                 type: string
+ *                 example: "324 Royal Ln, Mesa, New Jersey"
+ *               city:
+ *                 type: string
+ *                 example: "Mesa"
+ *               state:
+ *                 type: string
+ *                 example: "New Jersey"
+ *               zipcode:
+ *                 type: string
+ *                 example: "45463"
+ *               employessId:
+ *                 type: string
+ *                 example: "ABE12345"
+ *               userName:
+ *                 type: string
+ *                 example: "ahmed_badawi"
+ *               employeeType:
+ *                 type: string
+ *                 example: "part-time"
+ *               department:
+ *                 type: string
+ *                 example: "Engineering"
+ *               designation:
+ *                 type: string
+ *                 example: "Project Manager"
+ *               workingDays:
+ *                 type: string
+ *                 example: "Monday-Friday"
+ *               joiningAt:
+ *                 type: string
+ *                 format: date
+ *                 example: "2022-07-19"
+ *               officeLocation:
+ *                 type: string
+ *                 example: "New York HQ"
+ *               employeeCv:
+ *                 type: string
+ *                 example: "https://s3.amazonaws.com/bucket/cv.pdf"
+ *               slackId:
+ *                 type: string
+ *                 example: "brooklyn_simmons"
+ *               linkdeinId:
+ *                 type: string
+ *                 example: "brooklyn_simmons"
+ *               githubId:
+ *                 type: string
+ *                 example: "brooklyn_simmons"
  *     responses:
  *       200:
  *         description: Employee updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/EmployeeResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Employee updated successfully"
+ *                 employee:
+ *                   $ref: '#/components/schemas/Employee'
  *       400:
  *         description: Validation error
  *       401:
@@ -133,11 +311,11 @@
 
 /**
  * @swagger
- * /employees/{id}:
+ * /employees/deleteEmployee/{id}:
  *   delete:
  *     tags:
  *       - Employee
- *     summary: Delete an employee
+ *     summary: Delete Employee By ID
  *     description: Deletes an employee by their ID. Requires authentication.
  *     security:
  *       - bearerAuth: []
@@ -148,13 +326,18 @@
  *         schema:
  *           type: string
  *         description: The employee ID
+ *         example: "686a2aba2bcf79010745f38a"
  *     responses:
  *       200:
  *         description: Employee deleted successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/EmployeeResponse'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Employee deleted successfully"
  *       401:
  *         description: Unauthorized
  *       404:
@@ -165,132 +348,98 @@
  * @swagger
  * components:
  *   schemas:
- *     EmployeeInput:
+ *     Employee:
  *       type: object
- *       required:
- *         - firstName
- *         - lastName
- *         - mobileNumber
- *         - emailAddress
- *         - dateOfBrith
- *         - maritalStatus
- *         - gender
- *         - nationality
- *         - address
- *         - city
- *         - state
- *         - zipcode
- *         - employessId
- *         - userName
- *         - employeeType
- *         - department
- *         - designation
- *         - workingDays
- *         - joiningAt
- *         - officeLocation
  *       properties:
+ *         _id:
+ *           type: string
+ *           example: "686a2aba2bcf79010745f38a"
  *         profilePicture:
  *           type: string
  *           nullable: true
- *           example: https://s3.amazonaws.com/bucket/profile.jpg
+ *           example: "https://s3.amazonaws.com/bucket/profile.jpg"
  *         firstName:
  *           type: string
- *           example: Brooklyn
+ *           example: "Ahmed"
  *         lastName:
  *           type: string
- *           example: Simmons
+ *           example: "Badawi"
  *         mobileNumber:
  *           type: string
- *           example: "+1 555-123-4567"
+ *           example: "+201018562905"
  *         emailAddress:
  *           type: string
  *           format: email
- *           example: brooklyn.simmons@example.com
+ *           example: "ahmed@badawi.com"
  *         dateOfBrith:
  *           type: string
  *           format: date
- *           example: 1990-01-01
+ *           example: "1990-01-01"
  *         maritalStatus:
  *           type: string
- *           example: Single
+ *           example: "Single"
  *         gender:
  *           type: string
- *           example: Female
+ *           example: "Female"
  *         nationality:
  *           type: string
- *           example: American
+ *           example: "American"
  *         address:
  *           type: string
  *           example: "324 Royal Ln, Mesa, New Jersey"
  *         city:
  *           type: string
- *           example: Mesa
+ *           example: "Mesa"
  *         state:
  *           type: string
- *           example: New Jersey
+ *           example: "New Jersey"
  *         zipcode:
  *           type: string
  *           example: "45463"
  *         employessId:
  *           type: string
- *           example: "EMP12345"
+ *           example: "ABE12345"
  *         userName:
  *           type: string
- *           example: brooklyn_simmons
+ *           example: "ahmed_badawi"
  *         employeeType:
  *           type: string
- *           example: Full-time
+ *           example: "Full-time"
  *         department:
  *           type: string
- *           example: Engineering
+ *           example: "Engineering"
  *         designation:
  *           type: string
- *           example: Project Manager
+ *           example: "Project Manager"
  *         workingDays:
  *           type: string
  *           example: "Monday-Friday"
  *         joiningAt:
  *           type: string
  *           format: date
- *           example: 2022-07-19
+ *           example: "2022-07-19"
  *         officeLocation:
  *           type: string
  *           example: "New York HQ"
  *         employeeCv:
  *           type: string
  *           nullable: true
- *           example: https://s3.amazonaws.com/bucket/cv.pdf
+ *           example: "https://s3.amazonaws.com/bucket/cv.pdf"
  *         slackId:
  *           type: string
- *           example: brooklyn_simmons
+ *           example: "brooklyn_simmons"
  *         linkdeinId:
  *           type: string
- *           example: brooklyn_simmons
+ *           example: "brooklyn_simmons"
  *         githubId:
  *           type: string
- *           example: brooklyn_simmons
- *     Employee:
- *       allOf:
- *         - $ref: '#/components/schemas/EmployeeInput'
- *         - type: object
- *           properties:
- *             _id:
- *               type: string
- *               example: 685edd9be63269894bc97cde
- *             createdAt:
- *               type: string
- *               format: date-time
- *               example: 2025-06-27T18:06:19.406Z
- *             updatedAt:
- *               type: string
- *               format: date-time
- *               example: 2025-06-27T18:06:19.406Z
- *     EmployeeResponse:
- *       type: object
- *       properties:
- *         message:
+ *           example: "brooklyn_simmons"
+ *         createdAt:
  *           type: string
- *           example: Employee created successfully
- *         employee:
- *           $ref: '#/components/schemas/Employee'
+ *           format: date-time
+ *           example: "2025-06-27T18:06:19.406Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-06-27T18:06:19.406Z"
  */

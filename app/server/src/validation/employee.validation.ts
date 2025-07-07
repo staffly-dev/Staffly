@@ -14,7 +14,7 @@ export const employeeBaseSchema = {
   city: z.string().min(2).max(50),
   state: z.string().min(2).max(50),
   zipcode: z.string().min(2).max(20),
-  employessId: z.string().min(2).max(30),
+  employeeId: z.string().min(2).max(30),
   userName: z.string().min(2).max(30),
   employeeType: z.string().min(2).max(30),
   department: z.string().min(2).max(50),
@@ -23,9 +23,9 @@ export const employeeBaseSchema = {
   joiningAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   officeLocation: z.string().min(2).max(100),
   employeeCv: z.string().url().nullable().optional(),
-  slackId: z.string().max(50).optional(),
-  linkdeinId: z.string().max(50).optional(),
-  githubId: z.string().max(50).optional(),
+  linkdeinLink: z.string().max(50).optional(),
+  githubLink: z.string().max(50).optional(),
+  slackUserName: z.string().max(50).optional(),
 };
 
 export const addEmployeeSchema = z.object({
