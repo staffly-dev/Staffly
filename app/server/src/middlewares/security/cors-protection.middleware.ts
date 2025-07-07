@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import dotenv from 'dotenv';
-dotenv.config();
+import { Env } from "@/config/env.config";
 import { logSecurityEvent } from '@/utils/securityLogger';
 
 /**
@@ -19,19 +18,17 @@ export interface CORSConfig {
   logger?: (msg: string, meta?: any) => void;
 }
 
-const env = process.env;
-
 const DEFAULT_CONFIG: Required<CORSConfig> = {
-  origin: env.CORS_ORIGIN || '*',
-  methods: (env.CORS_METHODS || 'GET,POST,PUT,DELETE,OPTIONS').split(','),
-  allowedHeaders: (env.CORS_ALLOWED_HEADERS || 'Content-Type,Authorization,X-Requested-With').split(','),
-  exposedHeaders: (env.CORS_EXPOSED_HEADERS || '').split(',').filter(Boolean),
-  credentials: env.CORS_CREDENTIALS === 'true',
-  maxAge: parseInt(env.CORS_MAX_AGE || '86400', 10),
-  whitelist: (env.CORS_WHITELIST || '').split(',').filter(Boolean),
-  blacklist: (env.CORS_BLACKLIST || '').split(',').filter(Boolean),
-  enableSecurityHeaders: env.CORS_SECURITY_HEADERS !== 'false',
-  logger: (msg, meta) => console.warn(`[CORS] ${msg}`, meta || ''),
+  origin: Env.CORS_ORIGIN || 'http://localhost:3000',
+  methods: (Env.CORS_METHODS || 'GET,POST,PUT,DELETE,OPTIONS').split(','),
+  allowedHeaders: (Env.CORS_ALLOWED_HEADERS || 'Content-Type,Authorization,X-Requested-With').split(','),
+  exposedHeaders: (Env.CORS_EXPOSED_HEADERS || '').split(',').filter(Boolean),
+  credentials: Env.CORS_CREDENTIALS === 'true',
+  maxAge: parseInt(Env.CORS_MAX_AGE || '86400', 10),
+  whitelist: (Env.CORS_WHITELIST || 'http://localhost:3000').split(',').filter(Boolean),
+  blacklist: (Env.CORS_BLACKLIST || '').split(',').filter(Boolean),
+  enableSecurityHeaders: Env.CORS_SECURITY_HEADERS !== 'false',
+  logger: (msg, meta) => console.warn(`[CORS] ${msg}`, meta),
 };
 
 // Rate limiting for preflight requests
@@ -41,23 +38,32 @@ const preflightStore = new Map<string, { count: number; lastRequest: number }>()
  * Validates origin against whitelist/blacklist and patterns
  */
 function validateOrigin(origin: string, config: Required<CORSConfig>): boolean {
+  // Special case: allow Swagger docs access from same origin
+  if (origin === 'http://localhost:4004' || origin === 'https://localhost:4004') {
+    return true;
+  }
+
   // Check blacklist first
   if (config.blacklist.some(pattern => {
     const regex = new RegExp(pattern.replace(/\*/g, '.*'));
     return regex.test(origin);
   })) {
+    console.log(`[CORS] Origin ${origin} blocked by blacklist`);
     return false;
   }
 
   // Check whitelist if specified
   if (config.whitelist.length > 0) {
-    return config.whitelist.some(pattern => {
+    const isWhitelisted = config.whitelist.some(pattern => {
       const regex = new RegExp(pattern.replace(/\*/g, '.*'));
       return regex.test(origin);
     });
+    console.log(`[CORS] Origin ${origin} whitelist check: ${isWhitelisted}`);
+    return isWhitelisted;
   }
 
   // If no whitelist, allow all (except blacklisted)
+  console.log(`[CORS] Origin ${origin} allowed (no whitelist specified)`);
   return true;
 }
 

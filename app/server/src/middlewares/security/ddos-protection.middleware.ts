@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import dotenv from 'dotenv';
-dotenv.config();
+import { Env } from "@/config/env.config";
 import { logSecurityEvent } from '@/utils/securityLogger';
 
 /**
@@ -18,16 +17,14 @@ export interface DDOSProtectionConfig {
   logger?: (msg: string, meta?: any) => void;
 }
 
-const env = process.env;
-
 const DEFAULT_CONFIG: Required<DDOSProtectionConfig> = {
-  burst: parseInt(env.DDOS_BURST || '10', 10),
-  limit: parseInt(env.DDOS_LIMIT || '100', 10),
-  windowMs: parseInt(env.DDOS_WINDOW_MS || '60000', 10),
-  blacklist: (env.DDOS_BLACKLIST || '').split(',').filter(Boolean),
-  whitelist: (env.DDOS_WHITELIST || '').split(',').filter(Boolean),
-  autoBanCount: parseInt(env.DDOS_AUTO_BAN_COUNT || '5', 10),
-  autoBanTime: parseInt(env.DDOS_AUTO_BAN_TIME || '600000', 10),
+  burst: parseInt(Env.DDOS_BURST, 10),
+  limit: parseInt(Env.DDOS_LIMIT, 10),
+  windowMs: parseInt(Env.DDOS_WINDOW_MS, 10),
+  blacklist: (Env.DDOS_BLACKLIST).split(',').filter(Boolean),
+  whitelist: (Env.DDOS_WHITELIST).split(',').filter(Boolean),
+  autoBanCount: parseInt(Env.DDOS_AUTO_BAN_COUNT, 10),
+  autoBanTime: parseInt(Env.DDOS_AUTO_BAN_TIME, 10),
   skipRoutes: [],
   logger: (msg, meta) => console.warn(`[DDoS] ${msg}`, meta || ''),
 };
