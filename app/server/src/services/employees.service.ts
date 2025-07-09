@@ -1,5 +1,5 @@
-import EmployeeModel, { EmployeeDocument } from "@/models/employee.model";
-import { NotFoundException, BadRequestException } from "@/utils/app-error";
+import EmployeeModel, { EmployeeDocument } from "../models/employee.model";
+import { NotFoundException, BadRequestException } from "../utils/app-error";
 
 export const createEmployeeService = async (
   data: Partial<EmployeeDocument>

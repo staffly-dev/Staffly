@@ -1,19 +1,19 @@
 import "dotenv/config";
 import express, { Request, Response, NextFunction } from 'express';
-import { asyncHandler } from "@/middlewares/api/asyncHandler.middleware";
-import { HTTPSTATUS } from "@/config/http.config";
-import { errorHandler } from "@/middlewares/errors/errorHandler.middleware";
-import { Env } from "@/config/env.config";
-import connectDatabase from "@/config/database.config";
-import { swaggerUi, swaggerSpec } from "@/swagger";
+import { asyncHandler } from "./middlewares/api/asyncHandler.middleware";
+import { HTTPSTATUS } from "./config/http.config";
+import { errorHandler } from "./middlewares/errors/errorHandler.middleware";
+import { Env } from "./config/env.config";
+import connectDatabase from "./config/database.config";
+import { swaggerUi, swaggerSpec } from "./swagger";
 
-import authRoutes from "@/routes/auth.route";
-import userRoutes from "@/routes/user.route";
-import employeeRoutes from "@/routes/employees.route";
-import { swaggerAuth } from "@/middlewares/docs/swagger-docs.middleware";
+import authRoutes from "./routes/auth.route";
+import userRoutes from "./routes/user.route";
+import employeeRoutes from "./routes/employees.route";
+import { swaggerAuth } from "./middlewares/docs/swagger-docs.middleware";
 
 // Import comprehensive security stack
-import { applySecurityStack, securityStack } from "@/middlewares/security";
+import { applySecurityStack, securityStack } from "./middlewares/security";
 
 const app = express();
 

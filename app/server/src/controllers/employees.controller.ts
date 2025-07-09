@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
-import { asyncHandler } from "@/middlewares/api/asyncHandler.middleware";
-import { HTTPSTATUS } from "@/config/http.config";
+import { asyncHandler } from "../middlewares/api/asyncHandler.middleware";
+import { HTTPSTATUS } from "../config/http.config";
 import {
   createEmployeeService,
   getEmployeeByIdService,
   getAllEmployeesService,
   updateEmployeeService,
   deleteEmployeeService,
-} from "@/services/employees.service";
+} from "../services/employees.service";
 
 export const createEmployeeController = asyncHandler(
   async (req: Request, res: Response) => {

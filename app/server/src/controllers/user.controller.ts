@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { asyncHandler } from "@/middlewares/api/asyncHandler.middleware";
-import { UnauthorizedException } from "@/utils/app-error";
-import { HTTPSTATUS } from "@/config/http.config";
-import { getCurrentUserService } from "@/services/user.service";
+import { asyncHandler } from "../middlewares/api/asyncHandler.middleware";
+import { UnauthorizedException } from "../utils/app-error";
+import { HTTPSTATUS } from "../config/http.config";
+import { getCurrentUserService } from "../services/user.service";
 
 export const getCurrentUserController = asyncHandler(
   async (req: Request, res: Response) => {

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { FilterXSS } from 'xss';
-import { logSecurityEvent } from '@/utils/securityLogger';
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 /**
  * Configuration interface for XSS protection middleware

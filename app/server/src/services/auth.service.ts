@@ -1,28 +1,28 @@
 import { v4 as uuidv4 } from "uuid";
-import UserModel from "@/models/user.model";
+import UserModel from "../models/user.model";
 import {
   BadRequestException,
   NotFoundException,
   UnauthorizedException,
-} from "@/utils/app-error";
-import { generateDeviceHash, hashValue } from "@/utils/bcrypt";
+} from "../utils/app-error";
+import { generateDeviceHash, hashValue } from "../utils/bcrypt";
 import {
   AccessTPayload,
   refreshTokenSignOptions,
   RefreshTPayload,
   signJwtToken,
   verifyJwtToken,
-} from "@/utils/jwt";
-import RefreshTokenModel from "@/models/refreshToken.model";
-import PasswordResetModel from "@/models/passwordReset.model";
-import { getRedisTokenKey, redisClient } from "@/config/redis.config";
+} from "../utils/jwt";
+import RefreshTokenModel from "../models/refreshToken.model";
+import PasswordResetModel from "../models/passwordReset.model";
+import { getRedisTokenKey, redisClient } from "../config/redis.config";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendPasswordResetConfirmationEmail,
   sendWelcomeEmail,
-} from "@/services/email.service";
-import EmailVerificationModel from "@/models/emailVerification.model";
+} from "../services/email.service";
+import EmailVerificationModel from "../models/emailVerification.model";
 
 // ============== Register Service ==============
 export const registerUserService = async (body: {

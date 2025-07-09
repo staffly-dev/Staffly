@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { Env } from "@/config/env.config";
-import { logSecurityEvent } from '@/utils/securityLogger';
+import { Env } from "../../config/env.config";
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 /**
  * DDoS Protection Configuration

@@ -1,5 +1,5 @@
 import basicAuth from 'express-basic-auth';
-import { Env } from '@/config/env.config';
+import { Env } from '../../config/env.config';
 
 export const swaggerAuth = basicAuth({
   users: { [Env.SWAGGER_USER]: Env.SWAGGER_PASSWORD },

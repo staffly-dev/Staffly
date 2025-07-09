@@ -5,11 +5,11 @@ import {
   getAllEmployeesController,
   updateEmployeeController,
   deleteEmployeeController,
-} from "@/controllers/employees.controller";
-import { authenticateToken, requireRole } from "@/middlewares/auth/isAuthenticated.middleware";
-import { securityStack } from "@/middlewares/security";
-import { validateRequest } from "@/middlewares/validateRequest.middleware";
-import { addEmployeeSchema, updateEmployeeSchema } from "@/validation/employee.validation";
+} from "../controllers/employees.controller";
+import { authenticateToken, requireRole } from "../middlewares/auth/isAuthenticated.middleware";
+import { securityStack } from "../middlewares/security";
+import { validateRequest } from "../middlewares/validateRequest.middleware";
+import { addEmployeeSchema, updateEmployeeSchema } from "../validation/employee.validation";
 
 const employeeRoutes = Router();
 

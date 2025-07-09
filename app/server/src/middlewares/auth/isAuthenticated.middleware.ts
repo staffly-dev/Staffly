@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { UnauthorizedException, ForbiddenException } from "@/utils/app-error";
-import { verifyAccessToken, AccessTPayload } from "@/utils/jwt";
-import UserModel, { UserDocument } from "@/models/user.model";
+import { UnauthorizedException, ForbiddenException } from "../../utils/app-error";
+import { verifyAccessToken, AccessTPayload } from "../../utils/jwt";
+import UserModel, { UserDocument } from "../../models/user.model";
 
 declare global {
   namespace Express {

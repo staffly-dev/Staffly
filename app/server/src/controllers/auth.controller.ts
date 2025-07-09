@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { asyncHandler } from "@/middlewares/api/asyncHandler.middleware";
-import { HTTPSTATUS } from "@/config/http.config";
+import { asyncHandler } from "../middlewares/api/asyncHandler.middleware";
+import { HTTPSTATUS } from "../config/http.config";
 import {
   loginUserService,
   logoutAllDevicesService,
@@ -11,8 +11,8 @@ import {
   resetPasswordService,
   verifyEmailCodeService,
   verifyResetPasswordCodeService,
-} from "@/services/auth.service";
-import { UnauthorizedException } from "@/utils/app-error";
+} from "../services/auth.service";
+import { UnauthorizedException } from "../utils/app-error";
 import {
   loginSchema,
   registerSchema,
@@ -20,7 +20,7 @@ import {
   verifyResetCodeSchema,
   resetPasswordSchema,
   verifyEmailSchema
-} from "@/validation/auth.validation";
+} from "../validation/auth.validation";
 
 // ============== Register controllers ==============
 export const registerUserController = asyncHandler(

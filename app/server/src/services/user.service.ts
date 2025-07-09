@@ -1,6 +1,6 @@
-import UserModel from "@/models/user.model";
-import { NotFoundException, UnauthorizedException } from "@/utils/app-error";
-import { AccessTPayload, verifyJwtToken } from "@/utils/jwt";
+import UserModel from "../models/user.model";
+import { NotFoundException, UnauthorizedException } from "../utils/app-error";
+import { AccessTPayload, verifyJwtToken } from "../utils/jwt";
 
 export const getCurrentUserService = async (accessToken: string) => {
   const { payload } = verifyJwtToken<AccessTPayload>(accessToken);

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { logSecurityEvent } from '@/utils/securityLogger';
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 // Optional Redis import - will be undefined if redis is not installed
 let createClient: any;

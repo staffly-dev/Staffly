@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { logSecurityEvent } from '@/utils/securityLogger';
+import { logSecurityEvent } from '../../utils/securityLogger';
 
 /**
  * Configuration options for the NoSQL detection middleware

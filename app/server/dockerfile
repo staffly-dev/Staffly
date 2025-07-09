@@ -7,27 +7,21 @@ WORKDIR /app
 # Copy package files first for layer caching
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies for build)
+# Install dependencies (including devDependencies for TypeScript)
 RUN npm install
 
-# Copy the rest of the app
+# Copy all source files
+COPY src/ ./src/
 COPY tsconfig.json ./
-COPY src ./src
 
 # Build the TypeScript project
-RUN npm run build
+RUN npm run build && cp ./package.json ./dist/
 
-# Copy tsconfig.json into dist for runtime path resolution
-RUN cp tsconfig.json ./dist/
-
-# Prune devDependencies after build to reduce image size
+# Prune dev dependencies to reduce image size (optional)
 RUN npm prune --production
 
-# Set working directory to the compiled output
-WORKDIR /app/dist
-
-# Expose the port
+# Expose the port your app runs on
 EXPOSE 8000
 
-# Start the application
-CMD ["node", "-r", "tsconfig-paths/register", "index.js"]
+# Start the compiled application
+CMD ["npm", "start"]

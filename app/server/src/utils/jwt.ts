@@ -1,6 +1,6 @@
 import jwt, { SignOptions, VerifyOptions, JwtPayload } from "jsonwebtoken";
-import { UserDocument } from "@/models/user.model";
-import { Env } from "@/config/env.config";
+import { UserDocument } from "../models/user.model";
+import { Env } from "../config/env.config";
 
 type StringValue = `${number}${"s" | "m" | "h" | "d"}`; // e.g. "15m", "7d"
 
