@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { sanitize } from 'express-mongo-sanitize';
 
 /**
  * Configuration options for the NoSQL sanitization middleware
@@ -188,9 +189,9 @@ export function createNoSQLSanitizationMiddleware(
 
       // Sanitize query parameters
       if (req.query && typeof req.query === 'object') {
-        const queryResult = sanitizeObject(req.query, config, 'query', req);
-        req.query = queryResult.sanitized;
-        allEvents.push(...queryResult.events);
+        const step1 = sanitizeObject(req.query, config, 'query', req);
+        const finalSanitized = sanitize(step1);
+        Object.assign(req.query, finalSanitized);
       }
 
       // Sanitize route parameters

@@ -1,8 +1,14 @@
+import path from "path";
 import { getEnv } from "../utils/get-env";
+import dotenv from 'dotenv';
+dotenv.config();
+const envPath = path.resolve(__dirname, '../../.env');
+dotenv.config({ path: envPath });
 
 const envConfig = () => ({
   //? Backend Configuration
   PORT: getEnv("PORT", "4004"),
+  API_GATEWAY_PORT: getEnv("API_GATEWAY_PORT", "4005"),
   NODE_ENV: getEnv("NODE_ENV", "development"),
   FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "http://localhost:3000"),
 

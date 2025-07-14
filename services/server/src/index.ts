@@ -7,42 +7,23 @@ import { Env } from "./config/env.config";
 import connectDatabase from "./config/database.config";
 import { swaggerUi, swaggerSpec } from "./swagger";
 
-import authRoutes from "./routes/auth.route";
-import userRoutes from "./routes/user.route";
-import employeeRoutes from "./routes/employees.route";
 import { swaggerAuth } from "./middlewares/docs/swagger-docs.middleware";
 
-// Import comprehensive security stack
 import { applySecurityStack, securityStack } from "./middlewares/security";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 const app = express();
 
-app.use(express.json());
+// app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Apply comprehensive security stack
 applySecurityStack(app, {
-  // Customize security layers as needed
-  cors: {
-    // Your CORS settings are already in .env
-  },
-  ddos: {
-    // Your DDoS settings are already in .env
-  },
-  bot: {
-    // Bot protection settings
-  },
-  rateLimit: {
-    // Rate limiting settings
-  },
-  noSQL: {
-    // NoSQL protection settings
-  },
-  xss: {
-    // XSS protection settings
-  },
-  // Skip specific layers if needed
-  // skipLayers: ['bot'], // Example: skip bot protection
+  cors: {},
+  ddos: {},
+  bot: {},
+  rateLimit: {},
+  noSQL: {},
+  xss: {},
 });
 
 app.get(
@@ -60,9 +41,15 @@ if (Env.NODE_ENV !== 'development') {
   app.use(`/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
 
-app.use(`/api/auth`, authRoutes);
-app.use(`/api/users`, userRoutes);
-app.use(`/api/employees`, employeeRoutes);
+// localhost http://localhost:4004/servers/auth/login ==> direct to proxy http://localhost:4005/server/auth/login
+app.use('/server', createProxyMiddleware({
+  target: 'http://localhost:4005',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/server': '/server',
+  }
+
+}));
 
 app.use(errorHandler);
 
