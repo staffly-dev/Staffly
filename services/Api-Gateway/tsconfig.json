@@ -10,9 +10,10 @@
       "rootDirs": [".", "../server/src"], 
       "strict": true,
       "esModuleInterop": true,
-      "skipLibCheck": true
+      "skipLibCheck": true,
+      "typeRoots": ["./types", "./node_modules/@types"]
     },
-    "include": ["**/*.ts"],
+    "include": ["**/*.ts", "types/**/*.d.ts", "../server/src/**/*.ts"],
     "exclude": ["node_modules"]
   }
   
