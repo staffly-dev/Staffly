@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { FaChevronLeft } from "react-icons/fa6";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAuth } from "@/context/authContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -16,8 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function ForgetPasswordPage() {
-  const router = useRouter();
-  const { forgetPassword } = useAuth();
+  const { resetPasswordRequest, resetPasswordRequestError } = useAuth();
   const {
     handleSubmit,
     register,
@@ -30,11 +28,9 @@ export default function ForgetPasswordPage() {
   });
   const onSubmit = async (data: ForgetFormData) => {
     try {
-      await forgetPassword(data.email);
-      toast.success("Successfully logged in!");
-      router.push("/reset/change");
+      await resetPasswordRequest(data.email);
     } catch (error) {
-      toast.error("Error: " + error);
+      toast.error((error as Error).message);
     }
   };
 
@@ -57,6 +53,12 @@ export default function ForgetPasswordPage() {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          {resetPasswordRequestError && (
+            <p className="text-sm text-red-500 mt-1">
+              {(resetPasswordRequestError as any).response?.data?.message ||
+                "Error: Check your network"}
+            </p>
+          )}
           <div className="space-y-4">
             <div>
               <Input
@@ -79,7 +81,7 @@ export default function ForgetPasswordPage() {
               isSubmitting && "bg-primary/50"
             )}
           >
-            Send Link
+            {isSubmitting ? "Sending..." : "Send Code"}
           </Button>
         </form>
       </div>

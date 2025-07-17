@@ -1,4 +1,5 @@
 import EmployeeModel, { EmployeeDocument } from "../models/employee.model";
+import settingsModel from "../models/settings.model";
 import { NotFoundException, BadRequestException } from "../utils/app-error";
 
 export const createEmployeeService = async (
@@ -10,6 +11,16 @@ export const createEmployeeService = async (
   const employee = new EmployeeModel(data);
   await employee.save();
 
+  const settings = new settingsModel({
+    userId: employee._id,
+    appearance: 'light',
+    language: 'en',
+    twoFactorAuth: false,
+    mobileNotifications: true,
+    desktopNotifications: true,
+    emailNotifications: true,
+  });
+  await settings.save();
   return employee;
 }
 
