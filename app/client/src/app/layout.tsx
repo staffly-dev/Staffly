@@ -1,8 +1,8 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 import { Metadata } from "next";
-// import { AuthProvider } from "@/context/authContext";
 import { Toaster } from "sonner";
+import { QueryProvider } from "@/providers/QueryProvider";
 
 export const metadata: Metadata = {
   title: "Raizero HRMS",
@@ -18,15 +18,17 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen" suppressHydrationWarning>
         {/* <AuthProvider> */}
-        <Toaster richColors />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <QueryProvider>
+          <Toaster richColors />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </QueryProvider>
         {/* </AuthProvider> */}
       </body>
     </html>

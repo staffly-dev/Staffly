@@ -8,31 +8,25 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { HiOutlineLogout } from "react-icons/hi";
 import { CgProfile } from "react-icons/cg";
-// import { useAuth } from "@/context/authContext";
-import { useRouter } from "next/navigation";
-// import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export function Navbar() {
-  // const { user, loading, logout } = useAuth();
-  const router = useRouter();
+  const { user, logout, isLoggingOut } = useAuth();
+  const userData = user?.user;
 
-  // useEffect(() => {
-  //   if (!loading && !user) {
-  //     router.push("/login");
-  //   }
-  // }, [user, router, loading]);
-
-  const handleLogout = () => {
-    // logout();
-    console.log("logout");
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
   };
 
   return (
     <header className="flex justify-between items-center py-4">
       <div className="flex flex-col w-fit">
-        <Breadcrumbs name={"mazin emad"} />
-        {/* <Breadcrumbs name={user?.name.split(" ")[0]} /> */}
+        <Breadcrumbs name={userData?.name?.split(" ")[0] || "User"} />
       </div>
       <div className="flex items-center justify-center gap-4">
         <SearchInput />
@@ -44,7 +38,7 @@ export function Navbar() {
         </Link>
         <div className="flex items-center gap-2 justify-center border border-hrms-gray/20 rounded-xl p-1">
           <Image
-            src="/imgs/logo.png"
+            src={userData?.profilePicture || "/imgs/logo.png"}
             alt="Avatar"
             className="rounded-xl"
             width={32}
@@ -52,8 +46,7 @@ export function Navbar() {
           />
           <div className="flex flex-col">
             <div className="flex gap-1 justify-center items-center">
-              {/* <h3 className="font-bold">{user?.name}</h3> */}
-              <h3 className="font-bold">Mazin Emad</h3>
+              <h3 className="font-bold">{userData?.name || "User"}</h3>
               <Popover>
                 <PopoverTrigger>
                   <IoIosArrowDown className="text-xl" />
@@ -71,6 +64,7 @@ export function Navbar() {
                       onClick={handleLogout}
                       variant="ghost"
                       className="text-red-500 p-0 w-fit hover:bg-transparent hover:text-red-700"
+                      disabled={isLoggingOut}
                     >
                       <HiOutlineLogout className="text-xl" />
                       Logout
@@ -79,7 +73,7 @@ export function Navbar() {
                 </PopoverContent>
               </Popover>
             </div>
-            <p className="text-xs">FrontEnd Dev</p>
+            <p className="text-xs">{userData?.role || "Role"}</p>
           </div>
         </div>
       </div>

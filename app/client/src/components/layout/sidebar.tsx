@@ -75,7 +75,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="p-3 h-screen ">
+    <aside className="p-3 h-screen">
       <div className="flex flex-col rounded-lg bg-primary-foreground h-full pl-2 pr-4">
         <div className="p-4">
           <div className="flex items-center gap-2">
