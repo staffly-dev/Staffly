@@ -17,6 +17,6 @@ EXPOSE 5000
 ENV PYTHONUNBUFFERED=1
 
 # Start the AI service using module mode for robust imports
-CMD ["python", "-m", "ai.main"]
-# For production, you may use: uvicorn ai.main:app --host 0.0.0.0 --port 5000
+CMD ["python", "-m", "main.py"]
+# For production, you may use: uvicorn main.py:app --host 0.0.0.0 --port 5000
 # For development, consider using --reload and reload_excludes to avoid watcher spam
