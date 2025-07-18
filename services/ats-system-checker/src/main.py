@@ -34,6 +34,7 @@ from src.services.evaluation_service import EvaluationService
 
 # Routes
 from src.routes import api_router
+from src.routes.health_routes import router as health_router
 from src.routes.jobs_routes import router as jobs_router
 from src.routes.quiz_routes import router as quiz_router
 from src.routes.statistics_routes import router as statistics_router
