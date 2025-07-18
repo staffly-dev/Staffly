@@ -24,7 +24,6 @@ class JobController:
         self,
         database_service: DatabaseService,
         evaluation_service: EvaluationService,
-        document_service: DocumentProcessingService
     ):
         """
         Initialize job controller
@@ -32,11 +31,9 @@ class JobController:
         Args:
             database_service: Database service instance
             evaluation_service: Evaluation service instance
-            document_service: Document processing service instance
         """
         self.database_service = database_service
         self.evaluation_service = evaluation_service
-        self.document_service = document_service
     
     async def create_job_posting(
         self,
@@ -230,12 +227,6 @@ class JobController:
             # Validate file
             if not cv_file.filename or cv_file.filename == '':
                 raise HTTPException(status_code=400, detail="Please upload a valid CV file")
-            
-            if not self.document_service.is_allowed_file(cv_file.filename):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid file type. Please upload a PDF or DOCX file"
-                )
             
             # Read file content
             cv_content = await cv_file.read()
