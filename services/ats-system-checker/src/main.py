@@ -31,8 +31,6 @@ from src.middlewares import (
 from src.services.database_service import DatabaseService
 from src.services.email_service import EmailService
 from src.services.evaluation_service import EvaluationService
-from ai.services.cohere_service import CohereService
-from ai.services.document_service import DocumentProcessingService
 
 # Routes
 from src.routes import api_router
@@ -56,16 +54,13 @@ async def lifespan(app: FastAPI):
         )
         await app.state.database_service.connect()
         
-        app.state.cohere_service = CohereService(settings.COHERE_API_KEY)
-        app.state.document_service = DocumentProcessingService(settings.UPLOAD_FOLDER)
         app.state.email_service = EmailService(
             gmail_user=settings.GMAIL_USER,
             gmail_password=settings.GMAIL_PASSWORD,
             database_service=app.state.database_service
         )
         app.state.evaluation_service = EvaluationService(
-            cohere_service=app.state.cohere_service,
-            document_service=app.state.document_service,
+            ai_service_url=settings.AI_SERVICE_URL,
             email_service=app.state.email_service,
             database_service=app.state.database_service
         )

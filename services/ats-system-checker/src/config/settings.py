@@ -69,6 +69,8 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = Field(default="INFO", description="Logging level")
     LOG_FILE: str = Field(default="ats_system.log", description="Log file path")
     
+    AI_SERVICE_URL: str = Field(default="http://localhost:5000", description="Base URL for the AI microservice")
+    
     class Config:
         env_file = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
         env_file_encoding = "utf-8"
