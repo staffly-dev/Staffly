@@ -15,6 +15,7 @@ EXPOSE 4000
 
 # Set environment variables file location (for python-dotenv)
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH="/app:/app/ai"
 
 # Start the backend service using module mode for robust imports
 CMD ["python", "-m", "src.main"]
