@@ -153,8 +153,13 @@ async def evaluate_cv(request: EvaluateRequest):
         result = EvaluationResult(
             decision=decision,
             score=score,
-            evaluation_text=evaluation_text,
-            email=email,
+            reasoning=evaluation_text,  # Ensure this field is always present
+            extracted_skills=[],  # Add other fields as needed
+            experience_years=None,
+            match_percentage=None,
+            strengths=[],
+            weaknesses=[],
+            recommendations=None,
             filename=request.filename
         )
         
