@@ -5,6 +5,11 @@ Modern, async replacement for the original Flask application
 
 import sys
 import os
+
+# Add the ai directory to sys.path so ai/services/cohere_service.py can import models.evaluation_models
+ai_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../ai'))
+if ai_path not in sys.path:
+    sys.path.insert(0, ai_path)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
