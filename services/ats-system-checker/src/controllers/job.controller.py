@@ -244,14 +244,18 @@ class JobController:
                     files = {'file': (cv_file.filename, cv_content)}
                     ai_url = f"{settings.AI_SERVICE_URL}/extract-text"
                     response = await client.post(ai_url, files=files, timeout=60)
-                    response.raise_for_status()
+                    try:
+                        response.raise_for_status()
+                    except httpx.HTTPStatusError as http_exc:
+                        logger.error(f"AI service error: {response.text}")
+                        raise HTTPException(status_code=500, detail=f"AI service error: {response.text}")
                     data = response.json()
                     cv_text = data.get("text_content", "")
                     extracted_email = data.get("email", None)
                     extracted_name = data.get("name", None)
             except Exception as ai_exc:
                 logger.error(f"AI service extract-text error: {ai_exc}")
-                raise HTTPException(status_code=500, detail="Failed to extract text from CV using AI service.")
+                raise HTTPException(status_code=500, detail=f"Failed to extract text from CV using AI service: {ai_exc}")
             
             if not cv_text or len(cv_text.strip()) < 50:
                 raise HTTPException(
