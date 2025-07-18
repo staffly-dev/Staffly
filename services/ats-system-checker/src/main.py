@@ -34,10 +34,10 @@ from src.services.evaluation_service import EvaluationService
 
 # Routes
 from src.routes import api_router
-from src.routes.jobs.routes import router as jobs_router
-from src.routes.quiz.routes import router as quiz_router
-from src.routes.statistics.routes import router as statistics_router
-from src.routes.applications.routes import router as applications_router
+from src.routes.jobs_routes import router as jobs_router
+from src.routes.quiz_routes import router as quiz_router
+from src.routes.statistics_routes import router as statistics_router
+from src.routes.applications_routes import router as applications_router
 
 # Initialize settings and logging
 settings = get_settings()
