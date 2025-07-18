@@ -19,6 +19,6 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH="/app:/app/ai"
 
 # Start the backend service using module mode for robust imports
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "4000", "--reload", "--reload-excludes", "venv", "--reload-excludes", ".pytest_cache", "--reload-excludes", "__pycache__", "--reload-excludes", "uploads", "--reload-excludes", "ats_system.log"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "4000", "--reload", "--reload-exclude", "venv", "--reload-exclude", ".pytest_cache", "--reload-exclude", "__pycache__", "--reload-exclude", "uploads", "--reload-exclude", "ats_system.log"]
 # For production, you may use: uvicorn src.main:app --host 0.0.0.0 --port 4000
 # For development, consider using --reload and reload_excludes to avoid watcher spam
