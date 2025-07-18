@@ -46,26 +46,27 @@ if (Env.NODE_ENV !== 'development') {
 }
 
 
-// /server/auth
+// /auth
 app.use(`/auth`, authRoutes);
 
-// /server/users
+// /users
 app.use(`/users`, userRoutes);
 
-// /server/employees
+// /employees
 app.use(`/employees`, employeeRoutes);
 
-// /server/attendance
+// /attendance
 app.use(`/attendance`, attendanceRoutes);
 
-// /server/dashboard
+// /dashboard
 app.use(`/dashboard`, dashboardRoutes);
 
+// /settings
 app.use(`/settings`, settingsRoutes);
 
 app.use(errorHandler);
 
-app.listen( Env.PORT, async () => {
+app.listen(Env.PORT, async () => {
   console.log(`Server listening on port ${Env.PORT} in development`);
   console.log(`🔒 Security stack enabled with ${securityStack.length} protection layers`);
   await connectDatabase();
