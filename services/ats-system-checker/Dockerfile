@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY ./src ./src
-COPY ../../ai ../../ai
+# COPY ../../ai ../../ai
 
 # Expose the backend API port
 EXPOSE 4000
