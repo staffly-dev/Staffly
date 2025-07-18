@@ -11,7 +11,7 @@ from typing import Optional, Dict, List, Any
 import cohere
 from datetime import datetime
 
-from ai.models.evaluation_models import EvaluationResult
+from models.evaluation_models import EvaluationResult
 
 logger = logging.getLogger(__name__)
 
