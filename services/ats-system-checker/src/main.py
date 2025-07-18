@@ -34,6 +34,10 @@ from src.services.evaluation_service import EvaluationService
 
 # Routes
 from src.routes import api_router
+from src.routes.jobs.routes import router as jobs_router
+from src.routes.quiz.routes import router as quiz_router
+from src.routes.statistics.routes import router as statistics_router
+from src.routes.applications.routes import router as applications_router
 
 # Initialize settings and logging
 settings = get_settings()
@@ -157,6 +161,12 @@ def create_app() -> FastAPI:
 
 # Create the app instance
 app = create_app()
+
+# Explicitly include routers to ensure all endpoints are registered
+app.include_router(jobs_router)
+app.include_router(quiz_router)
+app.include_router(statistics_router)
+app.include_router(applications_router)
 
 @app.get("/", tags=["health"], summary="API Status")
 def root():
