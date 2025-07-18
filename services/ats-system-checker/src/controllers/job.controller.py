@@ -5,6 +5,7 @@ Handles job posting creation, retrieval, and management
 
 from typing import Optional, List
 from fastapi import HTTPException, UploadFile
+import httpx
 
 from src.utils.logging_config import get_logger
 from src.utils.responses import success_response
@@ -237,8 +238,20 @@ class JobController:
             if not cv_content or len(cv_content) < 100:
                 raise HTTPException(status_code=400, detail="Uploaded file is empty or too small.")
             
-            # Extract text from CV (placeholder)
-            cv_text = "Placeholder CV text for demonstration purposes."
+            # Extract text from CV using AI service
+            try:
+                async with httpx.AsyncClient() as client:
+                    files = {'file': (cv_file.filename, cv_content)}
+                    ai_url = f"{settings.AI_SERVICE_URL}/extract-text"
+                    response = await client.post(ai_url, files=files, timeout=60)
+                    response.raise_for_status()
+                    data = response.json()
+                    cv_text = data.get("text_content", "")
+                    extracted_email = data.get("email", None)
+                    extracted_name = data.get("name", None)
+            except Exception as ai_exc:
+                logger.error(f"AI service extract-text error: {ai_exc}")
+                raise HTTPException(status_code=500, detail="Failed to extract text from CV using AI service.")
             
             if not cv_text or len(cv_text.strip()) < 50:
                 raise HTTPException(
@@ -246,15 +259,11 @@ class JobController:
                     detail="Could not extract sufficient text from CV. Please ensure the file is readable."
                 )
             
-            # Extract candidate info (placeholder)
-            extracted_email = "placeholder@example.com"
-            extracted_name = "Placeholder Candidate"
-            
             # Use provided email or extracted email
-            final_email = candidate_email or extracted_email
+            final_email = candidate_email or extracted_email or "placeholder@example.com"
             
             # Use provided name or extracted name
-            final_name = candidate_name or extracted_name
+            final_name = candidate_name or extracted_name or "Placeholder Candidate"
             
             # Create application
             application = await self.database_service.create_application(
