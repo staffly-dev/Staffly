@@ -225,14 +225,19 @@ class JobController:
                 raise HTTPException(status_code=410, detail="This job posting is no longer active")
             
             # Validate file
-            if not cv_file.filename or cv_file.filename == '':
+            if not cv_file or not cv_file.filename or cv_file.filename == '':
                 raise HTTPException(status_code=400, detail="Please upload a valid CV file")
+            
+            if not cv_file.filename.lower().endswith(('.pdf', '.docx')):
+                raise HTTPException(status_code=400, detail="CV must be in PDF or DOCX format")
             
             # Read file content
             cv_content = await cv_file.read()
             
-            # Extract text from CV
-            # Placeholder for actual document processing
+            if not cv_content or len(cv_content) < 100:
+                raise HTTPException(status_code=400, detail="Uploaded file is empty or too small.")
+            
+            # Extract text from CV (placeholder)
             cv_text = "Placeholder CV text for demonstration purposes."
             
             if not cv_text or len(cv_text.strip()) < 50:
@@ -241,8 +246,7 @@ class JobController:
                     detail="Could not extract sufficient text from CV. Please ensure the file is readable."
                 )
             
-            # Extract candidate info
-            # Placeholder for actual candidate info extraction
+            # Extract candidate info (placeholder)
             extracted_email = "placeholder@example.com"
             extracted_name = "Placeholder Candidate"
             
