@@ -1,75 +1,30 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
+  BriefcaseIcon,
   FolderKanbanIcon,
   CalendarIcon,
   UserCircleIcon,
   CalendarCheck,
 } from "lucide-react";
-import { BriefcaseIcon } from "lucide-react";
-import Image from "next/image";
-import { notFound } from "next/navigation";
-import { use, useState } from "react";
-import { CiEdit } from "react-icons/ci";
 import { MdOutlineMail } from "react-icons/md";
-import { Profile, EmployeeAdded } from "../components/Profile";
-import { Attendance } from "../components/Attendance";
-import { Projects } from "../components/Projects";
-import { Leave } from "../components/Leave";
+import { CiEdit } from "react-icons/ci";
+import Image from "next/image";
+import { Profile } from "./Profile";
+import { Attendance } from "./Attendance";
+import { Projects } from "./Projects";
+import { Leave } from "./Leave";
+import type { EmployeeAdded } from "./Profile";
 
-export default function EmployeePage({
-  params,
-}: {
-  params: Promise<{ employeeId: string }>;
-}) {
-  const { employeeId } = use(params);
+interface EmployeeProfileClientProps {
+  employee: EmployeeAdded;
+}
 
-  if (employeeId !== "mazin-emad123") {
-    notFound();
-  }
-
-  const employee: EmployeeAdded = {
-    id: "mazin-emad123",
-    photo: "/imgs/mazin-picture.jpg",
-    personalInfo: {
-      name: "Mazin Emad",
-      email: "q6NtO@example.com",
-      phone: 1234567890,
-      address: "123 Main St, Anytown, USA",
-      city: "Anytown",
-      state: "CA",
-      zip: "12345",
-      gender: "Male",
-      maritalStatus: "Single",
-      nationality: "Egyptian",
-    },
-    professionalInfo: {
-      employeeId: "1234567890",
-      department: "Development",
-      designation: "Frontend Developer",
-      employeeType: "Remote",
-      status: "Permanent",
-      joiningDate: "2021-01-01",
-      officeLocation: "Remote",
-      workingDays: "5/2",
-      userName: "mazin-emad123",
-      workEmail: "q6NtO@example.com",
-    },
-    documents: {
-      appointmentLetter: "/imgs/mazin-picture.jpg",
-      salarySlips: "/imgs/mazin-picture.jpg",
-      relivingLetter: "/imgs/mazin-picture.jpg",
-      experienceLetter: "/imgs/mazin-picture.jpg",
-    },
-    accountAccess: {
-      emailAddress: "q6NtO@example.com",
-      skypeId: "mazin-emad123",
-      githubId: "mazin-emad123",
-      slackId: "mazin-emad123",
-    },
-  };
-
+export default function EmployeeProfileClient({
+  employee,
+}: EmployeeProfileClientProps) {
   const [toShow, setToShow] = useState("profile");
 
   return (
@@ -79,7 +34,7 @@ export default function EmployeePage({
           <Image
             className="rounded-xl"
             src={employee.photo}
-            alt="Mazin Emad"
+            alt={employee.personalInfo.name}
             width={60}
             height={60}
           />

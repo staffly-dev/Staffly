@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Navbar } from "./navbar";
 import { Sidebar } from "./sidebar";
 
@@ -8,7 +9,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <Sidebar />
       </div>
       <main className="ml-56 flex-1 lg:px-6 px-4">
-        <Navbar />
+        <Suspense fallback={<div>Loading...</div>}>
+          <Navbar />
+        </Suspense>
         <div className="pb-4 ">{children}</div>
       </main>
     </div>

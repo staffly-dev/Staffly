@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { AuthGuard } from "@/components/AuthGuard";
 
 export const metadata: Metadata = {
   title: "Raizero HRMS Auth",
@@ -11,15 +12,17 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex justify-center gap-16 items-center min-h-screen p-4">
-      <div className="hidden lg:block w-[52%] bg-muted shadow-lg py-12 pl-12 rounded-xl">
-        <div className="bg-background ml-auto h-[570px] lg:w-[500px] xl:w-[530px] py-2 pl-2 rounded-lg">
-          <div className="auth-bg" />
+    <AuthGuard requireAuth={false}>
+      <div className="flex justify-center gap-16 items-center min-h-screen p-4">
+        <div className="hidden lg:block w-[52%] bg-muted shadow-lg py-12 pl-12 rounded-xl">
+          <div className="bg-background ml-auto h-[570px] lg:w-[500px] xl:w-[530px] py-2 pl-2 rounded-lg">
+            <div className="auth-bg" />
+          </div>
+        </div>
+        <div className="m-auto w-[96%] md:w-[72%] lg:w-[45%] lg:m-0 px-2 md:px-6">
+          {children}
         </div>
       </div>
-      <div className="m-auto w-[96%] md:w-[72%] lg:w-[45%] lg:m-0 px-2 md:px-6">
-        {children}
-      </div>
-    </div>
+    </AuthGuard>
   );
 }

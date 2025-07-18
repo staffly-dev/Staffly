@@ -5,7 +5,7 @@ import { SearchInput } from "@/components/searchInput";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import React, { useEffect, useState } from "react";
-import { CustomTableContainer } from "../all-employees/[employeeId]/page";
+import { CustomTableContainer } from "../all-employees/components/CustomTableContainer";
 import Image from "next/image";
 import { CiExport } from "react-icons/ci";
 type Payroll = {

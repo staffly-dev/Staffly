@@ -6,23 +6,19 @@ import Image from "next/image";
 import logo from "/public/imgs/logo.png";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { toast } from "sonner";
-import { useAuth } from "@/context/authContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpSchema, type SignUpFormData } from "@/lib/validations/auth";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
-  const router = useRouter();
+  const { register: registerMutation, registerError } = useAuth();
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -34,21 +30,19 @@ export default function SignUpPage() {
   });
 
   const onSubmit = async (data: SignUpFormData) => {
-    setLoading(true);
-
     try {
-      await signup(data.email, data.password, data.name);
-      toast.success("Account created successfully!");
-      router.push("/code");
+      await registerMutation({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
     } catch (error) {
-      toast.error(`${error}`);
-    } finally {
-      setLoading(false);
+      console.log(error);
     }
   };
 
   return (
-    <div className="">
+    <div>
       <div className="flex gap-3 items-center mb-8">
         <div className="relative w-10 h-10">
           <Image src={logo} alt="HRMS Logo" fill className="object-contain" />
@@ -65,6 +59,12 @@ export default function SignUpPage() {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          {registerError && (
+            <p className="text-sm text-red-500 mt-1">
+              {(registerError as any).response?.data?.message ||
+                "Something went wrong, check your network"}
+            </p>
+          )}
           <div className="space-y-4">
             <div>
               <Input
@@ -97,16 +97,21 @@ export default function SignUpPage() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 className="h-12"
+                autoComplete="off"
                 {...register("password")}
               />
               {errors.password && (
-                <p className="text-sm text-red-500 mt-1">
+                <p className="text-sm text-red-500">
                   {errors.password.message}
                 </p>
               )}
+              <p className="text-sm text-muted-foreground mt-1">
+                Password must be at least 8 characters long, one uppercase, one
+                lowercase, one number and one special character
+              </p>
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                className="absolute right-3 top-4"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -166,9 +171,9 @@ export default function SignUpPage() {
           <Button
             className="w-full h-12 text-base font-medium"
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
           >
-            {loading ? "Creating account..." : "Sign up"}
+            {isSubmitting ? "Creating account..." : "Sign up"}
           </Button>
 
           <p className="text-center text-muted-foreground">

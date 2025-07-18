@@ -6,16 +6,14 @@ import Image from "next/image";
 import logo from "/public/imgs/logo.png";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { toast } from "sonner";
-import { useAuth } from "@/context/authContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signInSchema, type SignInFormData } from "@/lib/validations/auth";
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isLoggingIn, loginError } = useAuth();
 
   const {
     register,
@@ -31,15 +29,10 @@ export default function SignInPage() {
   });
 
   const onSubmit = async (data: SignInFormData) => {
-    setLoading(true);
-
     try {
-      await login(data.email, data.password);
-      toast.success("Successfully logged in!");
+      await login({ email: data.email, password: data.password });
     } catch (error) {
-      toast.error("Login failed. Please check your credentials." + error);
-    } finally {
-      setLoading(false);
+      console.log(error);
     }
   };
 
@@ -61,6 +54,12 @@ export default function SignInPage() {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          {loginError && (
+            <p className="text-sm text-red-500 mt-1">
+              {(loginError as any).response?.data?.message ||
+                "Something went wrong, check your network"}
+            </p>
+          )}
           <div className="space-y-4">
             <div>
               <Input
@@ -153,9 +152,9 @@ export default function SignInPage() {
           <Button
             className="w-full h-12 text-base font-medium"
             type="submit"
-            disabled={loading}
+            disabled={isLoggingIn}
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {isLoggingIn ? "Signing in..." : "Sign in"}
           </Button>
           <p className="text-center text-muted-foreground">
             Don&apos;t have an account?

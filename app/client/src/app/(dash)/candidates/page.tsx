@@ -2,7 +2,7 @@
 import { SearchInput } from "@/components/searchInput";
 import { Card } from "@/components/ui/card";
 import React, { useEffect, useState } from "react";
-import { CustomTableContainer } from "../all-employees/[employeeId]/page";
+import { CustomTableContainer } from "../all-employees/components/CustomTableContainer";
 import Image from "next/image";
 import { Pagination } from "@/components/Pagination";
 import { Checkbox } from "@/components/ui/checkbox";

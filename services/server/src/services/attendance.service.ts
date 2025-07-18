@@ -10,8 +10,8 @@ export const recordCheckInService = async (
 
   const finalCheckInTime = checkInTime || new Date();
 
-const employee = await EmployeeModel.findById(employeeId);
-if (!employee) throw new NotFoundException("Employee not found");
+  const employee = await EmployeeModel.findById(employeeId);
+  if (!employee) throw new NotFoundException("Employee not found");
 
   const attendance = await Attendance.findOne({
     employeeId,
@@ -22,13 +22,25 @@ if (!employee) throw new NotFoundException("Employee not found");
   });
   if (attendance) throw new NotFoundException("Check-in already recorded for today");
 
+  // Create 9:00 and 9:30 times for comparison
+  const checkInDate = new Date(finalCheckInTime);
+  const startOnTime = new Date(checkInDate);
+  startOnTime.setHours(9, 0, 0, 0);
+
+  const endOnTime = new Date(checkInDate);
+  endOnTime.setHours(9, 30, 0, 0);
+
+  const status = (finalCheckInTime >= startOnTime && finalCheckInTime <= endOnTime) ? "On Time" : "Late";
+
   const newAttendance = new Attendance({
     employeeId,
     checkInTime: finalCheckInTime,
-    status: finalCheckInTime.getHours() < 9 ? "On Time" : "Late",   // time : 9AM
+    status,
   });
+
   return await newAttendance.save();
 };
+
 
 export const getAllAttendanceService = async (): Promise<IAttendance[]> => {
 
