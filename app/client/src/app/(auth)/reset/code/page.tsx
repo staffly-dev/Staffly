@@ -14,10 +14,9 @@ import { useState } from "react";
 import { otpSchema, OtpFormData } from "@/lib/validations/auth";
 import { FaChevronLeft } from "react-icons/fa6";
 import { useAuth } from "@/hooks/useAuth";
-
 export default function OtpCode() {
   const [value, setValue] = useState("");
-  const { verifyEmail, verifyEmailError } = useAuth();
+  const { verifyResetPasswordCode, verifyResetPasswordCodeError } = useAuth();
 
   const {
     handleSubmit,
@@ -32,7 +31,7 @@ export default function OtpCode() {
 
   const onSubmit = async (data: OtpFormData) => {
     try {
-      await verifyEmail(data.otp);
+      await verifyResetPasswordCode(data.otp);
     } catch (error) {
       console.log(error);
     }
@@ -53,14 +52,14 @@ export default function OtpCode() {
         <div>
           <h2 className="text-3xl font-bold">Enter OTP</h2>
           <p className="text-muted-foreground mt-1">
-            We have share a code of your registered email address{" "}
-            {localStorage.getItem("registerEmail")}
+            We have share a code of your email address{" "}
+            {localStorage.getItem("resetPasswordEmail")}
           </p>
         </div>
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-          {verifyEmailError && (
+          {verifyResetPasswordCodeError && (
             <p className="text-sm text-red-500 mt-1">
-              {(verifyEmailError as any).response?.data?.message ||
+              {(verifyResetPasswordCodeError as any).response?.data?.message ||
                 "Error: Check your network"}
             </p>
           )}

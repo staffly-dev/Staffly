@@ -18,18 +18,23 @@ export const employees: Employee[] = [
     designation: i % 2 === 0 ? "UI/UX Designer" : "Frontend Developer",
     type: i % 2 === 0 ? "Office" : "Remote",
     status: i % 3 === 0 ? "Permanent" : "Contractor",
+    email: `employee${i + 7893222}@example.com`,
   })),
 ];
 
 export function EmployeesCard({ employees }: { employees: Employee[] }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({
-    departments: [],
-    workTypes: [],
+    departments: [] as string[],
+    workTypes: [] as string[],
     searchTerm: "",
   });
 
-  const handleApplyFilters = (filters) => {
+  const handleApplyFilters = (filters: {
+    departments: Array<{ id: string; checked: boolean }>;
+    workTypes: Array<{ id: string; checked: boolean }>;
+    searchTerm: string;
+  }) => {
     setAppliedFilters({
       departments: filters.departments
         .filter((d) => d.checked)
@@ -60,7 +65,7 @@ export function EmployeesCard({ employees }: { employees: Employee[] }) {
     if (
       appliedFilters.workTypes.length > 0 &&
       !appliedFilters.workTypes.includes(
-        emp.workType?.replace(" ", "-").toLowerCase()
+        emp.type?.replace(" ", "-").toLowerCase()
       )
     ) {
       return false;

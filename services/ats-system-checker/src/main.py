@@ -5,6 +5,11 @@ Modern, async replacement for the original Flask application
 
 import sys
 import os
+
+# Add the ai directory to sys.path so ai/services/cohere_service.py can import models.evaluation_models
+ai_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../ai'))
+if ai_path not in sys.path:
+    sys.path.insert(0, ai_path)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -26,11 +31,14 @@ from src.middlewares import (
 from src.services.database_service import DatabaseService
 from src.services.email_service import EmailService
 from src.services.evaluation_service import EvaluationService
-from ai.services.cohere_service import CohereService
-from ai.services.document_service import DocumentProcessingService
 
 # Routes
 from src.routes import api_router
+from src.routes.health_routes import router as health_router
+from src.routes.jobs_routes import router as jobs_router
+from src.routes.quiz_routes import router as quiz_router
+from src.routes.statistics_routes import router as statistics_router
+from src.routes.applications_routes import router as applications_router
 
 # Initialize settings and logging
 settings = get_settings()
@@ -51,16 +59,13 @@ async def lifespan(app: FastAPI):
         )
         await app.state.database_service.connect()
         
-        app.state.cohere_service = CohereService(settings.COHERE_API_KEY)
-        app.state.document_service = DocumentProcessingService(settings.UPLOAD_FOLDER)
         app.state.email_service = EmailService(
             gmail_user=settings.GMAIL_USER,
             gmail_password=settings.GMAIL_PASSWORD,
             database_service=app.state.database_service
         )
         app.state.evaluation_service = EvaluationService(
-            cohere_service=app.state.cohere_service,
-            document_service=app.state.document_service,
+            ai_service_url=settings.AI_SERVICE_URL,
             email_service=app.state.email_service,
             database_service=app.state.database_service
         )
@@ -157,6 +162,12 @@ def create_app() -> FastAPI:
 
 # Create the app instance
 app = create_app()
+
+# Explicitly include routers to ensure all endpoints are registered
+app.include_router(jobs_router)
+app.include_router(quiz_router)
+app.include_router(statistics_router)
+app.include_router(applications_router)
 
 @app.get("/", tags=["health"], summary="API Status")
 def root():

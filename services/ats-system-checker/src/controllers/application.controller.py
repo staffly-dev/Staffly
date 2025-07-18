@@ -12,7 +12,6 @@ from src.models.api_models import JobPostingResponse, ApplicationsListResponse, 
 from src.services.database_service import DatabaseService
 from src.services.evaluation_service import EvaluationService
 from src.config.settings import get_settings
-from ai.services.document_service import DocumentProcessingService
    
    
 logger = get_logger(__name__)

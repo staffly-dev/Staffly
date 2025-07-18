@@ -9,8 +9,7 @@ import asyncio
 from typing import List, Dict, Any, Optional
 from werkzeug.utils import secure_filename
 
-from ai.services.cohere_service import CohereService
-from ai.services.document_service import DocumentProcessingService
+import httpx
 from src.models.evaluation_models import (
     EvaluationDecision
 )
@@ -35,24 +34,16 @@ logger = logging.getLogger(__name__)
 class EvaluationService:
     """Main service for handling CV evaluations and quiz generation"""
     
-    def __init__(
-        self,
-        cohere_service: CohereService,
-        document_service: DocumentProcessingService,
-        email_service: EmailService,
-        database_service: DatabaseService
-    ):
+    def __init__(self, ai_service_url: str, email_service: EmailService, database_service: DatabaseService):
         """
         Initialize evaluation service with required dependencies
         
         Args:
-            cohere_service: AI service for evaluations and quiz generation
-            document_service: Service for document processing
+            ai_service_url: URL for the AI service (e.g., http://localhost:8000)
             email_service: Service for sending email notifications
             database_service: Service for database operations
         """
-        self.cohere_service = cohere_service
-        self.document_service = document_service
+        self.ai_service_url = ai_service_url
         self.email_service = email_service
         self.database_service = database_service
     async def generate_quiz(self, job_description: str) -> Optional[Dict[str, Any]]:
@@ -130,25 +121,28 @@ class EvaluationService:
         try:
             logger.info(f"Evaluating CV for job: {job_posting.title}")
             
-            # Extract candidate name from CV text
+            # Extract candidate name from CV text (optional: call AI for name extraction if needed)
             greeting_name = candidate_name
             if not greeting_name:
-                greeting_name = self.document_service.extract_name_from_text(cv_text)
-            logger.info(f"Extracted candidate name: {greeting_name}")
-            
-            # Generate evaluation using AI
-            evaluation_result = self.cohere_service.evaluate_cv(cv_text, job_posting.description)
-            
-            if not evaluation_result:
-                logger.error("Failed to generate AI evaluation")
-                await self.database_service.update_application_status(
-                    application_id, "EVALUATION_FAILED"
+                # Optionally, call AI API for name extraction
+                greeting_name = None
+            # Call AI service for evaluation
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.ai_service_url}/evaluate",
+                    json={
+                        "cv_text": cv_text,
+                        "job_description": job_posting.description,
+                        "filename": f"application_{application_id}"
+                    },
+                    timeout=60
                 )
-                return None
-            
-            # Parse evaluation result
-            decision, score = self.cohere_service.parse_evaluation_result(evaluation_result)
-            
+                response.raise_for_status()
+                ai_result = response.json()
+            decision = ai_result.get("decision", "UNKNOWN")
+            score = ai_result.get("score", 0)
+            evaluation_text = ai_result.get("evaluation_text", "")
+            email = ai_result.get("email", candidate_email)
             # Determine if candidate meets threshold
             meets_threshold = score >= job_posting.evaluation_threshold
             final_decision = "ACCEPTED" if meets_threshold else "REJECTED"
@@ -158,7 +152,7 @@ class EvaluationService:
                 application_id=application_id,
                 status=final_decision,
                 cv_score=score,
-                cv_evaluation_text=evaluation_result,
+                cv_evaluation_text=evaluation_text,
                 decision=EvaluationDecision(final_decision)
             )
             
@@ -239,9 +233,9 @@ class EvaluationService:
                 filename=f"application_{application_id}",
                 decision=EvaluationDecision(final_decision),
                 score=score,
-                evaluation_text=evaluation_result,
+                evaluation_text=evaluation_text,
                 text_length=len(cv_text),
-                email=candidate_email,
+                email=email,
                 candidate_name=greeting_name
             )
             

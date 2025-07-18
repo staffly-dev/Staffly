@@ -5,6 +5,7 @@ Handles job posting creation, retrieval, and management
 
 from typing import Optional, List
 from fastapi import HTTPException, UploadFile
+import httpx
 
 from src.utils.logging_config import get_logger
 from src.utils.responses import success_response
@@ -12,7 +13,6 @@ from src.models.api_models import JobPostingResponse, ApplicationsListResponse, 
 from src.services.database_service import DatabaseService
 from src.services.evaluation_service import EvaluationService
 from src.config.settings import get_settings
-from ai.services.document_service import DocumentProcessingService
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -25,7 +25,6 @@ class JobController:
         self,
         database_service: DatabaseService,
         evaluation_service: EvaluationService,
-        document_service: DocumentProcessingService
     ):
         """
         Initialize job controller
@@ -33,11 +32,9 @@ class JobController:
         Args:
             database_service: Database service instance
             evaluation_service: Evaluation service instance
-            document_service: Document processing service instance
         """
         self.database_service = database_service
         self.evaluation_service = evaluation_service
-        self.document_service = document_service
     
     async def create_job_posting(
         self,
@@ -229,22 +226,36 @@ class JobController:
                 raise HTTPException(status_code=410, detail="This job posting is no longer active")
             
             # Validate file
-            if not cv_file.filename or cv_file.filename == '':
+            if not cv_file or not cv_file.filename or cv_file.filename == '':
                 raise HTTPException(status_code=400, detail="Please upload a valid CV file")
             
-            if not self.document_service.is_allowed_file(cv_file.filename):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid file type. Please upload a PDF or DOCX file"
-                )
+            if not cv_file.filename.lower().endswith(('.pdf', '.docx')):
+                raise HTTPException(status_code=400, detail="CV must be in PDF or DOCX format")
             
             # Read file content
             cv_content = await cv_file.read()
             
-            # Extract text from CV
-            cv_text = await self.document_service.extract_text_from_file_async(
-                cv_content, cv_file.filename
-            )
+            if not cv_content or len(cv_content) < 100:
+                raise HTTPException(status_code=400, detail="Uploaded file is empty or too small.")
+            
+            # Extract text from CV using AI service
+            try:
+                async with httpx.AsyncClient() as client:
+                    files = {'file': (cv_file.filename, cv_content)}
+                    ai_url = f"{settings.AI_SERVICE_URL}/extract-text"
+                    response = await client.post(ai_url, files=files, timeout=60)
+                    try:
+                        response.raise_for_status()
+                    except httpx.HTTPStatusError as http_exc:
+                        logger.error(f"AI service error: {response.text}")
+                        raise HTTPException(status_code=500, detail=f"AI service error: {response.text}")
+                    data = response.json()
+                    cv_text = data.get("text_content", "")
+                    extracted_email = data.get("email", None)
+                    extracted_name = data.get("name", None)
+            except Exception as ai_exc:
+                logger.error(f"AI service extract-text error: {ai_exc}")
+                raise HTTPException(status_code=500, detail=f"Failed to extract text from CV using AI service: {ai_exc}")
             
             if not cv_text or len(cv_text.strip()) < 50:
                 raise HTTPException(
@@ -252,15 +263,11 @@ class JobController:
                     detail="Could not extract sufficient text from CV. Please ensure the file is readable."
                 )
             
-            # Extract candidate info
-            extracted_email = self.document_service.extract_email(cv_text)
-            extracted_name = self.document_service.extract_name(cv_text)
-            
             # Use provided email or extracted email
-            final_email = candidate_email or extracted_email
+            final_email = candidate_email or extracted_email or "placeholder@example.com"
             
             # Use provided name or extracted name
-            final_name = candidate_name or extracted_name
+            final_name = candidate_name or extracted_name or "Placeholder Candidate"
             
             # Create application
             application = await self.database_service.create_application(

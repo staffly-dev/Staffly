@@ -14,10 +14,10 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from dotenv import load_dotenv
 
-from ai.services.cohere_service import CohereService
-from ai.services.document_service import DocumentProcessingService
-from ai.models.evaluation_models import EvaluationResult, FileUploadInfo, ErrorResponse
-from ai.utils.logging_utils import setup_ai_logger, save_evaluation_log
+from services.cohere_service import CohereService
+from services.document_service import DocumentProcessingService
+from models.evaluation_models import EvaluationResult, FileUploadInfo, ErrorResponse
+from utils.logging_utils import setup_ai_logger, save_evaluation_log
 
 # Setup logging
 logger = setup_ai_logger(__name__, "ats_ai.log", "INFO")
@@ -153,8 +153,13 @@ async def evaluate_cv(request: EvaluateRequest):
         result = EvaluationResult(
             decision=decision,
             score=score,
-            evaluation_text=evaluation_text,
-            email=email,
+            reasoning=evaluation_text,  # Ensure this field is always present
+            extracted_skills=[],  # Add other fields as needed
+            experience_years=None,
+            match_percentage=None,
+            strengths=[],
+            weaknesses=[],
+            recommendations=None,
             filename=request.filename
         )
         
@@ -323,7 +328,7 @@ if __name__ == "__main__":
     logger.info(f"Starting AI Service on {host}:{port}")
     
     uvicorn.run(
-        "ai.main:app",
+        "main:app",
         host=host,
         port=port,
         reload=True,

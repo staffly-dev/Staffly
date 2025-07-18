@@ -3,8 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/context/authContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -15,10 +14,7 @@ import { toast } from "sonner";
 
 export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
-  const { resetPassword } = useAuth();
-  const param = useParams();
-  const token = param.token as string;
+  const { resetPassword, resetPasswordError } = useAuth();
   const {
     register,
     handleSubmit,
@@ -32,11 +28,9 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (data: ChangeFormData) => {
     try {
-      await resetPassword( token, data.password);
-      toast.success("Password changed Successfully");
-      router.push("/reset/congrats");
+      await resetPassword(data.password);
     } catch (error) {
-      toast.error("Error: " + error);
+      toast.error((error as Error).message);
     }
   };
 
@@ -49,6 +43,12 @@ export default function ResetPasswordPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {resetPasswordError && (
+            <p className="text-sm text-red-500 mt-1">
+              {(resetPasswordError as any).response?.data?.message ||
+                "Error: Check your network"}
+            </p>
+          )}
           <div className="space-y-4">
             <div className="relative">
               <Input
@@ -107,11 +107,9 @@ export default function ResetPasswordPage() {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className=
-              "w-full h-12 text-base font-medium"
-              
+            className="w-full h-12 text-base font-medium"
           >
-            {isSubmitting? "Loading..." : "Reset Password"}
+            {isSubmitting ? "Resetting..." : "Reset Password"}
           </Button>
         </form>
       </div>

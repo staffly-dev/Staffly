@@ -21,8 +21,7 @@ def get_job_controller(request: Request) -> JobController:
     """Get job controller with dependencies"""
     return JobController(
         database_service=request.app.state.database_service,
-        evaluation_service=request.app.state.evaluation_service,
-        document_service=request.app.state.document_service
+        evaluation_service=request.app.state.evaluation_service
     )
 
 
