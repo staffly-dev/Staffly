@@ -14,7 +14,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from dotenv import load_dotenv
 
-from services.cohere_service import CohereService
+from services.cohere_service import CohereService  
 from services.document_service import DocumentProcessingService
 from models.evaluation_models import EvaluationResult, FileUploadInfo, ErrorResponse
 from utils.logging_utils import setup_ai_logger, save_evaluation_log
@@ -107,7 +107,7 @@ async def health_check():
     }
 
 # CV Evaluation endpoint
-@app.post("/evaluate", response_model=EvaluationResult)
+@app.post("/evaluate", response_model=EvaluationResult) # بتاخد البيانيات بناءا علي EvaluateRequest و بترجع EvaluationResult
 async def evaluate_cv(request: EvaluateRequest):
     """
     Evaluate a CV against job requirements
@@ -153,14 +153,16 @@ async def evaluate_cv(request: EvaluateRequest):
         result = EvaluationResult(
             decision=decision,
             score=score,
+            evaluation_text=evaluation_text,
+            # email=email,
             reasoning=evaluation_text,  # Ensure this field is always present
-            extracted_skills=[],  # Add other fields as needed
-            experience_years=None,
-            match_percentage=None,
-            strengths=[],
-            weaknesses=[],
-            recommendations=None,
-            filename=request.filename
+            # extracted_skills=[],  # Add other fields as needed
+            # experience_years=None,
+            # match_percentage=None,
+            # strengths=[],
+            # weaknesses=[],
+            # recommendations=None,
+            # filename=request.filename
         )
         
         logger.info(f"CV evaluation completed: {decision} ({score}/100)")
