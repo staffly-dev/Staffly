@@ -41,15 +41,24 @@ if (Env.NODE_ENV !== 'development') {
   app.use(`/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
 
-// localhost http://localhost:4005/auth/login ==> direct to proxy http://localhost:4004/auth/login
+// localhost http://localhost:4005/server/auth/login ==> direct to proxy http://localhost:4004/auth/login
 app.use('/server', createProxyMiddleware({
-  target: 'http://localhost:4004',
+  target: Env.SERVER_URL,
   changeOrigin: true,
   pathRewrite: {
     '^/server': '',
   }
 }
 ));
+
+// localhost http://localhost:4005/ats/test ==> direct to proxy http://localhost:4000/ats/test
+app.use('/ats', createProxyMiddleware({
+  target: Env.ATS_SYSTEM_URL,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/ats': '',
+  }
+}));
 
 app.use(errorHandler);
 
