@@ -9,6 +9,8 @@ const envConfig = () => ({
   //? Backend Configuration
   PORT: getEnv("PORT", "4004"),
   API_GATEWAY_PORT: getEnv("API_GATEWAY_PORT", "4005"),
+  ATS_SYSTEM_URL: getEnv("ATS_SYSTEM_URL", "http://localhost:4000"),
+  SERVER_URL: getEnv("SERVER_URL", "http://localhost:4004"),
   NODE_ENV: getEnv("NODE_ENV", "development"),
   FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "http://localhost:3000"),
 

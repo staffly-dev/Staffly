@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     """Application settings with environment variable support"""
     
     # AI/API Configuration
-    COHERE_API_KEY: str = Field(..., description="Cohere API key for AI services")
+    COHERE_API_KEY: str = Field(default="", description="Cohere API key for AI services")
     
     # Email Configuration
     GMAIL_USER: str = Field(default="your_email@gmail.com", description="Gmail user for notifications")
