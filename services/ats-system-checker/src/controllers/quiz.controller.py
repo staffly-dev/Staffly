@@ -38,8 +38,8 @@ class QuizController:
         self,
         answers: str,
         quiz_data: str,
-        email: Optional[str] = None,
-        application_id: Optional[str] = None
+        quiz_session_id: str,
+        email: str
     ):
         """
         Handle quiz evaluation HTTP request
@@ -47,21 +47,21 @@ class QuizController:
         Args:
             answers: Quiz answers as JSON string
             quiz_data: Quiz questions data as JSON string
-            email: Candidate email address
-            application_id: Application ID for linking quiz result
+            quiz_session_id: Quiz session ID (required for validation)
+            email: Candidate email address (required for security validation)
             
         Returns:
             APIResponse: Quiz evaluation results with score and status
         """
         try:
-            logger.info(f" Processing quiz evaluation request for application: {application_id}")
+            logger.info(f" Processing quiz evaluation request for quiz session: {quiz_session_id}")
             
             # Call evaluation service to handle business logic
             result = await self.evaluation_service.evaluate_quiz_submission(
                 answers=answers,
                 quiz_data=quiz_data,
-                email=email,
-                application_id=application_id
+                quiz_session_id=quiz_session_id,
+                email=email
             )
             
             # Return success response with service result
@@ -101,6 +101,7 @@ class QuizController:
             quiz_users_responses = []
             for quiz_data in quiz_users_data:
                 quiz_user_response = QuizUserInfoResponse(
+                    application_id=quiz_data.get("application_id"),
                     quiz_session_id=quiz_data["quiz_session_id"],
                     candidate_email=quiz_data["candidate_email"],
                     quiz_link=quiz_data["quiz_link"],
@@ -161,6 +162,7 @@ class QuizController:
             
             quiz_response = QuizDisplayResponse(
                 quiz_session_id=quiz_data["quiz_session_id"],
+                application_id=quiz_data.get("application_id"),
                 questions=quiz_data["questions"],
                 total_questions=quiz_data["total_questions"],
                 time_limit_seconds=quiz_data["time_limit_seconds"],

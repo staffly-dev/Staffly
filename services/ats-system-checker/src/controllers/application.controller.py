@@ -45,12 +45,15 @@ class ApplicationController:
             application_responses = []
             for app in applications:
                 app_response = ApplicationListResponse(
-                    user_name=app.candidate_name,
-                    email_address=app.candidate_email,
-                    application_status=app.status,
-                    cv_file=app.cv_filename,
-                    cv_evaluation_score=app.cv_score,
-                    quiz_score=app.quiz_score
+                    application_id=app.application_id,
+                    candidate_email=app.candidate_email,
+                    candidate_name=app.candidate_name,
+                    cv_score=app.cv_score,
+                    cv_filename=app.cv_filename,
+                    decision=app.decision if app.decision else None,
+                    job_id=app.job_id,
+                    quiz_score=app.quiz_score,
+                    status=app.status
                 )
                 application_responses.append(app_response)
             
@@ -65,4 +68,6 @@ class ApplicationController:
         except Exception as e:
             logger.error(f" Failed to get applications: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to get applications: {str(e)}")
+    
+
     

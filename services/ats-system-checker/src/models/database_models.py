@@ -176,7 +176,7 @@ class JobPosting(Document):
 
 
 class Application(Document):
-    """MongoDB model for job applications"""
+    """MongoDB model for job applications - Simplified for HR Review"""
     
     # Application identifiers
     application_id: Indexed(str) = Field(..., description="Unique application identifier")
@@ -186,30 +186,17 @@ class Application(Document):
     candidate_email: Optional[str] = Field(None, description="Candidate email address")
     candidate_name: Optional[str] = Field(None, description="Candidate name (extracted from CV)")
     cv_filename: str = Field(..., description="Original CV filename")
-    cv_text_length: int = Field(..., description="Length of extracted CV text")
-    
-    # Application status and workflow
-    status: str = Field(default="SUBMITTED", description="Application status")
-    # Status values: SUBMITTED, EVALUATING, ACCEPTED, REJECTED, QUIZ_SENT, QUIZ_COMPLETED, QUIZ_PASSED, QUIZ_FAILED, INTERVIEW_SCHEDULED
     
     # Evaluation results
     cv_score: Optional[int] = Field(None, ge=0, le=100, description="CV evaluation score")
-    cv_evaluation_text: Optional[str] = Field(None, description="Detailed CV evaluation")
-    decision: Optional[EvaluationDecision] = Field(None, description="CV evaluation decision")
+    decision: Optional[str] = Field(None, description="CV evaluation decision (ACCEPTED/REJECTED)")
     
-    # Quiz information (if applicable)
-    quiz_session_id: Optional[str] = Field(None, description="Associated quiz session ID")
+    # Quiz information
     quiz_score: Optional[int] = Field(None, ge=0, le=10, description="Quiz score")
-    quiz_passed: Optional[bool] = Field(None, description="Whether candidate passed quiz")
     
-    # Email tracking
-    emails_sent: List[str] = Field(default_factory=list, description="Types of emails sent to candidate")
-    
-    # Metadata
-    submitted_at: datetime = Field(default_factory=datetime.now)
-    evaluated_at: Optional[datetime] = Field(None)
-    quiz_completed_at: Optional[datetime] = Field(None)
-    updated_at: Optional[datetime] = Field(None)
+    # Application status
+    status: str = Field(default="SUBMITTED", description="Application status")
+    # Status values: SUBMITTED, EVALUATING, ACCEPTED, REJECTED, QUIZ_SENT, QUIZ_COMPLETED, QUIZ_PASSED, QUIZ_FAILED, INTERVIEW_SCHEDULED
     
     class Settings:
         name = "applications"

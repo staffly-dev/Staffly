@@ -20,13 +20,18 @@ async def get_all_applications(
     Get all job applications across all job postings.
     
     Returns a list of all applications with the following information:
-    - **user_name**: Candidate's name (extracted from CV)
-    - **email_address**: Candidate's email address
-    - **application_status**: Current status (SUBMITTED, ACCEPTED, REJECTED, etc.)
-    - **cv_file**: CV filename (not the full content)
-    - **cv_evaluation_score**: CV evaluation score (0-100)
+    - **application_id**: Unique application identifier
+    - **candidate_email**: Candidate's email address
+    - **candidate_name**: Candidate's name (extracted from CV)
+    - **cv_score**: CV evaluation score (0-100)
+    - **cv_filename**: CV filename
+    - **decision**: CV evaluation decision (ACCEPTED, REJECTED)
+    - **job_id**: Associated job ID
     - **quiz_score**: Quiz score (0-10) if quiz was completed
+    - **status**: Application status (SUBMITTED, ACCEPTED, REJECTED, INTERVIEW_SCHEDULED, etc.)
     
     This endpoint provides a comprehensive overview of all candidates who have applied for jobs in the system.
     """
-    return await controller.get_all_applications() 
+    return await controller.get_all_applications()
+
+ 

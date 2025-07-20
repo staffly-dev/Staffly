@@ -62,7 +62,8 @@ async def lifespan(app: FastAPI):
         app.state.email_service = EmailService(
             gmail_user=settings.GMAIL_USER,
             gmail_password=settings.GMAIL_PASSWORD,
-            database_service=app.state.database_service
+            database_service=app.state.database_service,
+            frontend_url=settings.FRONTEND_URL
         )
         app.state.evaluation_service = EvaluationService(
             ai_service_url=settings.AI_SERVICE_URL,

@@ -269,11 +269,19 @@ class JobController:
             # Use provided name or extracted name
             final_name = candidate_name or extracted_name or "Placeholder Candidate"
             
+            # SECURITY CHECK: Prevent duplicate applications by email
+            if final_email and final_email != "placeholder@example.com":
+                existing_application = await self.database_service.check_duplicate_email_application(final_email, job_id)
+                if existing_application:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"An application with email '{final_email}' has already been submitted for this job posting. Each candidate can only apply once per job."
+                    )
+            
             # Create application
             application = await self.database_service.create_application(
                 job_id=job_id,
                 cv_filename=cv_file.filename,
-                cv_text_length=len(cv_text),
                 candidate_email=final_email,
                 candidate_name=final_name
             )
