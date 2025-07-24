@@ -5,7 +5,7 @@ import { NotFoundException, BadRequestException } from "../utils/app-error";
 export const createEmployeeService = async (
   data: Partial<EmployeeDocument>
 ) => {
-  const existingEmployee = await EmployeeModel.findOne({ employeeId: data.employeeId });
+  const existingEmployee = await EmployeeModel.findOne({ emailAddress: data.emailAddress });
   if (existingEmployee) throw new BadRequestException("Employee with this email already exists");
 
   const employee = new EmployeeModel(data);

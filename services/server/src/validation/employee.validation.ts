@@ -13,8 +13,6 @@ export const employeeBaseSchema = {
   address: z.string().min(2).max(100),
   city: z.string().min(2).max(50),
   state: z.string().min(2).max(50),
-  zipcode: z.string().min(2).max(20),
-  employeeId: z.string().min(2).max(30),
   userName: z.string().min(2).max(30),
   employeeType: z.string().min(2).max(30),
   department: z.string().min(2).max(50),
