@@ -17,6 +17,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
             staleTime: 5 * 60 * 1000, // 5 minutes
             retry: (failureCount, error: Error) => {
               // Don't retry on 401/403 errors
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const axiosError = error as any;
               if (
                 axiosError?.response?.status === 401 ||

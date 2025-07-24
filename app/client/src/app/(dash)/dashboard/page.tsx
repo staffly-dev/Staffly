@@ -1,6 +1,7 @@
 import { StatusCards } from "@/components/dash-ui/StatusCards";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import EmployeeManagement from "@/components/EmployeeManagement";
 
 export default function page() {
   return (
@@ -22,6 +23,7 @@ export default function page() {
           <div>blabla</div>
         </DashboardCard>
       </div>
+      <EmployeeManagement />
     </div>
   );
 }

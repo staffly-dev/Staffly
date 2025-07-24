@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { LockIcon, BriefcaseIcon, FileTextIcon, Upload } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import Image from "next/image";
+// import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -20,16 +20,21 @@ import {
   NewEmployeeFormData,
 } from "@/lib/validations/newEmployee";
 import { IoPersonCircleOutline } from "react-icons/io5";
+import { useEmployee } from "@/context/EmployeeContext";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function MultiStepForm() {
+  const router = useRouter();
+  const { addEmployee } = useEmployee();
   const [step, setStep] = useState(0);
-  const [image, setImage] = useState<{
-    image: File | null;
-    preview: string | null;
-  }>({
-    image: null,
-    preview: null,
-  });
+  // const [image, setImage] = useState<{
+  //   image: File | null;
+  //   preview: string | null;
+  // }>({
+  //   image: null,
+  //   preview: null,
+  // });
 
   const {
     register,
@@ -39,29 +44,38 @@ export default function MultiStepForm() {
     formState: { errors, isSubmitting },
   } = useForm<NewEmployeeFormData>({
     resolver: zodResolver(newEmployeeSchema),
+    defaultValues: {
+      mobileNumber: "+201018562905",
+    },
   });
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const photoUrl = URL.createObjectURL(file);
-      setImage({ image: file, preview: photoUrl });
-    }
-  };
+  // const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0];
+  //   if (file) {
+  //     const photoUrl = URL.createObjectURL(file);
+  //     setImage({ image: file, preview: photoUrl });
+  //   }
+  // };
 
-  const onSubmit = (data: NewEmployeeFormData) => {
+  const onSubmit = async (data: NewEmployeeFormData) => {
     console.log("Form submitted:", data);
-    // Handle form submission here
+    try {
+      const employee = await addEmployee(data);
+      toast.success("Employee added successfully");
+      router.push(`/all-employees/${employee._id}`);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   type fieldNames = keyof NewEmployeeFormData;
 
-  const [files, setFiles] = useState<{ [key: string]: File | null }>({
-    appointmentLetter: null,
-    salarySlips: null,
-    relivingLetter: null,
-    experienceLetter: null,
-  });
+  // const [files, setFiles] = useState<{ [key: string]: File | null }>({
+  //   appointmentLetter: null,
+  //   salarySlips: null,
+  //   relivingLetter: null,
+  //   experienceLetter: null,
+  // });
 
   // Get fields to validate for a specific step
   const getFieldsToValidate = (stepNumber: number): fieldNames[] => {
@@ -71,8 +85,8 @@ export default function MultiStepForm() {
           "firstName",
           "lastName",
           "mobileNumber",
-          "email",
-          "dateOfBirth",
+          "emailAddress",
+          "dateOfBrith",
           "maritalStatus",
           "gender",
           "nationality",
@@ -91,21 +105,17 @@ export default function MultiStepForm() {
           "designation",
           "workingDays",
           "employeeType",
+          "zipcode",
         ] as fieldNames[];
-      case 2: // Documents
-        return [
-          "appointmentLetter",
-          "salarySlips",
-          "relivingLetter",
-          "experienceLetter",
-        ] as fieldNames[];
+      // case 2: // Documents
+      //   return [
+      //     "appointmentLetter",
+      //     "salarySlips",
+      //     "relivingLetter",
+      //     "experienceLetter",
+      //   ] as fieldNames[];
       case 3: // Account Access
-        return [
-          "emailAddress",
-          "skypeId",
-          "githubId",
-          "slackId",
-        ] as fieldNames[];
+        return ["linkdeinLink", "githubLink", "slackUserName"] as fieldNames[];
       default:
         return [] as fieldNames[];
     }
@@ -145,36 +155,42 @@ export default function MultiStepForm() {
     }
   };
 
-  const handleFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    type: fieldNames
-  ) => {
-    const file = event.target.files?.[0] || null;
-    if (file) {
-      setFiles((prevFiles) => ({ ...prevFiles, [type]: file }));
-      setValue(type, file);
-    }
-  };
+  // const handleFileChange = (
+  //   event: React.ChangeEvent<HTMLInputElement>,
+  //   type: fieldNames
+  // ) => {
+  //   const file = event.target.files?.[0] || null;
+  //   if (file) {
+  //     setFiles((prevFiles) => ({ ...prevFiles, [type]: file }));
+  //     setValue(type, file);
+  //   }
+  // };
 
-  const handleDrop = (
-    event: React.DragEvent<HTMLLabelElement>,
-    type: fieldNames
-  ) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files?.[0] || null;
-    if (file) {
-      setFiles((prevFiles) => ({ ...prevFiles, [type]: file }));
-      setValue(type, file);
-    }
-  };
+  // const handleDrop = (
+  //   event: React.DragEvent<HTMLLabelElement>,
+  //   type: fieldNames
+  // ) => {
+  //   event.preventDefault();
+  //   const file = event.dataTransfer.files?.[0] || null;
+  //   if (file) {
+  //     setFiles((prevFiles) => ({ ...prevFiles, [type]: file }));
+  //     setValue(type, file);
+  //   }
+  // };
 
-  const handleDragOver = (event: React.DragEvent<HTMLLabelElement>) => {
-    event.preventDefault();
-  };
+  // const handleDragOver = (event: React.DragEvent<HTMLLabelElement>) => {
+  //   event.preventDefault();
+  // };
 
   return (
     <Card className="p-4">
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          console.log("Form submit event");
+          handleSubmit(onSubmit)(e);
+        }}
+      >
         <Tabs value={String(step)} onValueChange={handleTabChange}>
           {/* Step Navigation */}
           <TabsList className="flex space-x-4 border-b border-hrms-gray/20 p-2">
@@ -199,7 +215,7 @@ export default function MultiStepForm() {
           {/*  step 0: Personal Information */}
           <TabsContent value="0">
             <div className="grid grid-cols-2 gap-4 p-4">
-              <div className="col-span-2 w-fit">
+              {/* <div className="col-span-2 w-fit">
                 <label htmlFor="image-upload" className="cursor-pointer w-24">
                   <Card className="w-24 h-24 flex items-center justify-center cursor-pointer border-2 rounded-lg">
                     {image.preview ? (
@@ -220,12 +236,24 @@ export default function MultiStepForm() {
                   id="photo"
                   className="hidden"
                   accept="image/*"
-                  {...register("photo")}
+                  {...register("profilePicture")}
                   onChange={handleImageChange}
                 />
-                {errors.photo && (
+                {errors.profilePicture && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.photo.message as string}
+                    {errors.profilePicture.message as string}
+                  </p>
+                )}
+</div> */}
+
+              <div className="col-span-2 w-fit">
+                <Input
+                  placeholder="Profile Image Link"
+                  {...register("profilePicture")}
+                />
+                {errors.profilePicture && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.profilePicture.message as string}
                   </p>
                 )}
               </div>
@@ -257,10 +285,13 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
-                <Input placeholder="Email Address" {...register("email")} />
-                {errors.email && (
+                <Input
+                  placeholder="Email Address"
+                  {...register("emailAddress")}
+                />
+                {errors.emailAddress && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.email.message as string}
+                    {errors.emailAddress.message as string}
                   </p>
                 )}
               </div>
@@ -269,11 +300,11 @@ export default function MultiStepForm() {
                   placeholder="Date of Birth"
                   type="date"
                   className="block"
-                  {...register("dateOfBirth")}
+                  {...register("dateOfBrith")}
                 />
-                {errors.dateOfBirth && (
+                {errors.dateOfBrith && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.dateOfBirth.message as string}
+                    {errors.dateOfBrith.message as string}
                   </p>
                 )}
               </div>
@@ -400,10 +431,13 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
-                <Input placeholder="Email Address" {...register("workEmail")} />
-                {errors.workEmail && (
+                <Input
+                  placeholder="Email Address"
+                  {...register("emailAddress")}
+                />
+                {errors.emailAddress && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.workEmail.message as string}
+                    {errors.emailAddress.message as string}
                   </p>
                 )}
               </div>
@@ -431,11 +465,11 @@ export default function MultiStepForm() {
                   placeholder="Joining Date"
                   type="date"
                   className="block"
-                  {...register("joiningDate")}
+                  {...register("joiningAt")}
                 />
-                {errors.joiningDate && (
+                {errors.joiningAt && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.joiningDate.message as string}
+                    {errors.joiningAt.message as string}
                   </p>
                 )}
               </div>
@@ -466,6 +500,14 @@ export default function MultiStepForm() {
                 {errors.designation && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.designation.message as string}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Input placeholder="Enter Zipcode" {...register("zipcode")} />
+                {errors.zipcode && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.zipcode.message as string}
                   </p>
                 )}
               </div>
@@ -508,7 +550,9 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
-                <Select onValueChange={(value) => setValue("status", value)}>
+                <Select
+                  onValueChange={(value) => setValue("employeeType", value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
@@ -518,9 +562,9 @@ export default function MultiStepForm() {
                     <SelectItem value="Temporary">Temporary</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.status && (
+                {errors.employeeType && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.status.message as string}
+                    {errors.employeeType.message as string}
                   </p>
                 )}
               </div>
@@ -528,7 +572,7 @@ export default function MultiStepForm() {
           </TabsContent>
 
           {/*  step 2: Upload Documents */}
-          <TabsContent value="2">
+          {/* <TabsContent value="2">
             <div className="grid grid-cols-2 gap-4 p-4">
               {[
                 { label: "Appointment Letter", type: "appointmentLetter" },
@@ -583,43 +627,41 @@ export default function MultiStepForm() {
                 </div>
               ))}
             </div>
-          </TabsContent>
+          </TabsContent> */}
 
           {/*  step 3: Account Access */}
           <TabsContent value="3">
             <div className="grid grid-cols-2 gap-4 p-4">
               <div>
                 <Input
-                  placeholder="Enter Email Address"
-                  {...register("emailAddress")}
+                  placeholder="Enter LinkedIn Link"
+                  {...register("linkdeinLink")}
                 />
-                {errors.emailAddress && (
+                {errors.linkdeinLink && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.emailAddress.message as string}
+                    {errors.linkdeinLink.message as string}
                   </p>
                 )}
               </div>
               <div>
-                <Input placeholder="Skype ID" {...register("skypeId")} />
-                {errors.skypeId && (
+                <Input
+                  placeholder="Enter Github Link"
+                  {...register("githubLink")}
+                />
+                {errors.githubLink && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.skypeId.message as string}
+                    {errors.githubLink?.message as string}
                   </p>
                 )}
               </div>
               <div>
-                <Input placeholder="Github ID" {...register("githubId")} />
-                {errors.githubId && (
+                <Input
+                  placeholder="Enter Slack User Name"
+                  {...register("slackUserName")}
+                />
+                {errors.slackUserName && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.githubId.message as string}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Input placeholder="Slack ID" {...register("slackId")} />
-                {errors.slackId && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.slackId.message as string}
+                    {errors.slackUserName?.message as string}
                   </p>
                 )}
               </div>
@@ -643,7 +685,7 @@ export default function MultiStepForm() {
             )}
             {step === 3 && (
               <Button disabled={isSubmitting} type="submit">
-                Add
+                {isSubmitting ? "Adding..." : "Add"}
               </Button>
             )}
           </div>

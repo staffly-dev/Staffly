@@ -3,6 +3,7 @@ import "./globals.css";
 import { Metadata } from "next";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { EmployeeProvider } from "@/context/EmployeeContext";
 
 export const metadata: Metadata = {
   title: "Raizero HRMS",
@@ -17,19 +18,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen" suppressHydrationWarning>
-        {/* <AuthProvider> */}
-        <QueryProvider>
-          <Toaster richColors />
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
-        </QueryProvider>
-        {/* </AuthProvider> */}
+        <EmployeeProvider>
+          <QueryProvider>
+            <Toaster richColors />
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </QueryProvider>
+        </EmployeeProvider>
       </body>
     </html>
   );
