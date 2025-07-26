@@ -199,8 +199,8 @@ class JobController:
         self,
         job_id: str,
         cv_file: UploadFile,
-        candidate_email: Optional[str] = None,
-        candidate_name: Optional[str] = None
+        candidate_email: str,
+        candidate_name: str
     ):
         """
         Submit application for a job posting
@@ -208,8 +208,8 @@ class JobController:
         Args:
             job_id: Job posting ID
             cv_file: Uploaded CV file
-            candidate_email: Candidate email address
-            candidate_name: Candidate full name
+            candidate_email: Candidate email address (required)
+            candidate_name: Candidate full name (required)
             
         Returns:
             APIResponse: Application submission confirmation
@@ -251,7 +251,6 @@ class JobController:
                         raise HTTPException(status_code=500, detail=f"AI service error: {response.text}")
                     data = response.json()
                     cv_text = data.get("text_content", "")
-                    extracted_email = data.get("email", None)
                     extracted_name = data.get("name", None)
             except Exception as ai_exc:
                 logger.error(f"AI service extract-text error: {ai_exc}")
@@ -263,26 +262,22 @@ class JobController:
                     detail="Could not extract sufficient text from CV. Please ensure the file is readable."
                 )
             
-            # Use provided email or extracted email
-            final_email = candidate_email or extracted_email or "placeholder@example.com"
-            
-            # Use provided name or extracted name
-            final_name = candidate_name or extracted_name or "Placeholder Candidate"
+            # Use provided name or extracted name as fallback
+            final_name = candidate_name or extracted_name or "Unknown Candidate"
             
             # SECURITY CHECK: Prevent duplicate applications by email
-            if final_email and final_email != "placeholder@example.com":
-                existing_application = await self.database_service.check_duplicate_email_application(final_email, job_id)
-                if existing_application:
-                    raise HTTPException(
-                        status_code=409,
-                        detail=f"An application with email '{final_email}' has already been submitted for this job posting. Each candidate can only apply once per job."
-                    )
+            existing_application = await self.database_service.check_duplicate_email_application(candidate_email, job_id)
+            if existing_application:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"An application with email '{candidate_email}' has already been submitted for this job posting. Each candidate can only apply once per job."
+                )
             
             # Create application
             application = await self.database_service.create_application(
                 job_id=job_id,
                 cv_filename=cv_file.filename,
-                candidate_email=final_email,
+                candidate_email=candidate_email,
                 candidate_name=final_name
             )
             
@@ -294,7 +289,7 @@ class JobController:
                     cv_text=cv_text,
                     job_posting=job_posting,
                     application_id=application.application_id,
-                    candidate_email=final_email,
+                    candidate_email=candidate_email,
                     candidate_name=final_name
                 )
                 

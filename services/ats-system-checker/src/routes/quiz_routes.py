@@ -18,7 +18,6 @@ router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 @router.post("/submit", response_model=APIResponse, summary="Submit Quiz")
 async def submit_quiz(
     answers: str = Form(..., description="Quiz answers as JSON string"),
-    quiz_data: str = Form(..., description="Quiz questions data as JSON string"),
     quiz_session_id: str = Form(..., description="Quiz session ID (required)"),
     email: str = Form(..., description="Candidate email address (required for security validation)"),
     controller: QuizController = Depends(get_quiz_controller) # type: ignore
@@ -27,17 +26,16 @@ async def submit_quiz(
     Submit quiz answers for evaluation.
     
     - **answers**: Quiz answers as JSON string
-    - **quiz_data**: Quiz questions data as JSON string
     - **quiz_session_id**: Quiz session ID (required for validation and security)
     - **email**: Candidate email address (required for security validation - must match original application email)
     
     Returns quiz results including score and pass/fail status.
     Quiz can only be submitted once per session.
     Email must match the email used in the original job application.
+    Quiz questions are automatically retrieved from the database using the quiz_session_id.
     """
     return await controller.evaluate_quiz(
         answers=answers,
-        quiz_data=quiz_data,
         quiz_session_id=quiz_session_id,
         email=email
     )

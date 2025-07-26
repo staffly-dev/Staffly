@@ -315,7 +315,6 @@ class EvaluationService:
     async def evaluate_quiz_submission(
         self,
         answers: str,
-        quiz_data: str,
         quiz_session_id: str,
         email: str
     ) -> Dict[str, Any]:
@@ -324,7 +323,6 @@ class EvaluationService:
         
         Args:
             answers: Quiz answers as JSON string
-            quiz_data: Quiz questions data as JSON string
             quiz_session_id: Quiz session ID (required for validation and security)
             email: Candidate email address (required for security validation)
             
@@ -361,19 +359,22 @@ class EvaluationService:
             if quiz_session.candidate_email and email.lower() != quiz_session.candidate_email.lower():
                 raise ValueError(f"Email address '{email}' does not match the email used in the original application ('{quiz_session.candidate_email}'). Please use the same email address that was used when submitting your CV.")
             
-            # Parse the submitted data
+            # Parse the submitted answers
             try:
-                logger.info(f" Parsing quiz data - answers: {answers[:100]}...")
-                logger.info(f" Parsing quiz data - quiz_data: {quiz_data[:100]}...")
-                
+                logger.info(f" Parsing quiz answers: {answers[:100]}...")
                 answers_list = json.loads(answers)
-                questions_list = json.loads(quiz_data)
-                
-                logger.info(f" Successfully parsed - answers: {len(answers_list)} items, questions: {len(questions_list)} items")
+                logger.info(f" Successfully parsed answers: {len(answers_list)} items")
                 
             except json.JSONDecodeError as e:
-                logger.error(f" Invalid JSON data: {e}")
-                raise ValueError(f"Invalid quiz data format: {str(e)}")
+                logger.error(f" Invalid JSON data for answers: {e}")
+                raise ValueError(f"Invalid quiz answers format: {str(e)}")
+            
+            # Get quiz questions from the quiz session
+            questions_list = quiz_session.questions
+            if not questions_list:
+                raise ValueError("Quiz questions not found in the database")
+            
+            logger.info(f" Retrieved {len(questions_list)} questions from database")
             
             # Calculate score using business logic
             score = 0
@@ -396,7 +397,7 @@ class EvaluationService:
                     logger.debug(f" Question {i+1}: No answer provided")
             
             # Determine pass/fail status (business rule)
-            pass_threshold = 7  # This could be made configurable
+            pass_threshold = quiz_session.pass_threshold  # Use the threshold from the quiz session
             status = "PASSED" if score >= pass_threshold else "FAILED"
             percentage = round((score / total_questions) * 100, 1)
             

@@ -37,7 +37,6 @@ class QuizController:
     async def evaluate_quiz(
         self,
         answers: str,
-        quiz_data: str,
         quiz_session_id: str,
         email: str
     ):
@@ -46,7 +45,6 @@ class QuizController:
         
         Args:
             answers: Quiz answers as JSON string
-            quiz_data: Quiz questions data as JSON string
             quiz_session_id: Quiz session ID (required for validation)
             email: Candidate email address (required for security validation)
             
@@ -59,7 +57,6 @@ class QuizController:
             # Call evaluation service to handle business logic
             result = await self.evaluation_service.evaluate_quiz_submission(
                 answers=answers,
-                quiz_data=quiz_data,
                 quiz_session_id=quiz_session_id,
                 email=email
             )
