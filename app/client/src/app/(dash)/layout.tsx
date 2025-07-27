@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { AuthGuard } from "@/components/AuthGuard";
 export const metadata: Metadata = {
-  title: "Raizero HRMS",
-  description: "Raizero Human Resource Management System, Dashboard page",
+  title: "Staffly HRMS",
+  description: "Staffly Human Resource Management System, Dashboard page",
 };
 
 export default function DashLayout({
