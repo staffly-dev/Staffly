@@ -13,8 +13,6 @@ export interface EmployeeDocument extends Document {
   address: string;
   city: string;
   state: string;
-  zipcode: string;
-  employeeId: string;
   userName: string;
   employeeType: string;
   department: string;
@@ -85,19 +83,9 @@ const employeeSchema = new Schema<EmployeeDocument>({
     type: String,
     required: true
   },
-  zipcode: {
-    type: String,
-    required: true
-  },
-  employeeId: {
-    type: String,
-    required: true,
-    unique: true
-  },
   userName: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   employeeType: {
     type: String,

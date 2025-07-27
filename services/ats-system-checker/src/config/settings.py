@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     """Application settings with environment variable support"""
     
     # AI/API Configuration
-    COHERE_API_KEY: str = Field(..., description="Cohere API key for AI services")
+    COHERE_API_KEY: str = Field(default="", description="Cohere API key for AI services")
     
     # Email Configuration
     GMAIL_USER: str = Field(default="your_email@gmail.com", description="Gmail user for notifications")
@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = Field(default="INFO", description="Logging level")
     LOG_FILE: str = Field(default="ats_system.log", description="Log file path")
+    
+    AI_SERVICE_URL: str = Field(default="http://localhost:5000", description="Base URL for the AI microservice")
     
     class Config:
         env_file = os.path.join(os.path.dirname(__file__), "..", "..", ".env")

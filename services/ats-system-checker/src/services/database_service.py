@@ -830,7 +830,6 @@ class DatabaseService:
         self,
         job_id: str,
         cv_filename: str,
-        cv_text_length: int,
         candidate_email: Optional[str] = None,
         candidate_name: Optional[str] = None
     ) -> Application:
@@ -840,7 +839,6 @@ class DatabaseService:
         Args:
             job_id: Associated job posting ID
             cv_filename: CV filename
-            cv_text_length: Length of CV text
             candidate_email: Candidate email
             candidate_name: Candidate name
             
@@ -856,7 +854,6 @@ class DatabaseService:
                 application_id=application_id,
                 job_id=job_id,
                 cv_filename=cv_filename,
-                cv_text_length=cv_text_length,
                 candidate_email=candidate_email,
                 candidate_name=candidate_name
             )
@@ -882,11 +879,8 @@ class DatabaseService:
         application_id: str,
         status: str,
         cv_score: Optional[int] = None,
-        cv_evaluation_text: Optional[str] = None,
-        decision: Optional[EvaluationDecision] = None,
-        quiz_session_id: Optional[str] = None,
-        quiz_score: Optional[int] = None,
-        quiz_passed: Optional[bool] = None
+        decision: Optional[str] = None,
+        quiz_score: Optional[int] = None
     ) -> Optional[Application]:
         """
         Update application status and evaluation results
@@ -895,11 +889,8 @@ class DatabaseService:
             application_id: Application ID
             status: New status
             cv_score: CV evaluation score
-            cv_evaluation_text: CV evaluation text
-            decision: Evaluation decision
-            quiz_session_id: Associated quiz session ID
+            decision: Evaluation decision (ACCEPTED/REJECTED)
             quiz_score: Quiz score
-            quiz_passed: Whether quiz was passed
             
         Returns:
             Application: Updated application if found
@@ -912,40 +903,25 @@ class DatabaseService:
             
             # Update fields
             application.status = status
-            application.updated_at = datetime.now()
             
             if cv_score is not None:
                 application.cv_score = cv_score
-                application.evaluated_at = datetime.now()
-            
-            if cv_evaluation_text:
-                application.cv_evaluation_text = cv_evaluation_text
             
             if decision:
                 application.decision = decision
             
-            if quiz_session_id:
-                application.quiz_session_id = quiz_session_id
-            
             if quiz_score is not None:
                 application.quiz_score = quiz_score
-                application.quiz_completed_at = datetime.now()
-            
-            if quiz_passed is not None:
-                application.quiz_passed = quiz_passed
             
             await application.save()
             
             # Update job posting statistics
             job_posting = await self.get_job_posting_by_id(application.job_id)
             if job_posting and decision:
-                if decision == EvaluationDecision.ACCEPTED:
+                if decision == "ACCEPTED":
                     job_posting.total_accepted += 1
-                elif decision == EvaluationDecision.REJECTED:
+                elif decision == "REJECTED":
                     job_posting.total_rejected += 1
-                
-                if quiz_passed is not None and quiz_passed:
-                    job_posting.total_quiz_passed += 1
                 
                 # Update average score
                 if cv_score is not None:
@@ -964,23 +940,7 @@ class DatabaseService:
             logger.error(f" Failed to update application status: {e}")
             return None
     
-    async def add_email_to_application(self, application_id: str, email_type: str):
-        """
-        Add email type to application's email tracking
-        
-        Args:
-            application_id: Application ID
-            email_type: Type of email sent (e.g., 'ACCEPTANCE', 'REJECTION', 'QUIZ_INVITATION')
-        """
-        try:
-            application = await Application.find_one(Application.application_id == application_id)
-            if application:
-                application.emails_sent.append(email_type)
-                application.updated_at = datetime.now()
-                await application.save()
-                logger.info(f" Added email type '{email_type}' to application: {application_id}")
-        except Exception as e:
-            logger.error(f" Failed to add email to application: {e}")
+
     
     async def get_applications_for_job(self, job_id: str) -> List[Application]:
         """
@@ -1012,7 +972,32 @@ class DatabaseService:
             List[Application]: List of all applications
         """
         try:
-            applications = await Application.find_all().sort(-Application.submitted_at).to_list()
+            # Use pymongo directly to get applications and map to our simplified model
+            import pymongo
+            client = pymongo.MongoClient(self.mongodb_url)
+            db = client[self.database_name]
+            collection = db['applications']
+            
+            # Get all documents from the collection
+            documents = list(collection.find({}))
+            
+            applications = []
+            for doc in documents:
+                # Create Application object with only the fields we need
+                app = Application(
+                    application_id=doc.get('application_id'),
+                    job_id=doc.get('job_id'),
+                    candidate_email=doc.get('candidate_email'),
+                    candidate_name=doc.get('candidate_name'),
+                    cv_filename=doc.get('cv_filename'),
+                    cv_score=doc.get('cv_score'),
+                    decision=doc.get('decision'),
+                    quiz_score=doc.get('quiz_score'),
+                    status=doc.get('status')
+                )
+                applications.append(app)
+            
+            client.close()
             
             logger.info(f" Retrieved {len(applications)} total applications")
             return applications
@@ -1106,6 +1091,68 @@ class DatabaseService:
             logger.error(f" Failed to get application by ID {application_id}: {e}")
             return None
     
+    async def check_duplicate_email_application(self, email: str, job_id: str) -> Optional["Application"]:
+        """
+        Check if an email has already applied for a specific job
+        
+        Args:
+            email: Candidate email address
+            job_id: Job posting ID
+            
+        Returns:
+            Optional[Application]: Existing application if found, None otherwise
+        """
+        try:
+            existing_application = await Application.find_one(
+                Application.candidate_email == email,
+                Application.job_id == job_id
+            )
+            return existing_application
+        except Exception as e:
+            logger.error(f" Failed to check duplicate email application for {email} and job {job_id}: {e}")
+            return None
+    
+    async def get_application_by_email_and_job(self, email: str, job_id: str) -> Optional["Application"]:
+        """
+        Get application by email and job ID
+        
+        Args:
+            email: Candidate email address
+            job_id: Job posting ID
+            
+        Returns:
+            Optional[Application]: Application if found, None otherwise
+        """
+        try:
+            application = await Application.find_one(
+                Application.candidate_email == email,
+                Application.job_id == job_id
+            )
+            return application
+        except Exception as e:
+            logger.error(f" Failed to get application by email {email} and job {job_id}: {e}")
+            return None
+    
+    async def get_application_email_by_session_id(self, quiz_session_id: str) -> Optional[str]:
+        """
+        Get the original application email from quiz session ID
+        
+        Args:
+            quiz_session_id: Quiz session ID
+            
+        Returns:
+            Optional[str]: Original application email if found, None otherwise
+        """
+        try:
+            quiz_session = await self.get_quiz_session_by_id(quiz_session_id)
+            if not quiz_session:
+                return None
+            
+            return quiz_session.candidate_email
+        except Exception as e:
+            logger.error(f" Failed to get application email for quiz session {quiz_session_id}: {e}")
+            return None
+    
     async def get_quiz_session_for_application(self, application_id: str) -> Optional[QuizSession]:
         """
         Get quiz session for a specific application
@@ -1125,6 +1172,59 @@ class DatabaseService:
             return quiz_session
         except Exception as e:
             logger.error(f" Failed to get quiz session for application {application_id}: {e}")
+            return None
+    
+    async def get_quiz_result_by_session_id(self, quiz_session_id: str) -> Optional[QuizResult]:
+        """
+        Get quiz result by quiz session ID
+        
+        Args:
+            quiz_session_id: Quiz session ID
+            
+        Returns:
+            Optional[QuizResult]: Quiz result if found, None otherwise
+        """
+        try:
+            quiz_result = await QuizResult.find_one(
+                QuizResult.quiz_session_id == quiz_session_id
+            )
+            return quiz_result
+        except Exception as e:
+            logger.error(f" Failed to get quiz result for session {quiz_session_id}: {e}")
+            return None
+    
+    async def update_quiz_session_status(
+        self,
+        quiz_session_id: str,
+        status: str,
+        completed_at: Optional[datetime] = None
+    ) -> Optional[QuizSession]:
+        """
+        Update quiz session status
+        
+        Args:
+            quiz_session_id: Quiz session ID
+            status: New status
+            completed_at: Completion timestamp (if completed)
+            
+        Returns:
+            Optional[QuizSession]: Updated quiz session if found
+        """
+        try:
+            quiz_session = await self.get_quiz_session_by_id(quiz_session_id)
+            if not quiz_session:
+                return None
+            
+            quiz_session.status = status
+            if completed_at:
+                quiz_session.completed_at = completed_at
+            
+            await quiz_session.save()
+            logger.info(f" Updated quiz session {quiz_session_id} status to {status}")
+            return quiz_session
+            
+        except Exception as e:
+            logger.error(f" Failed to update quiz session status: {e}")
             return None
     
     async def create_interview_record(
@@ -1212,8 +1312,14 @@ class DatabaseService:
                     base_url = settings.FRONTEND_URL or "http://localhost:8000"
                     quiz_link = f"{base_url}/api/quiz/{str(quiz_session.id)}"
                 
+                # Extract application_id from associated_cv_filename
+                application_id = None
+                if quiz_session.associated_cv_filename and quiz_session.associated_cv_filename.startswith("application_"):
+                    application_id = quiz_session.associated_cv_filename.replace("application_", "")
+                
                 # Prepare quiz user info
                 quiz_info = {
+                    "application_id": application_id,
                     "quiz_session_id": str(quiz_session.id),
                     "candidate_email": quiz_session.candidate_email,
                     "quiz_link": quiz_link,
@@ -1278,9 +1384,15 @@ class DatabaseService:
                 quiz_session.started_at = datetime.now()
                 await quiz_session.save()
             
+            # Extract application_id from associated_cv_filename
+            application_id = None
+            if quiz_session.associated_cv_filename and quiz_session.associated_cv_filename.startswith("application_"):
+                application_id = quiz_session.associated_cv_filename.replace("application_", "")
+            
             # Prepare quiz display data
             quiz_display_data = {
                 "quiz_session_id": str(quiz_session.id),
+                "application_id": application_id,
                 "questions": quiz_session.questions,
                 "total_questions": quiz_session.total_questions,
                 "time_limit_seconds": quiz_session.time_limit_seconds,

@@ -9,8 +9,7 @@ import asyncio
 from typing import List, Dict, Any, Optional
 from werkzeug.utils import secure_filename
 
-from ai.services.cohere_service import CohereService
-from ai.services.document_service import DocumentProcessingService
+import httpx
 from src.models.evaluation_models import (
     EvaluationDecision
 )
@@ -35,24 +34,16 @@ logger = logging.getLogger(__name__)
 class EvaluationService:
     """Main service for handling CV evaluations and quiz generation"""
     
-    def __init__(
-        self,
-        cohere_service: CohereService,
-        document_service: DocumentProcessingService,
-        email_service: EmailService,
-        database_service: DatabaseService
-    ):
+    def __init__(self, ai_service_url: str, email_service: EmailService, database_service: DatabaseService):
         """
         Initialize evaluation service with required dependencies
         
         Args:
-            cohere_service: AI service for evaluations and quiz generation
-            document_service: Service for document processing
+            ai_service_url: URL for the AI service (e.g., http://localhost:8000)
             email_service: Service for sending email notifications
             database_service: Service for database operations
         """
-        self.cohere_service = cohere_service
-        self.document_service = document_service
+        self.ai_service_url = ai_service_url
         self.email_service = email_service
         self.database_service = database_service
     async def generate_quiz(self, job_description: str) -> Optional[Dict[str, Any]]:
@@ -68,13 +59,26 @@ class EvaluationService:
         try:
             logger.info(f"Generating quiz for job application")
             
-            # Generate quiz using AI with retry mechanism
+            # Generate quiz using AI service with retry mechanism
             quiz_questions = None
             max_retries = 3
             
             for attempt in range(max_retries):
                 logger.info(f"Quiz generation attempt {attempt + 1}/{max_retries}")
-                quiz_questions = self.cohere_service.generate_quiz(job_description)
+                
+                # Call AI service for quiz generation
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        f"{self.ai_service_url}/generate-quiz",
+                        json={
+                            "job_description": job_description,
+                            "num_questions": 10
+                        },
+                        timeout=60
+                    )
+                    response.raise_for_status()
+                    ai_result = response.json()
+                    quiz_questions = ai_result.get("questions", [])
                 
                 if quiz_questions:
                     logger.info(f" Successfully generated quiz on attempt {attempt + 1}")
@@ -130,42 +134,57 @@ class EvaluationService:
         try:
             logger.info(f"Evaluating CV for job: {job_posting.title}")
             
-            # Extract candidate name from CV text
+            # Extract candidate name from CV text (optional: call AI for name extraction if needed)
             greeting_name = candidate_name
             if not greeting_name:
-                greeting_name = self.document_service.extract_name_from_text(cv_text)
-            logger.info(f"Extracted candidate name: {greeting_name}")
-            
-            # Generate evaluation using AI
-            evaluation_result = self.cohere_service.evaluate_cv(cv_text, job_posting.description)
-            
-            if not evaluation_result:
-                logger.error("Failed to generate AI evaluation")
-                await self.database_service.update_application_status(
-                    application_id, "EVALUATION_FAILED"
+                # Optionally, call AI API for name extraction
+                greeting_name = None
+            # Call AI service for evaluation
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{self.ai_service_url}/evaluate",
+                    json={
+                        "cv_text": cv_text,
+                        "job_description": job_posting.description,
+                        "filename": f"application_{application_id}"
+                    },
+                    timeout=60
                 )
-                return None
-            
-            # Parse evaluation result
-            decision, score = self.cohere_service.parse_evaluation_result(evaluation_result)
-            
+                response.raise_for_status()
+                ai_result = response.json()
+            decision = ai_result.get("decision", "UNKNOWN")
+            score = ai_result.get("score", 0)
+            evaluation_text = ai_result.get("reasoning", "")  # AI service returns "reasoning" not "evaluation_text"
+            # AI service doesn't return email in the response, so use the provided candidate_email
+            email = candidate_email
             # Determine if candidate meets threshold
             meets_threshold = score >= job_posting.evaluation_threshold
             final_decision = "ACCEPTED" if meets_threshold else "REJECTED"
+            
+            # Save CV evaluation to database
+            await self.database_service.save_cv_evaluation(
+                filename=f"application_{application_id}",
+                job_description=job_posting.description,
+                decision=EvaluationDecision(final_decision),
+                score=score,
+                evaluation_text=evaluation_text,
+                cv_text_length=len(cv_text),
+                email=email,
+                processing_time_ms=None  # Could be calculated if needed
+            )
             
             # Update application status
             await self.database_service.update_application_status(
                 application_id=application_id,
                 status=final_decision,
                 cv_score=score,
-                cv_evaluation_text=evaluation_result,
-                decision=EvaluationDecision(final_decision)
+                decision=final_decision
             )
             
             # Send appropriate email based on decision
             if candidate_email and self.email_service:
                 if meets_threshold:
-                    # Send acceptance email
+                    # Send acceptance email with quiz invitation
                     if job_posting.quiz_required:
                         # Generate quiz and send quiz invitation
                         quiz_result = await self.generate_quiz(job_posting.description)
@@ -190,25 +209,21 @@ class EvaluationService:
                             await self.database_service.update_application_status(
                                 application_id, "QUIZ_SENT"
                             )
-                            await self.database_service.add_email_to_application(
-                                application_id, "QUIZ_INVITATION"
-                            )
                         else:
-                            # Fallback to interview invitation if quiz generation fails
-                            await self.email_service.send_interview_invitation(
+                            # If quiz generation fails, just send a simple acceptance email
+                            await self.email_service.send_evaluation_notification(
                                 to_email=candidate_email,
-                                job_title=job_posting.title,
-                                hr_contact=job_posting.hr_name or "HR Team",
+                                filename=f"application_{application_id}",
+                                decision="ACCEPTED",
+                                score=score,
+                                evaluation_text=evaluation_text,
                                 candidate_name=greeting_name
                             )
                             await self.database_service.update_application_status(
-                                application_id, "INTERVIEW_SCHEDULED"
-                            )
-                            await self.database_service.add_email_to_application(
-                                application_id, "INTERVIEW_INVITATION"
+                                application_id, "ACCEPTED"
                             )
                     else:
-                        # Send direct interview invitation
+                        # If quiz is not required, send direct interview invitation
                         await self.email_service.send_interview_invitation(
                             to_email=candidate_email,
                             job_title=job_posting.title,
@@ -217,9 +232,6 @@ class EvaluationService:
                         )
                         await self.database_service.update_application_status(
                             application_id, "INTERVIEW_SCHEDULED"
-                        )
-                        await self.database_service.add_email_to_application(
-                            application_id, "INTERVIEW_INVITATION"
                         )
                 else:
                     # Send rejection email
@@ -230,18 +242,16 @@ class EvaluationService:
                         threshold=job_posting.evaluation_threshold,
                         candidate_name=greeting_name
                     )
-                    await self.database_service.add_email_to_application(
-                        application_id, "REJECTION"
-                    )
+
             
             # Create result object
             result = CVEvaluationResult(
                 filename=f"application_{application_id}",
                 decision=EvaluationDecision(final_decision),
                 score=score,
-                evaluation_text=evaluation_result,
+                evaluation_text=evaluation_text,
                 text_length=len(cv_text),
-                email=candidate_email,
+                email=email,
                 candidate_name=greeting_name
             )
             
@@ -277,31 +287,19 @@ class EvaluationService:
             Dict[str, Any]: Evaluation result as dictionary
         """
         try:
-            # Extract text from CV file
-            cv_text = self.document_service.extract_text_from_file(cv_file_path)
-            
             # Create job description from requirements
             job_description = "Job Requirements:\n" + "\n".join(f"- {req}" for req in job_requirements)
             
-            # Get AI evaluation
-            evaluation_result = self.cohere_service.evaluate_cv_match(cv_text, job_requirements)
+            # For now, return a placeholder since this method is not used in the main workflow
+            # and would require file processing capabilities that are not available in this service
+            logger.warning("evaluate_application method is deprecated and not used in main workflow")
             
-            if not evaluation_result:
-                return {
-                    "decision": "UNKNOWN",
-                    "score": 0,
-                    "reasoning": "Failed to evaluate CV",
-                    "extracted_skills": [],
-                    "experience_years": 0
-                }
-            
-            # Return result as dictionary for test compatibility
             return {
-                "decision": evaluation_result.decision.value,
-                "score": evaluation_result.score,
-                "reasoning": evaluation_result.reasoning,
-                "extracted_skills": evaluation_result.extracted_skills,
-                "experience_years": evaluation_result.experience_years
+                "decision": "UNKNOWN",
+                "score": 0,
+                "reasoning": "This method is deprecated. Use evaluate_cv_for_job instead.",
+                "extracted_skills": [],
+                "experience_years": 0
             }
             
         except Exception as e:
@@ -317,18 +315,16 @@ class EvaluationService:
     async def evaluate_quiz_submission(
         self,
         answers: str,
-        quiz_data: str,
-        email: Optional[str] = None,
-        application_id: Optional[str] = None
+        quiz_session_id: str,
+        email: str
     ) -> Dict[str, Any]:
         """
         Evaluate quiz submission and determine pass/fail status
         
         Args:
             answers: Quiz answers as JSON string
-            quiz_data: Quiz questions data as JSON string
-            email: Candidate email address
-            application_id: Application ID for linking quiz result
+            quiz_session_id: Quiz session ID (required for validation and security)
+            email: Candidate email address (required for security validation)
             
         Returns:
             Dict[str, Any]: Quiz evaluation results with score and status
@@ -337,21 +333,48 @@ class EvaluationService:
         from datetime import datetime, timedelta
         
         try:
-            logger.info(f"🧮 Evaluating quiz submission for application: {application_id}, email: {email}")
+            logger.info(f"🧮 Evaluating quiz submission for quiz session: {quiz_session_id}, email: {email}")
             
-            # Parse the submitted data
+            # Validate quiz session ID is provided
+            if not quiz_session_id:
+                raise ValueError("Quiz session ID is required for quiz submission")
+            
+            # Check if quiz has already been completed
+            existing_result = await self.database_service.get_quiz_result_by_session_id(quiz_session_id)
+            if existing_result:
+                raise ValueError("Quiz has already been completed. You cannot submit answers multiple times.")
+            
+            # Get quiz session to validate it exists and is accessible
+            quiz_session = await self.database_service.get_quiz_session_by_id(quiz_session_id)
+            if not quiz_session:
+                raise ValueError("Quiz session not found or invalid")
+            
+            if quiz_session.status == "COMPLETED":
+                raise ValueError("Quiz has already been completed")
+            
+            if quiz_session.status == "EXPIRED":
+                raise ValueError("Quiz session has expired")
+            
+            # SECURITY CHECK: Validate email matches the quiz session email
+            if quiz_session.candidate_email and email.lower() != quiz_session.candidate_email.lower():
+                raise ValueError(f"Email address '{email}' does not match the email used in the original application ('{quiz_session.candidate_email}'). Please use the same email address that was used when submitting your CV.")
+            
+            # Parse the submitted answers
             try:
-                logger.info(f" Parsing quiz data - answers: {answers[:100]}...")
-                logger.info(f" Parsing quiz data - quiz_data: {quiz_data[:100]}...")
-                
+                logger.info(f" Parsing quiz answers: {answers[:100]}...")
                 answers_list = json.loads(answers)
-                questions_list = json.loads(quiz_data)
-                
-                logger.info(f" Successfully parsed - answers: {len(answers_list)} items, questions: {len(questions_list)} items")
+                logger.info(f" Successfully parsed answers: {len(answers_list)} items")
                 
             except json.JSONDecodeError as e:
-                logger.error(f" Invalid JSON data: {e}")
-                raise ValueError(f"Invalid quiz data format: {str(e)}")
+                logger.error(f" Invalid JSON data for answers: {e}")
+                raise ValueError(f"Invalid quiz answers format: {str(e)}")
+            
+            # Get quiz questions from the quiz session
+            questions_list = quiz_session.questions
+            if not questions_list:
+                raise ValueError("Quiz questions not found in the database")
+            
+            logger.info(f" Retrieved {len(questions_list)} questions from database")
             
             # Calculate score using business logic
             score = 0
@@ -374,15 +397,27 @@ class EvaluationService:
                     logger.debug(f" Question {i+1}: No answer provided")
             
             # Determine pass/fail status (business rule)
-            pass_threshold = 7  # This could be made configurable
+            pass_threshold = quiz_session.pass_threshold  # Use the threshold from the quiz session
             status = "PASSED" if score >= pass_threshold else "FAILED"
             percentage = round((score / total_questions) * 100, 1)
             
             logger.info(f" Quiz evaluation complete: {score}/{total_questions} ({status}) - {percentage}%")
             
+            # Get application_id from quiz session
+            application_id = None
+            if quiz_session.associated_cv_filename:
+                # Extract application_id from associated_cv_filename (format: "application_{application_id}")
+                if quiz_session.associated_cv_filename.startswith("application_"):
+                    application_id = quiz_session.associated_cv_filename.replace("application_", "")
+                    logger.info(f" Extracted application_id: {application_id} from quiz session")
+                else:
+                    logger.warning(f" Quiz session associated_cv_filename format unexpected: {quiz_session.associated_cv_filename}")
+            else:
+                logger.warning(" Quiz session has no associated_cv_filename")
+            
             # Save quiz result to database
             quiz_result = await self.database_service.save_quiz_result(
-                quiz_session_id="",  # Empty string instead of None
+                quiz_session_id=quiz_session_id,
                 answers=answers_list,
                 score=score,
                 total_questions=total_questions,
@@ -392,21 +427,52 @@ class EvaluationService:
                 associated_cv_filename=f"application_{application_id}" if application_id else None
             )
             
+            # Update quiz session status to completed
+            await self.database_service.update_quiz_session_status(
+                quiz_session_id=quiz_session_id,
+                status="COMPLETED",
+                completed_at=datetime.now()
+            )
+            
             # Update application status if we have an application_id
             if application_id:
                 await self.database_service.update_application_status(
                     application_id=application_id,
                     status="QUIZ_COMPLETED",
-                    quiz_score=score,
-                    quiz_passed=(status == "PASSED")
+                    quiz_score=score
                 )
                 logger.info(f" Updated application {application_id} with quiz results")
             
-            # If passed, schedule interview
+            # If passed, send interview invitation
             if status == "PASSED" and email:
-                await self.schedule_interview(email, score, total_questions)
+                # Get application details to send proper interview invitation
+                application = None
+                if application_id:
+                    application = await self.database_service.get_application_by_id(application_id)
                 
-                # Also update application status to indicate interview scheduled
+                # Get job posting details
+                job_posting = None
+                if application:
+                    job_posting = await self.database_service.get_job_posting_by_id(application.get("job_id"))
+                
+                # Send interview invitation email
+                if job_posting:
+                    await self.email_service.send_interview_invitation(
+                        to_email=email,
+                        job_title=job_posting.title,
+                        hr_contact=job_posting.hr_name or "HR Team",
+                        candidate_name=application.get("candidate_name") if application else None
+                    )
+                else:
+                    # Fallback if we can't get job details
+                    await self.email_service.send_interview_invitation(
+                        to_email=email,
+                        job_title="the position",
+                        hr_contact="HR Team",
+                        candidate_name=None
+                    )
+                
+                # Update application status to indicate interview scheduled
                 if application_id:
                     await self.database_service.update_application_status(
                         application_id=application_id,
@@ -450,65 +516,5 @@ class EvaluationService:
             logger.error(f" Error evaluating quiz: {e}")
             raise Exception(f"Failed to evaluate quiz: {str(e)}")
 
-    async def schedule_interview(self, email: str, quiz_score: int, total_questions: int) -> Dict[str, Any]:
-        """
-        Schedule an interview for a candidate who passed the quiz
-        
-        Args:
-            email: Candidate email
-            quiz_score: Quiz score achieved
-            total_questions: Total number of questions
-            
-        Returns:
-            Dict[str, Any]: Interview scheduling result
-        """
-        try:
-            from datetime import datetime, timedelta
-            
-            logger.info(f" Scheduling interview for {email} (score: {quiz_score}/{total_questions})")
-            
-            # Calculate interview date (business logic: 3-5 business days from now)
-            today = datetime.now()
-            days_to_add = 3
-            interview_date = today + timedelta(days=days_to_add)
-            
-            # Adjust for weekends (business rule)
-            while interview_date.weekday() >= 5:  # 5 = Saturday, 6 = Sunday
-                interview_date += timedelta(days=1)
-            
-            interview_time = interview_date.replace(hour=10, minute=0, second=0, microsecond=0)  # 10 AM
-            
-            # Create interview record in database
-            interview_record = await self.database_service.create_interview_record(
-                candidate_email=email,
-                quiz_score=quiz_score,
-                total_questions=total_questions,
-                scheduled_date=interview_time,
-                status="SCHEDULED"
-            )
-            
-            # Send interview invitation email
-            await self.email_service.send_interview_invitation_email(
-                to_email=email,
-                interview_date=interview_time,
-                quiz_score=quiz_score,
-                total_questions=total_questions,
-                candidate_name=None  # We don't have candidate name in quiz result context
-            )
-            
-            logger.info(f" Interview scheduled for {email} on {interview_time.strftime('%Y-%m-%d %H:%M')}")
-            
-            return {
-                "scheduled_date": interview_time,
-                "status": "SCHEDULED",
-                "message": f"Interview scheduled for {interview_time.strftime('%Y-%m-%d at %H:%M')}"
-            }
-            
-        except Exception as e:
-            logger.error(f" Failed to schedule interview for {email}: {e}")
-            # Don't raise the error, as the quiz evaluation should still succeed
-            return {
-                "status": "FAILED",
-                "message": f"Failed to schedule interview: {str(e)}"
-            }
+
  

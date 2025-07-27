@@ -7,7 +7,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
-from ai.models.evaluation_models import EvaluationDecision
+from models.evaluation_models import EvaluationDecision
 
 
 def setup_ai_logger(name: str, log_file: str = "ats_ai.log", level: str = "INFO") -> logging.Logger:

@@ -89,17 +89,17 @@ async def get_job_posting(
 async def submit_application(
     job_id: str,
     cv_file: UploadFile = File(..., description="CV file (PDF or DOCX)"),
-    candidate_email: Optional[str] = Form(None, description="Candidate email address"),
-    candidate_name: Optional[str] = Form(None, description="Candidate full name"),
+    candidate_email: str = Form(..., description="Candidate email address (required)"),
+    candidate_name: str = Form(..., description="Candidate full name (required)"),
     controller: JobController = Depends(get_job_controller)  # type: ignore
 ):
     """
     Submit a job application with CV.
     
     - **job_id**: ID of the job posting
-    - **cv_file**: CV document in PDF or DOCX format
-    - **candidate_email**: Applicant's email address
-    - **candidate_name**: Applicant's full name (optional, will be extracted from CV if not provided)
+    - **cv_file**: CV document in PDF or DOCX format (required)
+    - **candidate_email**: Applicant's email address (required)
+    - **candidate_name**: Applicant's full name (required)
     
     Returns application status and next steps (e.g., quiz link if required).
     This will trigger:

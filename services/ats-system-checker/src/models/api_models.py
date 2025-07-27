@@ -65,6 +65,7 @@ class QuizSubmissionResponse(BaseModel):
 
 class QuizUserInfoResponse(BaseModel):
     """Response model for quiz user information"""
+    application_id: Optional[str] = Field(None, description="Associated application ID")
     quiz_session_id: str = Field(..., description="Quiz session ID")
     candidate_email: Optional[str] = Field(None, description="Candidate email address")
     quiz_link: Optional[str] = Field(None, description="Quiz link sent to email")
@@ -87,6 +88,7 @@ class AllQuizUsersResponse(BaseModel):
 class QuizDisplayResponse(BaseModel):
     """Response model for displaying quiz to frontend"""
     quiz_session_id: str = Field(..., description="Quiz session ID")
+    application_id: Optional[str] = Field(None, description="Associated application ID")
     questions: List[Dict[str, Any]] = Field(..., description="Quiz questions with options")
     total_questions: int = Field(..., description="Total number of questions")
     time_limit_seconds: int = Field(..., description="Time limit in seconds")
@@ -108,13 +110,16 @@ class StatisticsResponse(BaseModel):
     daily_stats: Dict[str, Any] = Field(..., description="Daily statistics")
 
 class ApplicationListResponse(BaseModel):
-    """Response model for individual application in the applications list"""
-    user_name: Optional[str] = Field(None, description="Candidate name", example="John Smith")
-    email_address: Optional[str] = Field(None, description="Candidate email address", example="john.smith@email.com")
-    application_status: str = Field(..., description="Application status", example="ACCEPTED")
-    cv_file: str = Field(..., description="CV filename", example="john_smith_resume.pdf")
-    cv_evaluation_score: Optional[int] = Field(None, description="CV evaluation score (0-100)", example=85)
+    """Response model for individual application in the applications list - HR Review Format"""
+    application_id: str = Field(..., description="Unique application identifier", example="96b51684-67df-4fec-877e-918969f92729")
+    candidate_email: Optional[str] = Field(None, description="Candidate email address", example="john.smith@email.com")
+    candidate_name: Optional[str] = Field(None, description="Candidate name", example="John Smith")
+    cv_score: Optional[int] = Field(None, description="CV evaluation score (0-100)", example=85)
+    cv_filename: str = Field(..., description="CV filename", example="john_smith_resume.pdf")
+    decision: Optional[str] = Field(None, description="CV evaluation decision", example="ACCEPTED")
+    job_id: str = Field(..., description="Associated job ID", example="8e25e637")
     quiz_score: Optional[int] = Field(None, description="Quiz score (0-10)", example=8)
+    status: str = Field(..., description="Application status", example="INTERVIEW_SCHEDULED")
 
 class ApplicationsListResponse(BaseModel):
     """Response model for the applications endpoint"""

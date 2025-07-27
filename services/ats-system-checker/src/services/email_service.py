@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class EmailService:
     """Service for sending email notifications"""
     
-    def __init__(self, gmail_user: str, gmail_password: str, database_service: Optional["DatabaseService"] = None):
+    def __init__(self, gmail_user: str, gmail_password: str, database_service: Optional["DatabaseService"] = None, frontend_url: str = "http://localhost:3000"):
         """
         Initialize email service
         
@@ -27,12 +27,14 @@ class EmailService:
             gmail_user: Gmail username
             gmail_password: Gmail app password
             database_service: Database service for saving notifications
+            frontend_url: Frontend URL for generating quiz links
         """
         self.gmail_user = gmail_user
         self.gmail_password = gmail_password
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 587
         self.database_service = database_service
+        self.frontend_url = frontend_url.rstrip('/')  # Remove trailing slash
     
     async def send_email_async(
         self, 
@@ -529,8 +531,8 @@ Sent with motivation from our ATS System
         """
         subject = f"🎉 Congratulations! You're Accepted - Complete Your Quiz for {job_title}"
         
-        # Generate personalized quiz link using application ID
-        quiz_link = f"http://localhost:8000/api/quiz/{quiz_session_id}"
+        # Generate personalized quiz link using frontend URL
+        quiz_link = f"{self.frontend_url}/api/quiz/{quiz_session_id}"
         
         # Use the full candidate_name if provided
         if candidate_name and candidate_name.strip():
