@@ -4,9 +4,9 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import { HTTPSTATUS } from "./config/http.config";
 import { Env } from "./config/env.config";
 import { asyncHandler } from "./middlewares/api/asyncHandler.middleware";
-import { errorHandler } from "./errors/errorHandler.middleware";
+import { errorHandler } from "./middlewares/errors/errorHandler.middleware";
 import { applySecurityStack, securityStack } from "./middlewares/security";
-
+import connectDatabase from "./config/database.config";
 
 const app = express();
 
@@ -31,8 +31,6 @@ app.get(
   })
 );
 
-
-
 // localhost http://localhost:4005/server/auth/login ==> direct to proxy http://localhost:4004/auth/login
 app.use('/server', createProxyMiddleware({
   target: Env.SERVER_URL,
@@ -54,7 +52,8 @@ app.use('/ats', createProxyMiddleware({
 
 app.use(errorHandler);
 
-app.listen(Env.API_GATEWAY_PORT, async () => {
-  console.log(`Server listening on port ${Env.API_GATEWAY_PORT} in development`);
+app.listen(Env.PORT, async () => {
+  console.log(`Server listening on port ${Env.PORT} in development`);
   console.log(`🔒 Security stack enabled with ${securityStack.length} protection layers`);
+  await connectDatabase();
 });
