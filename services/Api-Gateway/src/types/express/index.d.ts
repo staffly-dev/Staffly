@@ -2,7 +2,7 @@ import { Response } from 'express';
 
 declare module 'express-serve-static-core' {
     interface Request {
-      user?: any;
+        user?: any;
     }
-    interface Response extends Response {}
-  }
+    interface Response extends Response { }
+}
