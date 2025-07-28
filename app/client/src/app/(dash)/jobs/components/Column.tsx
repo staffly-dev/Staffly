@@ -2,13 +2,12 @@
 
 import { Card } from "@/components/ui/card";
 import Job from "./Job";
-import { JobType } from "../page";
+import { Job as JobType } from "@/context/JobContext";
 import { useDroppable } from "@dnd-kit/core";
 
 const colors = {
   active: "bg-green-500",
-  "in-active": "bg-yellow-500",
-  completed: "bg-red-500",
+  inActive: "bg-red-500",
 };
 
 function Column({
@@ -31,11 +30,15 @@ function Column({
         ></span>
         {column.title}
       </h1>
-      {jobs.map((job) => {
-        if (job.status === column.id) {
-          return <Job key={job.id} job={job} />;
-        }
-      })}
+      {jobs
+        .filter((job) => {
+          if (column.id === "active") return job.is_active === true;
+          if (column.id === "inActive") return job.is_active === false;
+          // return false;
+        })
+        .map((job) => (
+          <Job key={job.job_id} job={job} />
+        ))}
     </Card>
   );
 }

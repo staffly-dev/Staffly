@@ -67,7 +67,7 @@ function StatusCard({
 
 const statusData = [
   {
-    title: "Total Employee",
+    title: "Total Employees",
     value: "560",
     icon: <IoPersonOutline className="h-5 w-5" />,
     change: {
@@ -77,7 +77,7 @@ const statusData = [
     lastUpdate: "July 16, 2023",
   },
   {
-    title: "Total Applicant",
+    title: "Total Applicants",
     value: "1050",
     icon: <IoBriefcaseOutline className="h-5 w-5" />,
     change: {
@@ -87,7 +87,7 @@ const statusData = [
     lastUpdate: "July 14, 2023",
   },
   {
-    title: "Today Attendance",
+    title: "Today's Attendance",
     value: "470",
     icon: <IoTimeOutline className="h-5 w-5" />,
     change: {
@@ -97,7 +97,7 @@ const statusData = [
     lastUpdate: "July 14, 2023",
   },
   {
-    title: "Total Projects",
+    title: "Total Jobs Posted",
     value: "250",
     icon: <IoFolderOpenOutline className="h-5 w-5" />,
     change: {

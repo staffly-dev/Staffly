@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import LoadingComponent from "./LoadingComponent";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -43,11 +44,7 @@ export function AuthGuard({
 
   // Show loading state while checking authentication or before mounting
   if (!mounted || isLoadingUser) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 dark:border-white border-gray-900 "></div>
-      </div>
-    );
+    return <LoadingComponent />;
   }
 
   // If route requires auth and user is not authenticated, don't render children

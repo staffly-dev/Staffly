@@ -13,7 +13,6 @@ import {
   MdWork,
   MdPersonOutline,
   MdEventNote,
-  // MdCalendarToday,
   MdSettings,
 } from "react-icons/md";
 import { DarkLightSwitch } from "./DarkLightSwitch";
@@ -59,11 +58,6 @@ const menuItems = [
     icon: MdEventNote,
     href: "/leaves",
   },
-  // {
-  //   title: "Holidays",
-  //   icon: MdCalendarToday,
-  //   href: "/holidays",
-  // },
   {
     title: "Settings",
     icon: MdSettings,
@@ -81,12 +75,12 @@ export function Sidebar() {
           <div className="flex items-center gap-2">
             <Image
               src="/imgs/logo.png"
-              alt="HRMS Logo"
+              alt="Staffly Logo"
               width={40}
               height={40}
               className="object-contain"
             />
-            <span className="font-semibold text-xl">HRMS</span>
+            <span className="font-semibold text-xl">Staffly</span>
           </div>
         </div>
 

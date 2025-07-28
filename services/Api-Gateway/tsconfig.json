@@ -1,19 +1,19 @@
 {
-    "compilerOptions": {
-      "target": "es2017",
-      "module": "commonjs",
-      "outDir": "dist",
-      "baseUrl": ".",
-      "paths": {
-        "server/*": ["../server/src/*"] 
-      },
-      "rootDirs": [".", "../server/src"], 
-      "strict": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "typeRoots": ["./types", "./node_modules/@types"]
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "server/*": ["../server/src/*"],
+      "@/*": ["./src/*"]
     },
-    "include": ["**/*.ts", "types/**/*.d.ts", "../server/src/**/*.ts"],
-    "exclude": ["node_modules"]
-  }
-  
+    "rootDirs": [".", "../server/src"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "typeRoots": ["./types", "./node_modules/@types"]
+  },
+  "include": ["src/**/*.ts", "types/**/*.d.ts", "../server/src/**/*.ts"],
+  "exclude": ["node_modules"]
+}

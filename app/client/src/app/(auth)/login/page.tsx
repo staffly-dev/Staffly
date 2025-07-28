@@ -40,9 +40,14 @@ export default function SignInPage() {
     <div>
       <div className="flex gap-3 items-center mb-8">
         <div className="relative w-10 h-10">
-          <Image src={logo} alt="HRMS Logo" fill className="object-contain" />
+          <Image
+            src={logo}
+            alt="Staffly Logo"
+            fill
+            className="object-contain"
+          />
         </div>
-        <h1 className="text-2xl font-semibold">HRMS</h1>
+        <h1 className="text-2xl font-semibold">Staffly</h1>
       </div>
 
       <div className="space-y-6">
@@ -56,6 +61,7 @@ export default function SignInPage() {
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           {loginError && (
             <p className="text-sm text-red-500 mt-1">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {(loginError as any).response?.data?.message ||
                 "Something went wrong, check your network"}
             </p>

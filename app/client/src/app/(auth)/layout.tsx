@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { AuthGuard } from "@/components/AuthGuard";
 
 export const metadata: Metadata = {
-  title: "Raizero HRMS Auth",
+  title: "Staffly HRMS Auth",
   description: "Auth page",
 };
 

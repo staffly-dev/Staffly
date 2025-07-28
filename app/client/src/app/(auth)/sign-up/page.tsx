@@ -61,8 +61,11 @@ export default function SignUpPage() {
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           {registerError && (
             <p className="text-sm text-red-500 mt-1">
-              {(registerError as any).response?.data?.message ||
-                "Something went wrong, check your network"}
+              {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (registerError as any).response?.data?.message ||
+                  "Something went wrong, check your network"
+              }
             </p>
           )}
           <div className="space-y-4">

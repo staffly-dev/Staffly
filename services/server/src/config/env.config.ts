@@ -6,17 +6,14 @@ const envPath = path.resolve(__dirname, '../../.env');
 dotenv.config({ path: envPath });
 
 const envConfig = () => ({
-  //? Backend Configuration
-  PORT: getEnv("PORT", "4004"),
-  API_GATEWAY_PORT: getEnv("API_GATEWAY_PORT", "4005"),
-  ATS_SYSTEM_URL: getEnv("ATS_SYSTEM_URL", "http://localhost:4000"),
-  SERVER_URL: getEnv("SERVER_URL", "http://localhost:4004"),
-  NODE_ENV: getEnv("NODE_ENV", "development"),
-  FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "http://localhost:3000"),
+  //? =========== Backend Configuration ===========
+  PORT: getEnv("PORT"),
+  NODE_ENV: getEnv("NODE_ENV"),
+  FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN"),
 
   //? Swagger Docs Configuration
-  SWAGGER_USER: getEnv("SWAGGER_USER", "staffly"),
-  SWAGGER_PASSWORD: getEnv("SWAGGER_PASSWORD", "defaultPass"),
+  SWAGGER_USER: getEnv("SWAGGER_USER"),
+  SWAGGER_PASSWORD: getEnv("SWAGGER_PASSWORD"),
 
   //* Database configuration (MongoDB)
   MONGO_URI_RMOTE: getEnv("MONGO_URI_RMOTE"),
@@ -24,13 +21,13 @@ const envConfig = () => ({
 
   // Auth JWT
   JWT: {
-    SECRET: getEnv("JWT_SECRET", "jwt_secret"),
-    EXPIRES_IN: getEnv("JWT_EXPIRES_IN", "15m"),
-    REFRESH_SECRET: getEnv("JWT_REFRESH_SECRET", "jwt_refresh_key"),
-    REFRESH_EXPIRES_IN: getEnv("JWT_REFRESH_EXPIRES_IN", "7d"),
+    SECRET: getEnv("JWT_SECRET"),
+    EXPIRES_IN: getEnv("JWT_EXPIRES_IN"),
+    REFRESH_SECRET: getEnv("JWT_REFRESH_SECRET"),
+    REFRESH_EXPIRES_IN: getEnv("JWT_REFRESH_EXPIRES_IN"),
   },
 
-  //! Security Layer
+  //! =========== Security Layer===========
   // Rate limiting
   RATE_LIMIT_WINDOW_MS: getEnv("RATE_LIMIT_WINDOW_MS"),
   RATE_LIMIT_MAX_REQUESTS: getEnv("RATE_LIMIT_MAX_REQUESTS"),
@@ -62,19 +59,16 @@ const envConfig = () => ({
   CORS_SECURITY_HEADERS: getEnv("CORS_SECURITY_HEADERS", "true"),
 
   //? Email configuration
-  EMAIL_HOST: process.env.EMAIL_HOST,
-  EMAIL_PORT: parseInt(process.env.EMAIL_PORT || "465"),
-  EMAIL_SECURE: process.env.EMAIL_SECURE === "true",
-  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
-  EMAIL_USER: process.env.EMAIL_USER || "stafflycompany@gmail.com",
-  EMAIL_FROM: process.env.EMAIL_FROM || "stafflycompany@gmail.com",
+  EMAIL_HOST: getEnv("EMAIL_HOST"),
+  EMAIL_PORT: parseInt(getEnv("EMAIL_PORT") || "465"),
+  EMAIL_SECURE: getEnv("EMAIL_SECURE", "true") === "true",
+  EMAIL_PASSWORD: getEnv("EMAIL_PASSWORD"),
+  EMAIL_USER: getEnv("EMAIL_USER"),
+  EMAIL_FROM: getEnv("EMAIL_FROM"),
 
   // ============ Anothers Configuration ============
   UPSTASH_REDIS_REST_URL: getEnv("UPSTASH_REDIS_REST_URL"),
   UPSTASH_REDIS_REST_TOKEN: getEnv("UPSTASH_REDIS_REST_TOKEN"),
-
-  ARCJET_KEY: getEnv("ARCJET_KEY"),
-  ARCJET_ENV: getEnv("ARCJET_ENV"),
 });
 
 export const Env = envConfig();
