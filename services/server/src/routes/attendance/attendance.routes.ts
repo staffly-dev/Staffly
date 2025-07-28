@@ -1,5 +1,5 @@
 import { Router } from "express";
-  import { createAttendanceController, getAllAttendanceController, getAttendanceController, searchAttendanceController } from "../../controllers/attendance/attendance.controller";
+import { createAttendanceController, getAllAttendanceController, getAttendanceController, searchAttendanceController } from "../../controllers/attendance/attendance.controller";
 import { authenticateToken } from "../../middlewares/auth/isAuthenticated.middleware";
 import { securityStack } from "../../middlewares/security";
 
@@ -13,17 +13,17 @@ attendanceRoutes.use(authenticateToken);
 
 // create Attendance
 // /attendance/checkin
-attendanceRoutes.post("/checkin",createAttendanceController);
+attendanceRoutes.post("/checkin", createAttendanceController);
 
 // search by firstName and lastName
-attendanceRoutes.get('/' ,searchAttendanceController )
+attendanceRoutes.get('/search', searchAttendanceController)
 
 // get All Attendance
 // /attendance
-attendanceRoutes.get("/", getAllAttendanceController);
+attendanceRoutes.get("/getAllAttendance", getAllAttendanceController);
 
 // get Attendance by id
 // /attendance/:id
-attendanceRoutes.get("/:id", getAttendanceController);
+attendanceRoutes.get("/getAttendance/:id", getAttendanceController);
 
 export default attendanceRoutes;

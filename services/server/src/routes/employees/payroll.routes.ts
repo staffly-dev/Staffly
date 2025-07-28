@@ -13,22 +13,22 @@ payrollRoutes.use(authenticateToken);
 
 // create payroll
 // /payroll
-payrollRoutes.post('/', createPayrollController);
+payrollRoutes.post('/createPayroll', createPayrollController);
 
 // search by firstName and lastName
 // /payroll
-payrollRoutes.get('/', searchPayrollController)
+payrollRoutes.get('/search', searchPayrollController)
 
 // get all payroll
 // /payroll
-payrollRoutes.get('/', getAllPayrollController)
+payrollRoutes.get('/getAllPayroll', getAllPayrollController)
 
 // update payroll
 // /payroll/:id
-payrollRoutes.put('/:id', updatePayrollController);
+payrollRoutes.put('/updatePayroll/:id', updatePayrollController);
 
 // delete payroll
 // /payroll/:id
-payrollRoutes.delete('/:id', deletePayrollController);
+payrollRoutes.delete('/deletePayroll/:id', deletePayrollController);
 
 export default payrollRoutes;

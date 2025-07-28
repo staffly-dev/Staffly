@@ -66,7 +66,7 @@
 
 /**
  * @swagger
- * /dashboard/attendance:
+ * /dashboard/total-attendance:
  *   get:
  *     tags:
  *       - Dashboard

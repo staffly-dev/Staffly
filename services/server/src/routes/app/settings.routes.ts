@@ -13,8 +13,8 @@ settingsRoutes.use(authenticateToken);
 
 // get settings by userId
 // /settings/:userId
-settingsRoutes.get('/:userId' ,getSettingsController)
+settingsRoutes.get('/getSettings/:userId', getSettingsController)
 
-settingsRoutes.put('/:userId' ,updateSettingsController)
+settingsRoutes.put('/updateSettings/:userId', updateSettingsController)
 
 export default settingsRoutes;
