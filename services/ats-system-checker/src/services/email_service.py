@@ -529,10 +529,10 @@ Sent with motivation from our ATS System
         Returns:
             bool: True if sent successfully
         """
-        subject = f"🎉 Congratulations! You're Accepted - Complete Your Quiz for {job_title}"
+        subject = f"Congratulations! You're Accepted - Complete Your Quiz for {job_title}"
         
         # Generate personalized quiz link using frontend URL
-        quiz_link = f"{self.frontend_url}/api/quiz/{quiz_session_id}"
+        quiz_link = f"{self.frontend_url}/quiz/{quiz_session_id}"
         
         # Use the full candidate_name if provided
         if candidate_name and candidate_name.strip():
