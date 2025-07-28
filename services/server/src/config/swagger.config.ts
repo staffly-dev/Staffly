@@ -8,7 +8,7 @@ export const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:4004/api', // Change if needed
+        url: 'http://localhost:4001/api', // Change if needed
       },
     ],
     components: {
@@ -26,5 +26,11 @@ export const swaggerOptions = {
       },
     ],
   },
-  apis: ['./src/routes/*.ts', './src/docs/*.ts'], // Include your route/docs folder
+  apis: [
+    './src/routes/*.ts',
+    './src/docs/app/*.ts',
+    './src/docs/auth/*.ts',
+    './src/docs/attendance/*.ts',
+    './src/docs/employees/*.ts',
+  ], // Include your route/docs folder
 };
