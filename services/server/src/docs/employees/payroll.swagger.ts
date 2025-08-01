@@ -85,7 +85,7 @@
 
 /**
  * @swagger
- * /payroll:
+ * /payroll/createPayroll:
  *   post:
  *     tags:
  *       - Payroll
@@ -130,12 +130,12 @@
 
 /**
  * @swagger
- * /payroll:
+ * /payroll/search:
  *   get:
  *     tags:
  *       - Payroll
- *     summary: Get all payroll records or search by employee name
- *     description: Retrieves all payroll records or searches by employee first name and/or last name.
+ *     summary: Search payroll records by employee name
+ *     description: Searches payroll records by employee first name and/or last name.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -174,7 +174,38 @@
 
 /**
  * @swagger
- * /payroll/{id}:
+ * /payroll/getAllPayroll:
+ *   get:
+ *     tags:
+ *       - Payroll
+ *     summary: Get all payroll records
+ *     description: Retrieves all payroll records from the system.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Payroll records retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Payroll fetched successfully
+ *                 payroll:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Payroll'
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /payroll/updatePayroll/{id}:
  *   put:
  *     tags:
  *       - Payroll
@@ -229,7 +260,7 @@
 
 /**
  * @swagger
- * /payroll/{id}:
+ * /payroll/deletePayroll/{id}:
  *   delete:
  *     tags:
  *       - Payroll

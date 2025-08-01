@@ -14,6 +14,7 @@ import attendanceRoutes from "./routes/attendance/attendance.routes";
 import dotenv from "dotenv";
 import dashboardRoutes from "./routes/app/dashboard.routes";
 import settingsRoutes from "./routes/app/settings.routes";
+import payrollRoutes from "./routes/employees/payroll.routes";
 dotenv.config();
 
 const app = express();
@@ -57,6 +58,9 @@ app.use(`/attendance`, attendanceRoutes);
 app.use(`/dashboard`, dashboardRoutes);
 // /settings
 app.use(`/settings`, settingsRoutes);
+
+// /payroll
+app.use('/payroll', payrollRoutes);
 
 app.use(errorHandler);
 

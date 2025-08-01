@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /settings/{userId}:
+ * /settings/getSettings/{userId}:
  *   get:
  *     tags:
  *       - Settings
@@ -72,7 +72,7 @@
 
 /**
  * @swagger
- * /settings/{userId}:
+ * /settings/updateSettings/{userId}:
  *   put:
  *     tags:
  *       - Settings

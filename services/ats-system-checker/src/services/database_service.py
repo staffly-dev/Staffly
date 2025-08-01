@@ -1410,3 +1410,59 @@ class DatabaseService:
         except Exception as e:
             logger.error(f" Failed to get quiz for display {quiz_session_id}: {e}")
             return None
+    
+    async def delete_job_posting(self, job_id: str) -> bool:
+        """
+        Delete a job posting and all its associated applications
+        
+        Args:
+            job_id: Job posting ID to delete
+            
+        Returns:
+            bool: True if deleted successfully, False otherwise
+        """
+        try:
+            # First, delete all applications associated with this job
+            applications_deleted = await Application.find(
+                Application.job_id == job_id
+            ).delete()
+            
+            logger.info(f" Deleted {applications_deleted} applications for job {job_id}")
+            
+            # Then delete the job posting
+            job_deleted = await JobPosting.find_one(JobPosting.job_id == job_id)
+            if job_deleted:
+                await job_deleted.delete()
+                logger.info(f" Successfully deleted job posting: {job_id}")
+                return True
+            else:
+                logger.warning(f" Job posting not found: {job_id}")
+                return False
+                
+        except Exception as e:
+            logger.error(f" Failed to delete job posting {job_id}: {e}")
+            return False
+    
+    async def delete_application(self, application_id: str) -> bool:
+        """
+        Delete a specific application
+        
+        Args:
+            application_id: Application ID to delete
+            
+        Returns:
+            bool: True if deleted successfully, False otherwise
+        """
+        try:
+            application = await Application.find_one(Application.application_id == application_id)
+            if application:
+                await application.delete()
+                logger.info(f" Successfully deleted application: {application_id}")
+                return True
+            else:
+                logger.warning(f" Application not found: {application_id}")
+                return False
+                
+        except Exception as e:
+            logger.error(f" Failed to delete application {application_id}: {e}")
+            return False

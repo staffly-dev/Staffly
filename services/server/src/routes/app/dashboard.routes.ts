@@ -13,10 +13,10 @@ dashboardRoutes.use(authenticateToken);
 
 // get dashboard (total employees , total attendance , total applicants , total projects)
 // /dashboard
-dashboardRoutes.get('/' ,dashboardController)
+dashboardRoutes.get('/', dashboardController)
 
 // get all attendance
 // /dashboard/attendance
-dashboardRoutes.get("/attendance", getAllAttendanceDashboardController);
+dashboardRoutes.get("/total-attendance", getAllAttendanceDashboardController);
 
 export default dashboardRoutes;
