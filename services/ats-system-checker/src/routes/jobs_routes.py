@@ -116,4 +116,20 @@ async def submit_application(
         cv_file=cv_file,
         candidate_email=candidate_email,
         candidate_name=candidate_name
-    ) 
+    )
+
+
+@router.delete("/api/jobs/{job_id}", summary="Delete Job Posting")
+async def delete_job_posting(
+    job_id: str,
+    controller: JobController = Depends(get_job_controller)  # type: ignore
+):
+    """
+    Delete a job posting and all its associated applications.
+    
+    - **job_id**: Unique identifier of the job posting to delete
+    
+    This will permanently delete the job posting and all applications associated with it.
+    Use with caution as this action cannot be undone.
+    """
+    return await controller.delete_job_posting(job_id) 

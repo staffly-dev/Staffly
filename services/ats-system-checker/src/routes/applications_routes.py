@@ -34,4 +34,20 @@ async def get_all_applications(
     """
     return await controller.get_all_applications()
 
+
+@router.delete("/applications/{application_id}", summary="Delete Application")
+async def delete_application(
+    application_id: str,
+    controller: ApplicationController = Depends(get_application_controller)  # type: ignore
+):
+    """
+    Delete a specific job application.
+    
+    - **application_id**: Unique identifier of the application to delete
+    
+    This will permanently delete the application and all associated data.
+    Use with caution as this action cannot be undone.
+    """
+    return await controller.delete_application(application_id)
+
  

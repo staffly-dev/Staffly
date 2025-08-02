@@ -5,15 +5,16 @@ import { HTTPSTATUS } from "./config/http.config";
 import { Env } from "./config/env.config";
 import { swaggerAuth } from "./middlewares/docs/swagger-docs.middleware";
 import { swaggerSpec, swaggerUi } from "./swagger";
-import authRoutes from "./routes/auth.route";
-import userRoutes from "./routes/user.route";
-import employeeRoutes from "./routes/employees.route";
+import authRoutes from "./routes/auth/auth.route";
+import userRoutes from "./routes/auth/user.route";
+import employeeRoutes from "./routes/employees/employees.route";
 import { errorHandler } from "./middlewares/errors/errorHandler.middleware";
 import connectDatabase from "./config/database.config";
-import attendanceRoutes from "./routes/attendance.routes";
+import attendanceRoutes from "./routes/attendance/attendance.routes";
 import dotenv from "dotenv";
-import dashboardRoutes from "./routes/dashboard.routes";
-import settingsRoutes from "./routes/settings.routes";
+import dashboardRoutes from "./routes/app/dashboard.routes";
+import settingsRoutes from "./routes/app/settings.routes";
+import payrollRoutes from "./routes/employees/payroll.routes";
 dotenv.config();
 
 const app = express();
@@ -40,34 +41,31 @@ app.get(
 );
 
 if (Env.NODE_ENV !== 'development') {
-  app.use(`/user/api-docs`, swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use(`/api-docs`, swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 } else {
-  app.use(`/user/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use(`/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
-
 
 // /auth
 app.use(`/auth`, authRoutes);
-
 // /users
 app.use(`/users`, userRoutes);
-
 // /employees
 app.use(`/employees`, employeeRoutes);
-
 // /attendance
 app.use(`/attendance`, attendanceRoutes);
-
 // /dashboard
 app.use(`/dashboard`, dashboardRoutes);
-
 // /settings
 app.use(`/settings`, settingsRoutes);
+
+// /payroll
+app.use('/payroll', payrollRoutes);
 
 app.use(errorHandler);
 
 app.listen(Env.PORT, async () => {
-  console.log(`Server listening on port ${Env.PORT} in development`);
+  console.log(`Server listening on port ${Env.PORT} in ${Env.NODE_ENV}`);
   console.log(`🔒 Security stack enabled with ${securityStack.length} protection layers`);
   await connectDatabase();
 }); 

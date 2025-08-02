@@ -8,7 +8,7 @@ const connectDatabase = async () => {
     await mongoose.connect(Env.MONGO_URI_RMOTE);
     console.log("Connected to Remote Mongo database");
   } catch (error) {
-    console.log("Error connecting to Mongo database");
+    console.error("❌ Error connecting to MongoDB:", error);
     process.exit(1);
   }
 };

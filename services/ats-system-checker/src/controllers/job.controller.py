@@ -4,6 +4,7 @@ Handles job posting creation, retrieval, and management
 """
 
 from typing import Optional, List
+from datetime import datetime
 from fastapi import HTTPException, UploadFile
 import httpx
 
@@ -329,4 +330,51 @@ class JobController:
             raise
         except Exception as e:
             logger.error(f" Error processing application: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to process application: {str(e)}") 
+            raise HTTPException(status_code=500, detail=f"Failed to process application: {str(e)}")
+    
+    async def delete_job_posting(self, job_id: str):
+        """
+        Delete a job posting and all its associated applications
+        
+        Args:
+            job_id: Job posting ID to delete
+            
+        Returns:
+            APIResponse: Deletion confirmation
+        """
+        try:
+            logger.info(f" Deleting job posting: {job_id}")
+            
+            # Check if job posting exists
+            job_posting = await self.database_service.get_job_posting_by_id(job_id)
+            if not job_posting:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Job posting not found"
+                )
+            
+            # Delete job posting and associated applications
+            success = await self.database_service.delete_job_posting(job_id)
+            
+            if not success:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to delete job posting"
+                )
+            
+            logger.info(f" Successfully deleted job posting: {job_id}")
+            
+            return success_response(
+                message="Job posting deleted successfully",
+                data={
+                    "job_id": job_id,
+                    "title": job_posting.title,
+                    "deleted_at": datetime.now().isoformat()
+                }
+            )
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f" Error deleting job posting: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to delete job posting: {str(e)}") 
