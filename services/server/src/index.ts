@@ -65,7 +65,7 @@ app.use('/payroll', payrollRoutes);
 app.use(errorHandler);
 
 app.listen(Env.PORT, async () => {
-  console.log(`Server listening on port ${Env.PORT} in development`);
+  console.log(`Server listening on port ${Env.PORT} in ${Env.NODE_ENV}`);
   console.log(`🔒 Security stack enabled with ${securityStack.length} protection layers`);
   await connectDatabase();
 }); 
