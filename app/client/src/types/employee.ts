@@ -12,8 +12,6 @@ export interface Employee {
   address: string;
   city: string;
   state: string;
-  zipcode: string;
-  employeeId: string;
   userName: string;
   employeeType: string;
   department: string;
@@ -25,8 +23,8 @@ export interface Employee {
   linkdeinLink?: string;
   githubLink?: string;
   slackUserName?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export type CreateEmployeeData = Omit<

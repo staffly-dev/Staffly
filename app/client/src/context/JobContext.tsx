@@ -152,15 +152,12 @@ export function JobProvider({ children }: { children: ReactNode }) {
     try {
       const response = await axios.get(`${JOBS_API_BASE}/api/jobs`);
       setJobs(response.data);
-      console.log("response", response.data);
-
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
         (err as unknown as { response: { data: { message: string } } }).response
-          .data.message || "Failed to Get jobs";
+          ?.data.message || "Failed to Get jobs";
       setError(errorMessage);
-      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -175,9 +172,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       const errorMessage =
         (err as unknown as { response: { data: { message: string } } }).response
-          .data.message || "Failed to Get job";
+          ?.data.message || "Failed to Get job";
       setError(errorMessage);
-      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -195,9 +191,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
       } catch (err: unknown) {
         const errorMessage =
           (err as unknown as { response: { data: { message: string } } })
-            .response.data.message || "Failed to create job";
+            .response?.data.message || "Failed to create job";
         setError(errorMessage);
-        throw new Error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -217,14 +212,12 @@ export function JobProvider({ children }: { children: ReactNode }) {
           `${JOBS_API_BASE}/api/jobs/${jobId}/apply`,
           application
         );
-        console.log("response", response.data);
         return response.data;
       } catch (err: unknown) {
         const errorMessage =
           (err as unknown as { response: { data: { message: string } } })
-            .response.data.message || "Failed to apply for job";
+            .response?.data.message || "Failed to apply for job";
         setError(errorMessage);
-        throw new Error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -241,14 +234,12 @@ export function JobProvider({ children }: { children: ReactNode }) {
         const response = await axios.get(
           `${JOBS_API_BASE}/api/quiz/${quizSessionId}`
         );
-        console.log("get quiz by session id response.data", response.data);
         return response.data?.data;
       } catch (err: unknown) {
         const errorMessage =
           (err as unknown as { response: { data: { message: string } } })
             .response?.data.message || "Failed to get quiz";
         setError(errorMessage);
-        throw new Error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -261,7 +252,6 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const response = await axios.get(`${JOBS_API_BASE}/api/quiz/users`);
-      console.log("get all quiz users response", response.data);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -279,7 +269,6 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const response = await axios.get(`${JOBS_API_BASE}/applications`);
-      console.log("get all candidates response", response.data);
       setCandidates(response.data.applications);
       setTotalApplications(response.data.total_applications);
       return response.data;
@@ -298,15 +287,13 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${JOBS_API_BASE}/statistics`);
-      console.log("get admin statistics response", response.data);
+      const response = await axios.get(`${JOBS_API_BASE}/api/statistics`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
         (err as unknown as { response: { data: { message: string } } }).response
           ?.data.message || "Failed to get admin statistics";
       setError(errorMessage);
-      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -335,15 +322,12 @@ export function JobProvider({ children }: { children: ReactNode }) {
             },
           }
         );
-        console.log("submit quiz response", response.data);
         return response.data;
       } catch (err: unknown) {
         const errorMessage =
           (err as unknown as { response: { data: { message: string } } })
             .response?.data.message || "Failed to submit quiz";
-        console.log("submit quiz error", err);
         setError(errorMessage);
-        // throw new Error(errorMessage);
       } finally {
         setLoading(false);
       }

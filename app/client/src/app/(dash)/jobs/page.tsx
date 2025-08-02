@@ -11,6 +11,7 @@ import { AddJobModal } from "./components/AddJobModal";
 import { useJob } from "@/context/JobContext";
 import Job from "./components/Job";
 import LoadingComponent from "@/components/LoadingComponent";
+import ErrorComponent from "@/components/ErrorComponent";
 
 // const columns = [
 //   {
@@ -38,7 +39,7 @@ import LoadingComponent from "@/components/LoadingComponent";
 // };
 
 export default function Page() {
-  const { jobs, loading, error, getAllJobs } = useJob();
+  const { jobs, loading, error, getAllJobs, clearError } = useJob();
   const [isAddJobOpen, setIsAddJobOpen] = useState(false);
 
   useEffect(() => {
@@ -62,6 +63,10 @@ export default function Page() {
   //   );
   // }
 
+  if (error) {
+    return <ErrorComponent error={error} clearError={clearError} />;
+  }
+
   return (
     <Card className="p-6">
       <div className="flex justify-between">
@@ -73,7 +78,6 @@ export default function Page() {
           Add New Job
         </Button>
       </div>
-      {error && <p className="text-red-500 text-xl text-center">{error}</p>}
       {/* {loading ? (
         <p className="text-center text-2xl">Loading...</p>
       ) : (

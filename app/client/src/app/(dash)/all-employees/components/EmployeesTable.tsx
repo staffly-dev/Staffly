@@ -4,10 +4,16 @@ import { Employee } from "@/types/employee";
 import { Pagination } from "@/components/Pagination";
 import { useState } from "react";
 import Link from "next/link";
+import LoadingComponent from "@/components/LoadingComponent";
+import ErrorComponent from "@/components/ErrorComponent";
+import { useEmployee } from "@/context/EmployeeContext";
+import { toast } from "sonner";
 
 export function EmployeesTable({ employees }: { employees: Employee[] }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const { deleteEmployee, loading, DeleteLoading, error, clearError } =
+    useEmployee();
   const totalItems = employees.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -16,17 +22,41 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
     currentPage * itemsPerPage
   );
 
+  const handleDeleteEmployee = (employeeId: string) => {
+    toast.warning("Are you sure you want to delete this employee?", {
+      action: {
+        label: "Delete",
+        onClick: () => {
+          deleteEmployee(employeeId);
+          toast.success("Employee deleted successfully");
+        },
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {},
+      },
+      position: "top-center",
+    });
+  };
+
+  if (loading) {
+    return <LoadingComponent />;
+  }
+  if (error) {
+    return <ErrorComponent error={error} clearError={clearError} />;
+  }
+
   return (
     <>
-      <div>
-        <table className="min-w-full divide-y divide-hrms-gray/20">
+      <div className="min-h-[400px]">
+        <table className="min-w-full divide-y divide-hrms-gray/20 ">
           <thead>
             <tr>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
-                Employee Name
+                Employee
               </th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
-                Employee ID
+                Employee Email
               </th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
                 Department
@@ -38,7 +68,7 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
                 Type
               </th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
-                Status
+                User Name
               </th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">
                 Action
@@ -47,36 +77,43 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
           </thead>
           <tbody className="divide-y divide-hrms-gray/20">
             {currentEmployees.map((employee) => (
-              <tr key={employee.id} className="hover:bg-hrms-gray/20">
+              <tr key={employee._id} className="hover:bg-hrms-gray/20">
                 <td className="px-6 py-3">
                   <div className="flex items-center">
                     <div className="h-8 w-8 flex-shrink-0">
                       <Image
                         className="h-8 w-8 rounded-full"
-                        src={employee.avatar}
-                        alt={employee.name}
+                        src={employee.profilePicture || "/imgs/user.png"}
+                        alt={employee.firstName + " " + employee.lastName}
                         width={32}
                         height={32}
                       />
                     </div>
                     <div className="ml-4">
-                      <div className="text-sm font-medium">{employee.name}</div>
+                      <div className="text-sm font-medium">
+                        {employee.firstName + " " + employee.lastName}
+                      </div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-3 text-sm">{employee.id}</td>
+                <td className="px-6 py-3 text-sm">
+                  <Link
+                    href={`mailto:${employee.emailAddress}`}
+                    className="hover:text-primary underline"
+                  >
+                    {employee.emailAddress}
+                  </Link>
+                </td>
                 <td className="px-6 py-3 text-sm">{employee.department}</td>
                 <td className="px-6 py-3 text-sm">{employee.designation}</td>
-                <td className="px-6 py-3 text-sm">{employee.type}</td>
-                <td className="px-6 py-3">
-                  <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-sm bg-primary/20 text-primary">
-                    {employee.status}
-                  </span>
+                <td className="px-3 py-1 mt-4 inline-flex text-xs leading-5 font-semibold rounded-sm bg-primary/20 text-primary">
+                  <span className="capitalize">{employee.employeeType}</span>
                 </td>
+                <td className="px-6 py-3">{employee.userName}</td>
                 <td className="px-6 py-3">
                   <div className="flex gap-3">
                     <Link
-                      href={`/all-employees/${employee.id}`}
+                      href={`/all-employees/${employee._id}`}
                       className="hover:text-primary"
                     >
                       <svg
@@ -99,7 +136,10 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
                         />
                       </svg>
                     </Link>
-                    <button className="hover:text-primary">
+                    <Link
+                      href={`/all-employees/edit-employee/${employee._id}`}
+                      className="hover:text-primary"
+                    >
                       <svg
                         className="h-5 w-5"
                         fill="none"
@@ -113,8 +153,12 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
                           d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                         />
                       </svg>
-                    </button>
-                    <button className="hover:text-primary">
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteEmployee(employee._id)}
+                      className="hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={DeleteLoading}
+                    >
                       <svg
                         className="h-5 w-5"
                         fill="none"

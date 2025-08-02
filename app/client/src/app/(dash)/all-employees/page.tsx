@@ -5,22 +5,10 @@ import { EmployeesTable } from "./components/EmployeesTable";
 import { AddNewEmployeeButton } from "./components/Buttons";
 import { SearchInput } from "@/components/searchInput";
 import { FilterDialog } from "./components/FilterDialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TbFilterPlus } from "react-icons/tb";
-
-export const employees: Employee[] = [
-  ...Array.from({ length: 74 }).map((_, i) => ({
-    id: `${i + 7893222}`,
-    name: `Employee ${i + 7893222}`,
-    department: i % 2 === 0 ? "Development" : "HR",
-    avatar: "/imgs/user.png",
-    designation: i % 2 === 0 ? "UI/UX Designer" : "Frontend Developer",
-    type: i % 2 === 0 ? "Office" : "Remote",
-    status: i % 3 === 0 ? "Permanent" : "Contractor",
-    email: `employee${i + 7893222}@example.com`,
-  })),
-];
+import { useEmployee } from "@/context/EmployeeContext";
 
 export function EmployeesCard({ employees }: { employees: Employee[] }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -48,7 +36,9 @@ export function EmployeesCard({ employees }: { employees: Employee[] }) {
     // Filter by search term
     if (
       appliedFilters.searchTerm &&
-      !emp.name.toLowerCase().includes(appliedFilters.searchTerm.toLowerCase())
+      !emp.firstName
+        .toLowerCase()
+        .includes(appliedFilters.searchTerm.toLowerCase())
     ) {
       return false;
     }
@@ -65,7 +55,7 @@ export function EmployeesCard({ employees }: { employees: Employee[] }) {
     if (
       appliedFilters.workTypes.length > 0 &&
       !appliedFilters.workTypes.includes(
-        emp.type?.replace(" ", "-").toLowerCase()
+        emp.employeeType?.replace(" ", "-").toLowerCase()
       )
     ) {
       return false;
@@ -101,5 +91,11 @@ export function EmployeesCard({ employees }: { employees: Employee[] }) {
 }
 
 export default function EmployeesPage() {
+  const { employees, getAllEmployees } = useEmployee();
+
+  useEffect(() => {
+    getAllEmployees();
+  }, [getAllEmployees]);
+
   return <EmployeesCard employees={employees} />;
 }

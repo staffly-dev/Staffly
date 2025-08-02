@@ -128,7 +128,6 @@ async function refreshToken(): Promise<string> {
     });
 
     const { accessToken, refreshToken: newRefreshToken } = response.data;
-    console.log(response.data);
 
     if (!accessToken) {
       throw new Error("No access token received from refresh endpoint");

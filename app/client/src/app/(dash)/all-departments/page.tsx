@@ -1,126 +1,51 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CiSearch } from "react-icons/ci";
 import Link from "next/link";
 import { FaChevronRight } from "react-icons/fa6";
-
-interface Member {
-  name: string;
-  role: string;
-  image: string;
-}
-
-interface Department {
-  name: string;
-  members: Member[];
-}
-
-const departments: Department[] = [
-  {
-    name: "Design Department",
-    members: [
-      {
-        name: "Dionne Russell",
-        role: "Sr. UI/UX Designer",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Arlene McCoy",
-        role: "Sr. UI/UX Designer",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Cody Fisher",
-        role: "Sr. UI/UX Designer",
-        image: "/imgs/user.png",
-      },
-      { name: "Theresa Webb", role: "UI/UX Designer", image: "/imgs/test.png" },
-      {
-        name: "Ronald Richards",
-        role: "UI/UX Designer",
-        image: "/imgs/user.png",
-      },
-    ],
-  },
-  {
-    name: "Sales Department",
-    members: [
-      {
-        name: "Darrell Steward",
-        role: "Sr. Sales Manager",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Kristin Watson",
-        role: "Sr. Sales Manager",
-        image: "/imgs/user.png",
-      },
-      { name: "Courtney Henry", role: "BDM", image: "/imgs/user.png" },
-      { name: "Kathryn Murphy", role: "BDE", image: "/imgs/user.png" },
-      { name: "Albert Flores", role: "Sales", image: "/imgs/user.png" },
-    ],
-  },
-  {
-    name: "Project Manager Department",
-    members: [
-      {
-        name: "Leslie Alexander",
-        role: "Sr. Project Manager",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Ronald Richards",
-        role: "Sr. Project Manager",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Savannah Nguyen",
-        role: "Project Manager",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Eleanor Pena",
-        role: "Project Manager",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Esther Howard",
-        role: "Project Manager",
-        image: "/imgs/user.png",
-      },
-    ],
-  },
-  {
-    name: "Marketing Department",
-    members: [
-      {
-        name: "Wade Warren",
-        role: "Sr. Marketing Manager",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Brooklyn Simmons",
-        role: "Sr. Marketing Manager",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Kristin Watson",
-        role: "Marketing Coordinator",
-        image: "/imgs/user.png",
-      },
-      {
-        name: "Jacob Jones",
-        role: "Marketing Coordinator",
-        image: "/imgs/user.png",
-      },
-      { name: "Cody Fisher", role: "Marketing", image: "/imgs/user.png" },
-    ],
-  },
-];
+import { useEmployee } from "@/context/EmployeeContext";
+import LoadingComponent from "@/components/LoadingComponent";
+import ErrorComponent from "@/components/ErrorComponent";
+import { Employee } from "@/types/employee";
 
 export default function Page() {
+  const { employees, getAllEmployees, error, clearError, loading } =
+    useEmployee();
+
+  const [departments, setDepartments] = useState<Record<string, Employee[]>>(
+    {}
+  );
+
+  useEffect(() => {
+    getAllEmployees();
+  }, [getAllEmployees]);
+
+  useEffect(() => {
+    const depts = employees.reduce((acc, employee) => {
+      const department = employee.department;
+      if (!acc[department]) {
+        acc[department] = [];
+      }
+      acc[department].push(employee);
+      return acc;
+    }, {} as Record<string, Employee[]>);
+    setDepartments(depts);
+  }, [employees]);
+
+  console.log(departments);
+  console.log(employees);
+
+  if (loading) {
+    return <LoadingComponent className="h-[60vh]" />;
+  }
+
+  if (error) {
+    return <ErrorComponent error={error} clearError={clearError} />;
+  }
+
   return (
     <Card className="border-hrms-gray/20 bg-transparent p-4">
       <div className="w-60 relative mb-5">
@@ -134,19 +59,19 @@ export default function Page() {
         <CiSearch className="absolute left-2 top-1/2 transform -translate-y-1/2" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {departments.map((dept, index) => (
+        {Object.entries(departments).map(([dept, members], index) => (
           <Card key={index} className="bg-transparent p-3 border-hrms-gray/20">
             <div className="flex justify-between items-center pb-3 border-b-2 border-hrms-gray/20">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {dept.name}
+                  {dept}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {dept.members.length} Members
+                  {members.length} Members
                 </p>
               </div>
               <Link
-                href={`all-departments/${dept.name
+                href={`all-departments/${dept
                   .toLowerCase()
                   .split(" ")
                   .join("-")}`}
@@ -156,7 +81,7 @@ export default function Page() {
               </Link>
             </div>
             <div className="space-y-4 pt-3">
-              {dept.members.slice(0, 5).map((member, memberIndex) => (
+              {members.slice(0, 5).map((member, memberIndex) => (
                 <div
                   key={memberIndex}
                   className="flex items-center justify-between"
@@ -164,22 +89,22 @@ export default function Page() {
                   <div className="flex items-center gap-3">
                     <div className="relative h-10 w-10">
                       <Image
-                        src={member.image}
-                        alt={member.name}
+                        src={member.profilePicture}
+                        alt={member.firstName}
                         fill
                         className="rounded-full object-cover"
                       />
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                        {member.name}
+                        {member.firstName} {member.lastName}
                       </h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {member.role}
+                        {member.designation}
                       </p>
                     </div>
                   </div>
-                  <Link href={"all-employees/mazin-1234"}>
+                  <Link href={`/all-employees/${member._id}`}>
                     <FaChevronRight />
                   </Link>
                 </div>

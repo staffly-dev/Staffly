@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { EmployeeProvider } from "@/context/EmployeeContext";
 import { JobProvider } from "@/context/JobContext";
+import { AttendanceProvider } from "@/context/AttendanceContext";
 
 export const metadata: Metadata = {
   title: "Staffly HRMS",
@@ -21,17 +22,19 @@ export default function RootLayout({
       <body className="antialiased min-h-screen" suppressHydrationWarning>
         <EmployeeProvider>
           <JobProvider>
-            <QueryProvider>
-              <Toaster richColors />
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                {children}
-              </ThemeProvider>
-            </QueryProvider>
+            <AttendanceProvider>
+              <QueryProvider>
+                <Toaster richColors />
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  {children}
+                </ThemeProvider>
+              </QueryProvider>
+            </AttendanceProvider>
           </JobProvider>
         </EmployeeProvider>
       </body>

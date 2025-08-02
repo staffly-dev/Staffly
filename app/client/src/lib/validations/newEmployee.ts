@@ -21,8 +21,6 @@ export const newEmployeeSchema = z.object({
   address: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
-  zipcode: z.string().min(1, "Zipcode is required"),
-  employeeId: z.string().min(1, "Employee ID is required"),
   userName: z.string().min(1, "Username is required"),
   employeeType: z.string().optional(),
   department: z.string().min(1, "Department is required"),
@@ -39,35 +37,3 @@ export const newEmployeeSchema = z.object({
 });
 
 export type NewEmployeeFormData = z.infer<typeof newEmployeeSchema>;
-
-// profilePicture	[...]
-// firstName	[...]
-// lastName	[...]
-// mobileNumber	[...]
-// emailAddress	[...]
-// dateOfBrith	[...]
-// maritalStatus	[...]
-// gender	[...]
-// nationality	[...]
-// address	[...]
-// city	[...]
-// state	[...]
-// zipcode	[...]
-// employessId	[...]
-// userName	[...]
-// employeeType	[...]
-// department	[...]
-// designation	[...]
-// workingDays	[...]
-// joiningAt	[...]
-// officeLocation	string
-// example: New York HQ
-// employeeCv	string
-// nullable: true
-// example: https://s3.amazonaws.com/bucket/cv.pdf
-// slackId	string
-// example: brooklyn_simmons
-// linkdeinId	string
-// example: brooklyn_simmons
-// githubId	string
-// example: brooklyn_simmons

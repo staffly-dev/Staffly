@@ -1,5 +1,5 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -7,6 +7,10 @@ import {
   BreadcrumbLink,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
+import { useEmployee } from "@/context/EmployeeContext";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { Button } from "./ui/button";
 
 function getGreeting() {
   const date = new Date();
@@ -68,11 +72,59 @@ function getSubTitle(pathname: string, name?: string) {
 export function Breadcrumbs({ name }: { name?: string }) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
-  const unhandeldTitle = segments[segments.length - 1];
-  const subtitle = getSubTitle(unhandeldTitle, name)?.subtitle;
-  const title =
-    getSubTitle(unhandeldTitle, name)?.title ||
-    unhandeldTitle.split("-").join(" ");
+  const unhandledTitle = segments[segments.length - 1];
+  let subtitle = getSubTitle(unhandledTitle, name)?.subtitle;
+  const editEmployee =
+    segments.includes("all-employees") &&
+    segments.length >= 2 &&
+    !segments.includes("add-new-employee");
+  const props = useParams();
+  const {
+    getEmployeeById,
+    singleEmployee,
+    singleError,
+    clearError,
+    singleLoading,
+  } = useEmployee();
+
+  useEffect(() => {
+    if (editEmployee) {
+      getEmployeeById(props.employeeId as string);
+    }
+  }, [props.employeeId, editEmployee, getEmployeeById, pathname]);
+
+  let title =
+    getSubTitle(unhandledTitle, name)?.title ||
+    unhandledTitle.split("-").join(" ");
+  if (editEmployee && singleEmployee) {
+    if (segments.length === 3) {
+      subtitle = `Edit ${singleEmployee.firstName} ${singleEmployee.lastName} info`;
+      title = `${singleEmployee.firstName} ${singleEmployee.lastName}`;
+    } else {
+      subtitle = `View ${singleEmployee.firstName} ${singleEmployee.lastName} info`;
+      title = `${singleEmployee.firstName} ${singleEmployee.lastName}`;
+    }
+  }
+
+  if (singleLoading) {
+    return (
+      <div className="flex items-center gap-2">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (singleError) {
+    return (
+      <div className="flex items-center text-sm gap-2 text-red-500 p-2">
+        <p>{singleError}</p>
+        <Button variant="outline" size="sm" onClick={clearError}>
+          Clear Error
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <>

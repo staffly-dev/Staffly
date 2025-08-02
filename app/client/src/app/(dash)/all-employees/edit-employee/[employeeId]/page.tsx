@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 import { LockIcon, BriefcaseIcon, FileTextIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 // import Image from "next/image";
+import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -23,7 +24,11 @@ import { IoPersonCircleOutline } from "react-icons/io5";
 import { useEmployee } from "@/context/EmployeeContext";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { CreateEmployeeData } from "@/types/employee";
+import { UpdateEmployeeData } from "@/types/employee";
+import LoadingComponent from "@/components/LoadingComponent";
+import { Label } from "@/components/ui/label";
+import ErrorComponent from "@/components/ErrorComponent";
+import Combobox from "@/components/ui/combobox";
 import {
   cities,
   departments,
@@ -31,11 +36,14 @@ import {
   offices,
   states,
 } from "@/app/constants";
-import Combobox from "@/components/ui/combobox";
+
+const labelStyle = "text-sm font-normal block mb-1";
 
 export default function MultiStepForm() {
+  const { employeeId } = useParams<{ employeeId: string }>();
   const router = useRouter();
-  const { addEmployee, error, clearError } = useEmployee();
+  const { updateEmployee, singleEmployee, singleLoading, error, clearError } =
+    useEmployee();
   const [step, setStep] = useState(0);
   // const [image, setImage] = useState<{
   //   image: File | null;
@@ -48,15 +56,31 @@ export default function MultiStepForm() {
   const {
     register,
     handleSubmit,
+    reset,
     setValue,
     trigger,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<NewEmployeeFormData>({
     resolver: zodResolver(newEmployeeSchema),
-    defaultValues: {
-      mobileNumber: "+201018562905",
-    },
   });
+
+  useEffect(() => {
+    if (singleEmployee) {
+      const dateOfBirth = singleEmployee.dateOfBrith
+        ? new Date(singleEmployee.dateOfBrith).toISOString().split("T")[0]
+        : "";
+      const joiningDate = singleEmployee.joiningAt
+        ? new Date(singleEmployee.joiningAt).toISOString().split("T")[0]
+        : "";
+      const employeeData = {
+        ...singleEmployee,
+        dateOfBrith: dateOfBirth,
+        joiningAt: joiningDate,
+      };
+      delete employeeData.employeeCv;
+      reset(employeeData);
+    }
+  }, [singleEmployee, reset]);
 
   // const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   //   const file = event.target.files?.[0];
@@ -67,10 +91,19 @@ export default function MultiStepForm() {
   // };
 
   const onSubmit = async (data: NewEmployeeFormData) => {
-    console.log(" submitted:", data);
+    if (!isDirty) {
+      toast.error("No changes to save", {
+        description: "Please make some changes to save",
+        position: "top-center",
+      });
+      return;
+    }
     try {
-      const employee = await addEmployee(data as CreateEmployeeData);
-      toast.success("Employee added successfully");
+      const employee = await updateEmployee(
+        employeeId,
+        data as UpdateEmployeeData
+      );
+      toast.success("Employee updated successfully");
       router.push(`/all-employees/${employee._id}`);
     } catch (error) {
       console.log(error);
@@ -105,7 +138,6 @@ export default function MultiStepForm() {
         ] as fieldNames[];
       case 1: // Professional
         return [
-          "employeeId",
           "userName",
           "workEmail",
           "department",
@@ -114,7 +146,6 @@ export default function MultiStepForm() {
           "designation",
           "workingDays",
           "employeeType",
-          "zipcode",
         ] as fieldNames[];
       // case 2: // Documents
       //   return [
@@ -191,20 +222,20 @@ export default function MultiStepForm() {
   //   event.preventDefault();
   // };
 
+  if (singleLoading) {
+    return <LoadingComponent className="h-[400px]" />;
+  }
+
+  if (error) {
+    return <ErrorComponent error={error} clearError={clearError} />;
+  }
+
   return (
     <Card className="p-4">
-      {error && (
-        <div className="flex items-center gap-2 text-red-500 p-2">
-          <p>{error}, Check your inputs and try again</p>
-          <Button variant="outline" onClick={clearError}>
-            Clear Error
-          </Button>
-        </div>
-      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          console.log("Form submit event");
+          console.log("Form submit errors", errors);
           handleSubmit(onSubmit)(e);
         }}
       >
@@ -263,7 +294,8 @@ export default function MultiStepForm() {
                 )}
 </div> */}
 
-              <div className="col-span-2 w-fit">
+              <div className="">
+                <Label className={labelStyle}>Profile Image Link</Label>
                 <Input
                   placeholder="Profile Image Link"
                   {...register("profilePicture")}
@@ -275,6 +307,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>First Name</Label>
                 <Input placeholder="First Name" {...register("firstName")} />
                 {errors.firstName && (
                   <p className="text-red-500 text-xs mt-1">
@@ -283,6 +316,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Last Name</Label>
                 <Input placeholder="Last Name" {...register("lastName")} />
                 {errors.lastName && (
                   <p className="text-red-500 text-xs mt-1">
@@ -291,6 +325,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Mobile Number</Label>
                 <Input
                   placeholder="Mobile Number"
                   {...register("mobileNumber")}
@@ -302,6 +337,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Email Address</Label>
                 <Input
                   placeholder="Email Address"
                   {...register("emailAddress")}
@@ -313,6 +349,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Date of Birth</Label>
                 <Input
                   placeholder="Date of Birth"
                   type="date"
@@ -326,6 +363,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Marital Status</Label>
                 <Select
                   onValueChange={(value) => setValue("maritalStatus", value)}
                 >
@@ -344,6 +382,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Gender</Label>
                 <Select onValueChange={(value) => setValue("gender", value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Gender" />
@@ -360,10 +399,11 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Nationality</Label>
                 <Combobox
                   initialValues={nationalities}
                   placeholder="Nationality"
-                  searchPlaceholder="Search nationality..."
+                  searchPlaceholder="Search Nationality"
                   onValueChange={(value) => setValue("nationality", value)}
                 />
                 {errors.nationality && (
@@ -372,12 +412,9 @@ export default function MultiStepForm() {
                   </p>
                 )}
               </div>
-              <div className="col-span-2">
-                <Input
-                  placeholder="Address"
-                  className="col-span-2"
-                  {...register("address")}
-                />
+              <div className="">
+                <Label className={labelStyle}>Address</Label>
+                <Input placeholder="Address" {...register("address")} />
                 {errors.address && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.address.message as string}
@@ -385,10 +422,11 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>City</Label>
                 <Combobox
                   initialValues={cities}
                   placeholder="City"
-                  searchPlaceholder="Search city..."
+                  searchPlaceholder="Search City"
                   onValueChange={(value) => setValue("city", value)}
                 />
                 {errors.city && (
@@ -398,10 +436,11 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>State</Label>
                 <Combobox
                   initialValues={states}
                   placeholder="State"
-                  searchPlaceholder="Search state..."
+                  searchPlaceholder="Search State"
                   onValueChange={(value) => setValue("state", value)}
                 />
                 {errors.state && (
@@ -417,6 +456,7 @@ export default function MultiStepForm() {
           <TabsContent value="1">
             <div className="grid grid-cols-2 gap-4 p-4">
               <div>
+                <Label className={labelStyle}>User Name</Label>
                 <Input placeholder="User Name" {...register("userName")} />
                 {errors.userName && (
                   <p className="text-red-500 text-xs mt-1">
@@ -425,6 +465,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Email Address</Label>
                 <Input
                   placeholder="Email Address"
                   {...register("emailAddress")}
@@ -436,20 +477,13 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
-                <Select
+                <Label className={labelStyle}>Department</Label>
+                <Combobox
+                  initialValues={departments}
+                  placeholder="Department"
+                  searchPlaceholder="Search Department"
                   onValueChange={(value) => setValue("department", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept} value={dept}>
-                        {dept}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
                 {errors.department && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.department.message as string}
@@ -457,6 +491,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Joining Date</Label>
                 <Input
                   placeholder="Joining Date"
                   type="date"
@@ -470,10 +505,11 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Office Location</Label>
                 <Combobox
                   initialValues={offices}
                   placeholder="Office Location"
-                  searchPlaceholder="Search office location..."
+                  searchPlaceholder="Search Office Location"
                   onValueChange={(value) => setValue("officeLocation", value)}
                 />
                 {errors.officeLocation && (
@@ -483,6 +519,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Designation</Label>
                 <Input
                   placeholder="Enter Designation"
                   {...register("designation")}
@@ -494,6 +531,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Working Days</Label>
                 <Input
                   placeholder="Enter Working Days"
                   {...register("workingDays")}
@@ -505,6 +543,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Employee Type</Label>
                 <Select
                   onValueChange={(value) => setValue("employeeType", value)}
                 >
@@ -590,6 +629,7 @@ export default function MultiStepForm() {
           <TabsContent value="3">
             <div className="grid grid-cols-2 gap-4 p-4">
               <div>
+                <Label className={labelStyle}>LinkedIn Link</Label>
                 <Input
                   placeholder="Enter LinkedIn Link"
                   {...register("linkdeinLink")}
@@ -601,6 +641,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Github Link</Label>
                 <Input
                   placeholder="Enter Github Link"
                   {...register("githubLink")}
@@ -612,6 +653,7 @@ export default function MultiStepForm() {
                 )}
               </div>
               <div>
+                <Label className={labelStyle}>Slack User Name</Label>
                 <Input
                   placeholder="Enter Slack User Name"
                   {...register("slackUserName")}
@@ -642,7 +684,7 @@ export default function MultiStepForm() {
             )}
             {step === 3 && (
               <Button disabled={isSubmitting} type="submit">
-                {isSubmitting ? "Adding..." : "Add"}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </Button>
             )}
           </div>

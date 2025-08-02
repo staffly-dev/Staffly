@@ -1,12 +1,17 @@
+"use client";
 import { Card } from "@/components/ui/card";
+import { AdminStatistics, useJob } from "@/context/JobContext";
 import { cn } from "@/lib/utils";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   IoPersonOutline,
   IoBriefcaseOutline,
   IoTimeOutline,
   IoFolderOpenOutline,
 } from "react-icons/io5";
+import LoadingComponent from "../LoadingComponent";
+import ErrorComponent from "../ErrorComponent";
 
 interface StatusCardProps {
   title: string;
@@ -109,6 +114,25 @@ const statusData = [
 ];
 
 export function StatusCards() {
+  const { getAdminStatistics, loading, error, clearError } = useJob();
+  const [adminStatistics, setAdminStatistics] = useState<AdminStatistics>();
+
+  useEffect(() => {
+    getAdminStatistics().then((data) => {
+      setAdminStatistics(data);
+    });
+  }, [getAdminStatistics]);
+
+  console.log("adminStatistics", adminStatistics);
+
+  if (loading) {
+    return <LoadingComponent className="h-[320px]" />;
+  }
+
+  if (error) {
+    return <ErrorComponent error={error} clearError={clearError} />;
+  }
+
   return (
     <div className="grid grid-cols-2 gap-2">
       {statusData.map((data, index) => (

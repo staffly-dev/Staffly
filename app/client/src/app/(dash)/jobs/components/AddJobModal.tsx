@@ -12,6 +12,7 @@ import { useJob, CreateJobData } from "@/context/JobContext";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
 const addJobSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -76,11 +77,15 @@ export function AddJobModal({ open, onOpenChange }: AddJobModalProps) {
       );
       jobData.append("is_active", data.is_active.toString());
       const newJob = await createJob(jobData as unknown as CreateJobData);
-      console.log("newJob", newJob);
+      toast.success("Job added successfully", {
+        description: `${newJob.title} has been added successfully`,
+      });
       onOpenChange(false);
       reset();
-    } catch {
-      // error handling is done in context
+    } catch (error) {
+      toast.error("Failed to add job", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   };
 

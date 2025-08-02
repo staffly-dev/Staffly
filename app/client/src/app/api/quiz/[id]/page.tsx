@@ -18,6 +18,7 @@ import GetStartedAtTime from "./GetStartedAtTime";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import ErrorComponent from "@/components/ErrorComponent";
 
 const QuizPage = () => {
   const { id } = useParams();
@@ -50,7 +51,6 @@ const QuizPage = () => {
       return;
     }
 
-    console.log("Submitted answers:", answers);
     const answersString = Object.values(answers).map((answer) =>
       Number(answer)
     );
@@ -99,10 +99,11 @@ const QuizPage = () => {
     );
   if (error || fetchError)
     return (
-      <div className="text-red-500 sm:text-xl font-bold text-center flex flex-col gap-4 items-center justify-center h-screen">
-        Error: {error || fetchError}
-        <Button onClick={() => clearError()}>Clear Error</Button>
-      </div>
+      <ErrorComponent
+        error={error}
+        fetchError={fetchError}
+        clearError={clearError}
+      />
     );
 
   if (!quiz) return <div></div>;

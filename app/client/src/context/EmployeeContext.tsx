@@ -20,6 +20,7 @@ interface EmployeeContextType {
   employees: Employee[];
   loading: boolean;
   error: string | null;
+  DeleteLoading: boolean;
   addEmployee: (employeeData: CreateEmployeeData) => Promise<Employee>;
   getAllEmployees: () => Promise<Employee[]>;
   getEmployeeById: (id: string) => Promise<Employee>;
@@ -29,6 +30,9 @@ interface EmployeeContextType {
   ) => Promise<Employee>;
   deleteEmployee: (id: string) => Promise<void>;
   clearError: () => void;
+  singleEmployee: Employee | null;
+  singleLoading: boolean;
+  singleError: string | null;
 }
 
 const EmployeeContext = createContext<EmployeeContextType | undefined>(
@@ -39,7 +43,10 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [DeleteLoading, setDeleteLoading] = useState(false);
+  const [singleEmployee, setSingleEmployee] = useState<Employee | null>(null);
+  const [singleLoading, setSingleLoading] = useState(false);
+  const [singleError, setSingleError] = useState<string | null>(null);
   const clearError = useCallback(() => {
     setError(null);
   }, []);
@@ -55,7 +62,6 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
           employeeData
         );
 
-        // Server returns { message: string, employee: Employee }
         const newEmployee = response.data.employee;
         setEmployees((prev) => [...prev, newEmployee]);
         return newEmployee;
@@ -63,6 +69,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to add employee";
         setError(errorMessage);
+        console.log(err);
         throw new Error(errorMessage);
       } finally {
         setLoading(false);
@@ -94,7 +101,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getEmployeeById = useCallback(async (id: string): Promise<Employee> => {
-    setLoading(true);
+    setSingleLoading(true);
     setError(null);
 
     try {
@@ -102,15 +109,16 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         `/employees/getEmployee/${id}`
       );
 
-      // Server returns { message: string, employee: Employee }
-      return response.data.employee;
+      const employee = response.data.employee;
+      setSingleEmployee(employee);
+      return employee;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch employee";
       setError(errorMessage);
-      throw new Error(errorMessage);
+      setSingleError(errorMessage);
     } finally {
-      setLoading(false);
+      setSingleLoading(false);
     }
   }, []);
 
@@ -144,7 +152,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteEmployee = useCallback(async (id: string): Promise<void> => {
-    setLoading(true);
+    setDeleteLoading(true);
     setError(null);
 
     try {
@@ -163,7 +171,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
-      setLoading(false);
+      setDeleteLoading(false);
     }
   }, []);
 
@@ -177,6 +185,10 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
     updateEmployee,
     deleteEmployee,
     clearError,
+    DeleteLoading,
+    singleEmployee,
+    singleLoading,
+    singleError,
   };
 
   return (

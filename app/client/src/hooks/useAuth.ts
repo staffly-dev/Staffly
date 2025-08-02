@@ -78,7 +78,6 @@ const authAPI = {
 
   getCurrentUser: async (): Promise<UserData> => {
     const response = await axiosInstance.get("/users/me");
-    console.log(response.data);
     return response.data;
   },
 
@@ -156,7 +155,6 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: authAPI.login,
     onSuccess: (data) => {
-      console.log(data);
       // Store the access token in memory
       tokenStore.setAccessToken(data.data.accessToken);
       // Store the refresh token using token store
