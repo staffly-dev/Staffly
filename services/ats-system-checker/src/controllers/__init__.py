@@ -25,11 +25,13 @@ JobController = load_controller_from_file('job.controller.py', 'JobController')
 QuizController = load_controller_from_file('quiz.controller.py', 'QuizController')
 StatisticsController = load_controller_from_file('statistics.controller.py', 'StatisticsController')
 ApplicationController = load_controller_from_file('application.controller.py', 'ApplicationController')
+UploadController = load_controller_from_file('upload.controller.py', 'UploadController')
 
 __all__ = [
     'HealthController',
     'JobController',
     'QuizController',
     'StatisticsController',
-    'ApplicationController'
+    'ApplicationController',
+    'UploadController'
 ] 
