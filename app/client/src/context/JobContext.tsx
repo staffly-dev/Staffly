@@ -258,7 +258,6 @@ export function JobProvider({ children }: { children: ReactNode }) {
         (err as unknown as { response: { data: { message: string } } }).response
           ?.data.message || "Failed to get quiz users";
       setError(errorMessage);
-      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -277,7 +276,6 @@ export function JobProvider({ children }: { children: ReactNode }) {
         (err as unknown as { response: { data: { message: string } } }).response
           ?.data.message || "Failed to get candidates";
       setError(errorMessage);
-      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }

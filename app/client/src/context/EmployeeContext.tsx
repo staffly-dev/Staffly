@@ -70,7 +70,6 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
           err instanceof Error ? err.message : "Failed to add employee";
         setError(errorMessage);
         console.log(err);
-        throw new Error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -94,7 +93,6 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch employees";
       setError(errorMessage);
-      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -143,7 +141,6 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to update employee";
         setError(errorMessage);
-        throw new Error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -169,7 +166,6 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete employee";
       setError(errorMessage);
-      throw new Error(errorMessage);
     } finally {
       setDeleteLoading(false);
     }
