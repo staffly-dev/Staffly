@@ -5,7 +5,16 @@ const nextConfig: NextConfig = {
     API_AUTH_URL: process.env.API_AUTH_URL,
   },
   images: {
-    domains: ["s3.amazonaws.com", "s3.amazonaaws.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**", // allow all domains
+      },
+      {
+        protocol: "http",
+        hostname: "**", // allow all domains (http too, if needed)
+      },
+    ],
   },
 };
 

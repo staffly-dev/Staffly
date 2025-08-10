@@ -59,6 +59,7 @@ export default function MultiStepForm() {
     reset,
     setValue,
     trigger,
+    watch,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<NewEmployeeFormData>({
     resolver: zodResolver(newEmployeeSchema),
@@ -365,7 +366,13 @@ export default function MultiStepForm() {
               <div>
                 <Label className={labelStyle}>Marital Status</Label>
                 <Select
-                  onValueChange={(value) => setValue("maritalStatus", value)}
+                  value={watch("maritalStatus")}
+                  onValueChange={(value) =>
+                    setValue("maritalStatus", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Marital Status" />
@@ -383,7 +390,15 @@ export default function MultiStepForm() {
               </div>
               <div>
                 <Label className={labelStyle}>Gender</Label>
-                <Select onValueChange={(value) => setValue("gender", value)}>
+                <Select
+                  value={watch("gender")}
+                  onValueChange={(value) => {
+                    setValue("gender", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    });
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Gender" />
                   </SelectTrigger>
@@ -404,7 +419,12 @@ export default function MultiStepForm() {
                   initialValues={nationalities}
                   placeholder="Nationality"
                   searchPlaceholder="Search Nationality"
-                  onValueChange={(value) => setValue("nationality", value)}
+                  onValueChange={(value) =>
+                    setValue("nationality", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
                 />
                 {errors.nationality && (
                   <p className="text-red-500 text-xs mt-1">
@@ -427,7 +447,12 @@ export default function MultiStepForm() {
                   initialValues={cities}
                   placeholder="City"
                   searchPlaceholder="Search City"
-                  onValueChange={(value) => setValue("city", value)}
+                  onValueChange={(value) =>
+                    setValue("city", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
                 />
                 {errors.city && (
                   <p className="text-red-500 text-xs mt-1">
@@ -441,7 +466,12 @@ export default function MultiStepForm() {
                   initialValues={states}
                   placeholder="State"
                   searchPlaceholder="Search State"
-                  onValueChange={(value) => setValue("state", value)}
+                  onValueChange={(value) =>
+                    setValue("state", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
                 />
                 {errors.state && (
                   <p className="text-red-500 text-xs mt-1">
@@ -482,7 +512,12 @@ export default function MultiStepForm() {
                   initialValues={departments}
                   placeholder="Department"
                   searchPlaceholder="Search Department"
-                  onValueChange={(value) => setValue("department", value)}
+                  onValueChange={(value) =>
+                    setValue("department", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
                 />
                 {errors.department && (
                   <p className="text-red-500 text-xs mt-1">
@@ -510,7 +545,12 @@ export default function MultiStepForm() {
                   initialValues={offices}
                   placeholder="Office Location"
                   searchPlaceholder="Search Office Location"
-                  onValueChange={(value) => setValue("officeLocation", value)}
+                  onValueChange={(value) =>
+                    setValue("officeLocation", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
                 />
                 {errors.officeLocation && (
                   <p className="text-red-500 text-xs mt-1">
@@ -545,7 +585,13 @@ export default function MultiStepForm() {
               <div>
                 <Label className={labelStyle}>Employee Type</Label>
                 <Select
-                  onValueChange={(value) => setValue("employeeType", value)}
+                  value={watch("employeeType")}
+                  onValueChange={(value) =>
+                    setValue("employeeType", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Employee Type" />

@@ -8,7 +8,7 @@ import {
   CalendarCheck,
 } from "lucide-react";
 import { BriefcaseIcon } from "lucide-react";
-import Image from "next/image";
+// import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { use, useState } from "react";
@@ -21,6 +21,7 @@ import { Leave } from "../components/Leave";
 import { useEmployee } from "@/context/EmployeeContext";
 import ErrorComponent from "@/components/ErrorComponent";
 import LoadingComponent from "@/components/LoadingComponent";
+import Image from "next/image";
 
 export default function EmployeePage({
   params,
@@ -89,7 +90,7 @@ export default function EmployeePage({
       <div className="flex justify-between border-b border-hrms-gray/20 pb-4">
         <div className="flex gap-2">
           <Image
-            className="rounded-xl"
+            className="rounded-xl object-cover"
             src={singleEmployee.profilePicture}
             alt="Mazin Emad"
             width={60}

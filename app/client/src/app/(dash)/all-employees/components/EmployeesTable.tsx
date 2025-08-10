@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+// import Image from "next/image";
 import { Employee } from "@/types/employee";
 import { Pagination } from "@/components/Pagination";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import LoadingComponent from "@/components/LoadingComponent";
 import ErrorComponent from "@/components/ErrorComponent";
 import { useEmployee } from "@/context/EmployeeContext";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function EmployeesTable({ employees }: { employees: Employee[] }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,14 +81,18 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
               <tr key={employee._id} className="hover:bg-hrms-gray/20">
                 <td className="px-6 py-3">
                   <div className="flex items-center">
-                    <div className="h-8 w-8 flex-shrink-0">
-                      <Image
-                        className="h-8 w-8 rounded-full"
-                        src={employee.profilePicture || "/imgs/user.png"}
-                        alt={employee.firstName + " " + employee.lastName}
-                        width={32}
-                        height={32}
-                      />
+                    <div className="h-8 w-8 flex-shrink-0 relative">
+                      <Avatar>
+                        <AvatarImage
+                          src={employee.profilePicture || "/imgs/user.png"}
+                          alt={employee.firstName + " " + employee.lastName}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="text-xs font-semibold bg-primary text-white">
+                          {employee.firstName.charAt(0) +
+                            employee.lastName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium">
