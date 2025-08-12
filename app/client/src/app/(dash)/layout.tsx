@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { DashboardLayout } from "@/components/layout/Dashboard-layout";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { AuthGuard } from "@/components/AuthGuard";
 export const metadata: Metadata = {
   title: "Staffly HRMS",
