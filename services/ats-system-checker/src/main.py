@@ -14,6 +14,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 
 # Configuration and utilities
 from src.config import get_settings, init_database, close_database
@@ -39,6 +41,7 @@ from src.routes.jobs_routes import router as jobs_router
 from src.routes.quiz_routes import router as quiz_router
 from src.routes.statistics_routes import router as statistics_router
 from src.routes.applications_routes import router as applications_router
+from src.routes.upload_routes import router as upload_router
 
 # Initialize settings and logging
 settings = get_settings()
@@ -133,6 +136,10 @@ def create_app() -> FastAPI:
             {
                 "name": "applications",
                 "description": "Application management and retrieval"
+            },
+            {
+                "name": "upload",
+                "description": "File upload to AWS S3 bucket"
             }
         ]
     )
@@ -158,6 +165,17 @@ def create_app() -> FastAPI:
     # Include all routes
     app.include_router(api_router)
     
+    # Mount static files for local uploads (when S3 is not configured)
+    uploads_dir = os.path.join(os.path.dirname(__file__), "..", settings.UPLOAD_FOLDER)
+    # Ensure uploads directory exists and mount it
+    try:
+        os.makedirs(uploads_dir, exist_ok=True)
+        app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+        logger.info(f"Mounted static files for uploads at: {uploads_dir}")
+    except Exception as e:
+        logger.warning(f"Failed to mount uploads directory: {e}")
+        # Continue without static files - files can still be uploaded but won't be served statically
+    
     return app
 
 
@@ -169,6 +187,7 @@ app.include_router(jobs_router)
 app.include_router(quiz_router)
 app.include_router(statistics_router)
 app.include_router(applications_router)
+app.include_router(upload_router)
 
 @app.get("/", tags=["health"], summary="API Status")
 def root():

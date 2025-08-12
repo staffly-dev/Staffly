@@ -5,7 +5,7 @@ FastAPI dependency providers for controllers and services
 
 from fastapi import Request
 
-from ..controllers import HealthController, JobController, QuizController, StatisticsController, ApplicationController
+from ..controllers import HealthController, JobController, QuizController, StatisticsController, ApplicationController, UploadController
 
 
 def get_health_controller(request: Request) -> HealthController:
@@ -45,6 +45,11 @@ def get_application_controller(request: Request) -> ApplicationController:
     return ApplicationController(
         database_service=request.app.state.database_service
     )
+
+
+def get_upload_controller(request: Request) -> UploadController:
+    """Get upload controller with dependencies"""
+    return UploadController()
 
 
 # Legacy dependency for backward compatibility

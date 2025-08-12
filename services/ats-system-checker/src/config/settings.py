@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     GMAIL_USER: str = Field(default="your_email@gmail.com", description="Gmail user for notifications")
     GMAIL_PASSWORD: str = Field(default="", description="Gmail app password")
     
+    # AWS S3 Configuration
+    AWS_ACCESS_KEY_ID: str = Field(default="", description="AWS Access Key ID")
+    AWS_SECRET_ACCESS_KEY: str = Field(default="", description="AWS Secret Access Key")
+    AWS_REGION: str = Field(default="us-east-1", description="AWS Region")
+    AWS_S3_BUCKET: str = Field(default="", description="AWS S3 Bucket name")
+    AWS_S3_BUCKET_URL: str = Field(default="", description="AWS S3 Bucket URL (optional, auto-generated if not provided)")
+    
     # Application Configuration
     ENV: str = Field(default="development", description="Environment (development/production)")
     DEBUG: bool = Field(default=True, description="Debug mode")
@@ -91,6 +98,16 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         """Check if running in production mode"""
         return self.ENV.lower() == "production"
+    
+    @property
+    def s3_bucket_url(self) -> str:
+        """Get S3 bucket URL, auto-generate if not provided"""
+        if self.AWS_S3_BUCKET_URL:
+            return self.AWS_S3_BUCKET_URL.rstrip('/')
+        elif self.AWS_S3_BUCKET:
+            return f"https://{self.AWS_S3_BUCKET}.s3.{self.AWS_REGION}.amazonaws.com"
+        else:
+            return ""
     
     def get_cors_origins(self) -> list:
         """Get CORS allowed origins"""

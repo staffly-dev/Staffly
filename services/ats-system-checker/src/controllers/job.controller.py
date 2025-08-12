@@ -7,12 +7,15 @@ from typing import Optional, List
 from datetime import datetime
 from fastapi import HTTPException, UploadFile
 import httpx
+import os
+import uuid
 
 from src.utils.logging_config import get_logger
 from src.utils.responses import success_response
 from src.models.api_models import JobPostingResponse, ApplicationsListResponse, ApplicationListResponse
 from src.services.database_service import DatabaseService
 from src.services.evaluation_service import EvaluationService
+from src.services.s3_service import S3Service
 from src.config.settings import get_settings
 
 logger = get_logger(__name__)
@@ -36,6 +39,7 @@ class JobController:
         """
         self.database_service = database_service
         self.evaluation_service = evaluation_service
+        self.s3_service = S3Service()
     
     async def create_job_posting(
         self,
@@ -233,8 +237,95 @@ class JobController:
             if not cv_file.filename.lower().endswith(('.pdf', '.docx')):
                 raise HTTPException(status_code=400, detail="CV must be in PDF or DOCX format")
             
-            # Read file content
-            cv_content = await cv_file.read()
+            # SECURITY CHECK: Prevent duplicate applications by email
+            existing_application = await self.database_service.check_duplicate_email_application(candidate_email, job_id)
+            if existing_application:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"An application with email '{candidate_email}' has already been submitted for this job posting. Each candidate can only apply once per job."
+                )
+            
+            # Try to upload file to S3, fallback to local storage if S3 fails
+            cv_content = None
+            use_local_storage = False
+            
+            try:
+                if self.s3_service.is_configured():
+                    try:
+                        s3_result = await self.s3_service.upload_file(cv_file)
+                        file_url = s3_result['file_url']
+                        s3_key = s3_result['s3_key']
+                        # Read file content for AI processing after S3 upload
+                        await cv_file.seek(0)
+                        cv_content = await cv_file.read()
+                        logger.info(f"File successfully uploaded to S3: {file_url}")
+                    except HTTPException as s3_error:
+                        logger.warning(f"S3 upload failed: {s3_error.detail}, falling back to local storage")
+                        use_local_storage = True
+                        await cv_file.seek(0)  # Reset file position for local storage
+                    except Exception as s3_error:
+                        logger.warning(f"S3 upload failed: {str(s3_error)}, falling back to local storage")
+                        use_local_storage = True
+                        await cv_file.seek(0)  # Reset file position for local storage
+                else:
+                    logger.info("S3 not configured, using local storage")
+                    use_local_storage = True
+                
+                if use_local_storage:
+                    # Fallback to local storage
+                    logger.info("Using local storage for file upload")
+                    
+                    # Validate file has a name
+                    if not cv_file.filename:
+                        raise HTTPException(status_code=400, detail="File must have a filename")
+                    
+                    # Generate unique filename
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    unique_id = str(uuid.uuid4())[:8]
+                    file_extension = os.path.splitext(cv_file.filename)[1].lower()
+                    
+                    # Ensure we have a valid extension
+                    if not file_extension:
+                        file_extension = '.pdf'  # Default to PDF if no extension
+                    
+                    unique_filename = f"cv_{timestamp}_{unique_id}{file_extension}"
+                    
+                    # Save to local uploads directory
+                    upload_path = os.path.join(settings.UPLOAD_FOLDER, unique_filename)
+                    
+                    # Ensure directory exists
+                    try:
+                        os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
+                        logger.info(f"Created/verified upload directory: {settings.UPLOAD_FOLDER}")
+                    except Exception as dir_error:
+                        logger.error(f"Failed to create upload directory: {dir_error}")
+                        raise HTTPException(status_code=500, detail=f"Failed to create upload directory: {str(dir_error)}")
+                    
+                    # Read file content for both saving and AI processing
+                    try:
+                        cv_content = await cv_file.read()
+                        if not cv_content:
+                            raise HTTPException(status_code=400, detail="File is empty")
+                        
+                        with open(upload_path, 'wb') as f:
+                            f.write(cv_content)
+                        
+                        logger.info(f"File saved locally: {upload_path} ({len(cv_content)} bytes)")
+                    except Exception as write_error:
+                        logger.error(f"Failed to write file: {write_error}")
+                        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(write_error)}")
+                    
+                    # Generate local file URL
+                    file_url = f"http://localhost:{settings.API_PORT}/uploads/{unique_filename}"
+                    s3_key = unique_filename
+                    
+                    logger.info(f"File uploaded successfully to local storage: {file_url}")
+            except Exception as upload_error:
+                logger.error(f"File upload failed: {upload_error}")
+                raise HTTPException(
+                    status_code=500, 
+                    detail=f"File upload failed: {str(upload_error)}"
+                )
             
             if not cv_content or len(cv_content) < 100:
                 raise HTTPException(status_code=400, detail="Uploaded file is empty or too small.")
@@ -266,18 +357,10 @@ class JobController:
             # Use provided name or extracted name as fallback
             final_name = candidate_name or extracted_name or "Unknown Candidate"
             
-            # SECURITY CHECK: Prevent duplicate applications by email
-            existing_application = await self.database_service.check_duplicate_email_application(candidate_email, job_id)
-            if existing_application:
-                raise HTTPException(
-                    status_code=409,
-                    detail=f"An application with email '{candidate_email}' has already been submitted for this job posting. Each candidate can only apply once per job."
-                )
-            
-            # Create application
+            # Create application with S3 file URL
             application = await self.database_service.create_application(
                 job_id=job_id,
-                cv_filename=cv_file.filename,
+                cv_filename=file_url,  # Store the S3 URL instead of filename
                 candidate_email=candidate_email,
                 candidate_name=final_name
             )
@@ -312,7 +395,9 @@ class JobController:
                 "job_title": job_posting.title,
                 "status": "submitted",
                 "message": "Your application has been submitted successfully!",
-                "next_steps": "Our system is evaluating your CV. You will receive an email with the results shortly."
+                "next_steps": "Our system is evaluating your CV. You will receive an email with the results shortly.",
+                "file_url": file_url,
+                "s3_key": s3_key
             }
             
             if evaluation_result:
