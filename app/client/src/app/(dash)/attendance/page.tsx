@@ -3,10 +3,10 @@ import ErrorComponent from "@/components/ErrorComponent";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Pagination } from "@/components/Pagination";
 import { SearchInput } from "@/components/searchInput";
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { useAttendance } from "@/context/AttendanceContext";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const attStatusColors: Record<string, string> = {
@@ -65,12 +65,16 @@ export default function Attendance() {
     };
   });
 
-  console.log(currentData);
-
   return (
     <Card className="bg-transparent border-hrms-gray/20 container mx-auto p-6">
       <div className="flex justify-between items-center mb-6 ">
         <SearchInput />
+        <Link
+          href="/attendance/checkin"
+          className="rounded-md px-4 py-2 bg-primary text-white hover:bg-primary/90"
+        >
+          Check In Employees
+        </Link>
       </div>
       <div className="min-h-[400px]">
         <table className="min-w-full divide-y divide-hrms-gray/20 mb-4">
@@ -79,31 +83,27 @@ export default function Attendance() {
               <th>Employee</th>
               <th>Designation</th>
               <th>Check In</th>
-              <th>Check Out</th>
+              <th>Date</th>
               <th>Employee Type</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-hrms-gray/20">
             {data.map((att) => (
-              <tr key={att._id} className="*:px-6 *:py-3 *:text-sm">
+              <tr
+                key={att._id}
+                className="*:px-6 *:py-3 *:text-sm hover:bg-hrms-gray/20"
+              >
                 <td>
-                  {/* <Avatar className="w-8 h-8">
-                    <AvatarImage src={att.employeeId.profilePicture} />
-                    <AvatarFallback>
-                      {att.employeeId.firstName.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar> */}
-                  {att.employeeId.firstName} {att.employeeId.lastName}
+                  {att.employeeId?.firstName || "_Employee Deleted_"}
+                  {att.employeeId?.lastName && " " + att.employeeId?.lastName}
                 </td>
-                <td>{att.employeeId.designation}</td>
+                <td>{att.employeeId?.designation || "_Employee Deleted_"}</td>
                 <td className={cn(att.checkInTime ? "" : "text-center")}>
                   {att.checkInTime ? att.checkInTime : "_"}
                 </td>
-                <td className={cn(att.checkOutTime ? "" : "text-center")}>
-                  {att.checkOutTime ? att.checkOutTime : "_"}
-                </td>
-                <td>{att.employeeId.employeeType}</td>
+                <td>{new Date(att.date).toLocaleDateString()}</td>
+                <td>{att.employeeId?.employeeType || "Employee Deleted"}</td>
                 <td>
                   <span
                     className={`rounded-md px-2 py-1 ${

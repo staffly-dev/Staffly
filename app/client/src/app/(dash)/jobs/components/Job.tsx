@@ -1,13 +1,14 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Job as JobType } from "@/context/JobContext";
+import { Job as JobType, useJob } from "@/context/JobContext";
 import { IoBriefcaseOutline } from "react-icons/io5";
 // import { useDraggable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
-import { FaLink } from "react-icons/fa6";
+import { FaLink, FaSpinner, FaTrash } from "react-icons/fa6";
 import { toast } from "sonner";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 function Job({ job }: { job: JobType }) {
   // const { setNodeRef, attributes, listeners, transform } = useDraggable({
@@ -18,6 +19,27 @@ function Job({ job }: { job: JobType }) {
   //       transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   //     }
   //   : undefined;
+  const { deleteJob, deleteLoading } = useJob();
+  const [id, setId] = useState<string | null>(null);
+  const handleDelete = (id: string) => {
+    setId(id);
+    toast.warning("Are you sure you want to delete this job?", {
+      action: {
+        label: "Delete",
+        onClick: () => {
+          deleteJob(id);
+          toast.success("Job deleted successfully", {
+            position: "top-center",
+          });
+        },
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {},
+      },
+      position: "top-center",
+    });
+  };
   return (
     <Card
       // ref={setNodeRef}
@@ -46,12 +68,20 @@ function Job({ job }: { job: JobType }) {
             </p>
           </div>
         </div>
-        <Link
-          href={`/apply/${job.job_id}`}
-          className="text-sm bg-hrms-gray/10 rounded-md px-3 py-1 justify-center items-center flex"
+        <Button
+          onClick={() => handleDelete(job.job_id)}
+          disabled={deleteLoading && id === job.job_id}
+          className="text-sm bg-red-500 hover:bg-red-700 rounded-md px-3 py-1 justify-center items-center flex"
         >
-          Apply Page
-        </Link>
+          {deleteLoading && id === job.job_id ? (
+            <FaSpinner className="w-4 h-4 animate-spin" />
+          ) : (
+            <div className="flex items-center gap-2">
+              <FaTrash />
+              Delete
+            </div>
+          )}
+        </Button>
       </div>
       <div className="flex gap-2 flex-wrap">
         {job.required_skills.map((skill: string) => (

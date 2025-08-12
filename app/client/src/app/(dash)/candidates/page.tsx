@@ -8,6 +8,11 @@ import { Pagination } from "@/components/Pagination";
 import { Candidate, Job, useJob } from "@/context/JobContext";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { FaEye, FaFilePdf, FaTrash } from "react-icons/fa";
+import { CandidateInfoModal } from "./CandidateInfoModel";
+import { toast } from "sonner";
+import { FaSpinner } from "react-icons/fa6";
 
 export default function CandidatesPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -104,7 +109,12 @@ function CandidatesTable({
   jobs: Job[];
 }) {
   // const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
+  const [open, setOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
+    null
+  );
+  const [jobTitle, setJobTitle] = useState<string | undefined>(undefined);
+  const { deleteApplication, deleteLoading, getCandidates } = useJob();
   // const allSelected =
   //   candidates.length > 0 && selectedIds.length === candidates.length;
   // const someSelected =
@@ -122,6 +132,24 @@ function CandidatesTable({
   //   );
   // };
 
+  const handleDelete = (id: string) => {
+    toast.warning("Are you sure you want to delete this candidate?", {
+      position: "top-center",
+      action: {
+        label: "Delete",
+        onClick: () => {
+          deleteApplication(id);
+          toast.success("Candidate deleted successfully");
+          getCandidates();
+        },
+      },
+      cancel: {
+        label: "Cancel",
+        onClick: () => {},
+      },
+    });
+  };
+
   return (
     <CustomTableContainer>
       <thead className="sticky top-0 bg-background shadow-sm">
@@ -133,20 +161,19 @@ function CandidatesTable({
               onCheckedChange={toggleAll}
             />
           </th> */}
-          <th>Name</th>
+          <th>Candidate Name</th>
           <th>Applied For</th>
-          <th>CV File Name </th>
-          <th>Email</th>
-          <th className="w-32">ATS Score</th>
-          <th className="text-center">Quiz Score</th>
+          <th>Resume Link</th>
+          <th>CV Score</th>
           <th>Status</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-hrms-gray/20">
         {candidates.map((cand) => (
           <tr
             key={cand.application_id}
-            className="hover:bg-hrms-gray/20 *:text-sm *:px-6 *:py-3 *:capitalize"
+            className="hover:bg-hrms-gray/20 *:text-sm *:px-6 *:py-3 "
           >
             {/* <td>
               <Checkbox
@@ -157,15 +184,22 @@ function CandidatesTable({
                 }
               />
             </td> */}
-            <td>{cand.candidate_name}</td>
-            <td>{jobs.find((job) => job.job_id === cand.job_id)?.title}</td>
-            <td>{cand.cv_filename}</td>
-            <td>{cand.candidate_email}</td>
-            <td className="text-center">
-              {cand.cv_score ? cand.cv_score : "-"}
+            <td className="capitalize">{cand.candidate_name}</td>
+            <td className="capitalize">
+              {jobs.find((job) => job.job_id === cand.job_id)?.title}
+            </td>
+            <td className="capitalize">
+              <Link
+                href={cand.cv_filename}
+                className="flex items-center gap-2 hover:text-primary"
+                target="_blank"
+              >
+                <FaFilePdf className="w-4 h-4 " />
+                <span className="">Resume Link</span>
+              </Link>
             </td>
             <td className="text-center">
-              {cand.quiz_score ? cand.quiz_score : "-"}
+              {cand.cv_score ? cand.cv_score : "-"}
             </td>
             <td className="px-4 py-2 w-52">
               <span
@@ -176,9 +210,45 @@ function CandidatesTable({
                 {getText(cand.status)}
               </span>
             </td>
+            <td className="flex gap-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setSelectedCandidate(cand);
+                  setOpen(true);
+                  setJobTitle(
+                    jobs.find((job) => job.job_id === cand.job_id)?.title ||
+                      null
+                  );
+                }}
+              >
+                <FaEye />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled={deleteLoading}
+                onClick={() => {
+                  handleDelete(cand.application_id);
+                }}
+              >
+                {deleteLoading ? (
+                  <FaSpinner className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FaTrash />
+                )}
+              </Button>
+            </td>
           </tr>
         ))}
       </tbody>
+      <CandidateInfoModal
+        open={open}
+        onOpenChange={setOpen}
+        candidate={selectedCandidate}
+        jobTitle={jobTitle}
+      />
     </CustomTableContainer>
   );
 }

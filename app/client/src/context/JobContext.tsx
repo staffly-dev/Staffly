@@ -119,6 +119,7 @@ interface JobContextType {
   jobs: Job[];
   loading: boolean;
   error: string | null;
+  deleteLoading: boolean;
   getAllJobs: () => Promise<Job[]>;
   getJobById: (id: string) => Promise<Job>;
   createJob: (jobData: CreateJobData) => Promise<Job>;
@@ -132,6 +133,8 @@ interface JobContextType {
   submitQuiz: (params: QuizSubmitData) => Promise<QuizResult>;
   getCandidates: () => Promise<CandidateResponse>;
   getAdminStatistics: () => Promise<AdminStatistics>;
+  deleteApplication: (id: string) => Promise<unknown>;
+  deleteJob: (id: string) => Promise<unknown>;
 }
 
 const JobContext = createContext<JobContextType | undefined>(undefined);
@@ -142,6 +145,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [total_applications, setTotalApplications] = useState(0);
   const clearError = useCallback(() => setError(null), []);
@@ -333,12 +337,53 @@ export function JobProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const deleteApplication = useCallback(async (id: string): Promise<void> => {
+    setDeleteLoading(true);
+    setError(null);
+    try {
+      const response = await axios.delete(
+        `${JOBS_API_BASE}/applications/${id}`,
+        {
+          data: {
+            candidate_id: id,
+          },
+        }
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as unknown as { response: { data: { message: string } } }).response
+          ?.data.message || "Failed to delete application";
+      setError(errorMessage);
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, []);
+
+  const deleteJob = useCallback(async (id: string): Promise<void> => {
+    setDeleteLoading(true);
+    setError(null);
+    try {
+      const response = await axios.delete(`${JOBS_API_BASE}/api/jobs/${id}`);
+      setJobs((prev) => prev.filter((job) => job.job_id !== id));
+      return response.data;
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as unknown as { response: { data: { message: string } } }).response
+          ?.data.message || "Failed to delete job";
+      setError(errorMessage);
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, []);
+
   const value: JobContextType = {
     candidates,
     total_applications,
     jobs,
     loading,
     error,
+    deleteLoading,
     getAllJobs,
     getJobById,
     createJob,
@@ -349,6 +394,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
     submitQuiz,
     getCandidates,
     getAdminStatistics,
+    deleteApplication,
+    deleteJob,
   };
 
   return <JobContext.Provider value={value}>{children}</JobContext.Provider>;

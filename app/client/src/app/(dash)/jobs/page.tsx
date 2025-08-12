@@ -43,8 +43,10 @@ export default function Page() {
   const [isAddJobOpen, setIsAddJobOpen] = useState(false);
 
   useEffect(() => {
-    getAllJobs();
-  }, [getAllJobs]);
+    if (jobs.length === 0) {
+      getAllJobs();
+    }
+  }, [getAllJobs, jobs.length]);
 
   // function handleDragEnd(event: DragEndEvent) {
   //   const { active, over } = event;

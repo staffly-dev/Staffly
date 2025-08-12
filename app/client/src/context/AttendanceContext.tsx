@@ -44,7 +44,7 @@ interface AttendanceRecord {
 
 interface CheckInRequest {
   employeeId: string;
-  checkInTime: string;
+  checkInTime?: string;
 }
 
 interface AttendanceSearchParams {
@@ -107,7 +107,6 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
     null
   );
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
-
   // Attendance state
   const [attendanceRecords, setAttendanceRecords] = useState<
     AttendanceRecord[]
@@ -204,9 +203,9 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
         return response.data.attendance;
       } catch (err: unknown) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to check in";
+          (err as unknown as { response: { data: { message: string } } })
+            .response?.data.message || "Failed to CheckIn Employee";
         setError(errorMessage);
-        return null;
       }
     },
     []
