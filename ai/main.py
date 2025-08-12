@@ -18,6 +18,7 @@ from services.cohere_service import CohereService
 from services.document_service import DocumentProcessingService
 from models.evaluation_models import EvaluationResult, FileUploadInfo, ErrorResponse
 from utils.logging_utils import setup_ai_logger, save_evaluation_log
+from middlewares import DocsAuthenticationMiddleware
 
 # Setup logging
 logger = setup_ai_logger(__name__, "ats_ai.log", "INFO")
@@ -81,6 +82,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add authentication middleware for docs endpoints
+app.add_middleware(DocsAuthenticationMiddleware)
+
 # Request/Response Models
 class EvaluateRequest(BaseModel):
     cv_text: str = Field(..., description="CV text content")
@@ -101,13 +105,31 @@ async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
-        "service": "AI Service",
-        "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0"
+        "service": "ATS AI Service",
+        "version": "1.0.0",
+        "timestamp": datetime.now().isoformat()
+    }
+
+# Root endpoint
+@app.get("/")
+async def root():
+    """
+    Get AI service status and information.
+    
+    Returns basic service information and links to documentation.
+    """
+    return {
+        "service": "ATS AI Service",
+        "version": "1.0.0",
+        "status": "operational",
+        "docs": "Available at /docs (authentication required)",
+        "redoc": "Available at /redoc (authentication required)",
+        "openapi": "Available at /openapi.json (authentication required)",
+        "note": "API documentation requires authentication. Contact your administrator for credentials."
     }
 
 # CV Evaluation endpoint
-@app.post("/evaluate", response_model=EvaluationResult) # بتاخد البيانيات بناءا علي EvaluateRequest و بترجع EvaluationResult
+@app.post("/evaluate", response_model=EvaluationResult)
 async def evaluate_cv(request: EvaluateRequest):
     """
     Evaluate a CV against job requirements
@@ -328,6 +350,18 @@ if __name__ == "__main__":
     host = os.getenv("AI_HOST", "0.0.0.0")
     
     logger.info(f"Starting AI Service on {host}:{port}")
+    
+    # Log authentication information
+    auth_enabled = os.getenv("DOCS_AUTH_ENABLED", "true").lower() == "true"
+    username = os.getenv("DOCS_USERNAME", "admin")
+    password = os.getenv("DOCS_PASSWORD", "admin123")
+    
+    if auth_enabled:
+        logger.info(f"API Documentation Authentication: ENABLED")
+        logger.info(f"Default credentials: {username}:{password}")
+        logger.info(f"Protected endpoints: /docs, /redoc, /openapi.json")
+    else:
+        logger.warning("API Documentation Authentication: DISABLED (not recommended for production)")
     
     uvicorn.run(
         "main:app",

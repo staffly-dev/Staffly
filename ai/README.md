@@ -32,6 +32,48 @@ A dedicated, scalable AI microservice for CV evaluation and quiz generation, bui
 
 Interactive docs: [http://localhost:5000/docs](http://localhost:5000/docs)
 
+## 🔐 API Documentation Authentication
+
+**Important Security Notice**: The API documentation endpoints are now protected with HTTP Basic Authentication to prevent unauthorized access.
+
+### Protected Endpoints
+
+- `/docs` - Swagger UI documentation
+- `/redoc` - ReDoc documentation
+- `/openapi.json` - OpenAPI schema
+
+### Default Credentials
+
+- **Username**: `admin`
+- **Password**: `admin123`
+
+### Security Configuration
+
+To change the default credentials, set these environment variables in your `.env` file:
+
+```bash
+# API Documentation Authentication
+DOCS_USERNAME=your_secure_username
+DOCS_PASSWORD=your_secure_password
+DOCS_AUTH_ENABLED=true
+```
+
+**⚠️ Security Recommendations:**
+
+1. **Change default credentials immediately** in production
+2. Use strong, unique passwords
+3. Store credentials in environment variables (not in code)
+4. Regularly rotate credentials
+5. Monitor access logs for suspicious activity
+
+### Disabling Authentication
+
+To disable authentication (not recommended for production), set:
+
+```bash
+DOCS_AUTH_ENABLED=false
+```
+
 ## ⚙️ Environment Variables
 
 Create a `.env` file in the `ai/` directory with:
@@ -43,6 +85,11 @@ AI_PORT=5000
 CORS_ALLOW_ORIGINS=http://localhost:3000
 CORS_ALLOW_CREDENTIALS=true
 LOG_LEVEL=INFO
+
+# API Documentation Authentication
+DOCS_USERNAME=your_secure_username
+DOCS_PASSWORD=your_secure_password
+DOCS_AUTH_ENABLED=true
 ```
 
 ## 🚀 How to Run the AI Service

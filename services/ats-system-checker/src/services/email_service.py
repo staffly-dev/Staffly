@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class EmailService:
     """Service for sending email notifications"""
     
-    def __init__(self, gmail_user: str, gmail_password: str, database_service: Optional["DatabaseService"] = None, frontend_url: str = "http://localhost:3000"):
+    def __init__(self, gmail_user: str, gmail_password: str, database_service: Optional["DatabaseService"] = None, frontend_url: str = "https://stafflyhr.tech"):
         """
         Initialize email service
         

@@ -3,14 +3,90 @@ Security Middleware for ATS System
 Handles security headers and basic security measures
 """
 
-from fastapi import Request, Response
+from fastapi import Request, Response, HTTPException, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.middleware.base import BaseHTTPMiddleware
+import base64
+import secrets
 
 from ..utils.logging_config import get_logger
 from ..config.settings import get_settings
 
 logger = get_logger(__name__)
 settings = get_settings()
+
+
+class DocsAuthenticationMiddleware(BaseHTTPMiddleware):
+    """Middleware for protecting API documentation endpoints with HTTP Basic Authentication"""
+    
+    def __init__(self, app):
+        super().__init__(app)
+        self.docs_endpoints = ["/docs", "/redoc", "/openapi.json"]
+        self.security = HTTPBasic()
+    
+    async def dispatch(self, request: Request, call_next) -> Response:
+        """
+        Check authentication for docs endpoints
+        
+        Args:
+            request: FastAPI request object
+            call_next: Next middleware/endpoint in chain
+            
+        Returns:
+            Response: HTTP response
+        """
+        # Check if this is a docs endpoint
+        is_docs_endpoint = any(
+            endpoint in str(request.url.path) for endpoint in self.docs_endpoints
+        )
+        
+        if is_docs_endpoint and settings.DOCS_AUTH_ENABLED:
+            # Extract credentials from Authorization header
+            auth_header = request.headers.get("authorization")
+            
+            if not auth_header or not auth_header.startswith("Basic "):
+                # Return 401 with WWW-Authenticate header to prompt for credentials
+                response = Response(
+                    content="Authentication required",
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    media_type="text/plain"
+                )
+                response.headers["WWW-Authenticate"] = 'Basic realm="API Documentation"'
+                return response
+            
+            try:
+                # Decode credentials
+                credentials = base64.b64decode(auth_header[6:]).decode("utf-8")
+                username, password = credentials.split(":", 1)
+                
+                # Check credentials
+                if (username == settings.DOCS_USERNAME and 
+                    password == settings.DOCS_PASSWORD):
+                    # Authentication successful, continue
+                    logger.info(f"Successful docs access by user: {username}")
+                else:
+                    # Invalid credentials
+                    logger.warning(f"Failed docs access attempt with username: {username}")
+                    response = Response(
+                        content="Invalid credentials",
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        media_type="text/plain"
+                    )
+                    response.headers["WWW-Authenticate"] = 'Basic realm="API Documentation"'
+                    return response
+                    
+            except Exception as e:
+                logger.error(f"Error processing authentication: {e}")
+                response = Response(
+                    content="Authentication error",
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    media_type="text/plain"
+                )
+                response.headers["WWW-Authenticate"] = 'Basic realm="API Documentation"'
+                return response
+        
+        response = await call_next(request)
+        return response
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):

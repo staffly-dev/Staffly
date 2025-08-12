@@ -125,3 +125,15 @@ class ApplicationsListResponse(BaseModel):
     """Response model for the applications endpoint"""
     total_applications: int = Field(..., description="Total number of applications", example=150)
     applications: List[ApplicationListResponse] = Field(..., description="List of applications") 
+
+class SingleApplicationResponse(BaseModel):
+    """Response model for single application endpoint - matches exact user requirements"""
+    application_id: str = Field(..., description="Unique application identifier", example="415c79ce-a154-4fa4-becb-f2cd6caf5383")
+    candidate_email: str = Field(..., description="Candidate email address", example="mohamedaboelyazeed920@gmail.com")
+    candidate_name: str = Field(..., description="Candidate name", example="Mohamed Aboelyazeed")
+    cv_score: int = Field(..., description="CV evaluation score (0-100)", example=55)
+    cv_filename: str = Field(..., description="CV file URL", example="https://stafflyhr.tech/uploads/cv_20250812_180436_ba61fca9.pdf")
+    decision: str = Field(..., description="CV evaluation decision", example="REJECTED")
+    job_id: str = Field(..., description="Associated job ID", example="840b87f9")
+    quiz_score: Optional[int] = Field(None, description="Quiz score (0-10)", example=8)
+    status: str = Field(..., description="Application status", example="REJECTED") 

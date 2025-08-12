@@ -71,12 +71,12 @@ Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 
 ### File Upload (AWS S3)
 
-| Endpoint                    | Method | Description                    |
-| --------------------------- | ------ | ------------------------------ |
-| `/upload`                   | POST   | Upload file to S3 bucket      |
-| `/upload/status`            | GET    | Check S3 service status       |
-| `/upload/{s3_key}`          | DELETE | Delete file from S3 bucket    |
-| `/upload/url/{s3_key}`      | GET    | Get public URL for file       |
+| Endpoint               | Method | Description                |
+| ---------------------- | ------ | -------------------------- |
+| `/upload`              | POST   | Upload file to S3 bucket   |
+| `/upload/status`       | GET    | Check S3 service status    |
+| `/upload/{s3_key}`     | DELETE | Delete file from S3 bucket |
+| `/upload/url/{s3_key}` | GET    | Get public URL for file    |
 
 ### Quiz System
 
@@ -96,6 +96,48 @@ Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 | `/api/statistics/quiz`         | GET    | Quiz performance statistics |
 
 Interactive API docs: [http://localhost:4000/docs](http://localhost:4000/docs)
+
+## 🔐 API Documentation Authentication
+
+**Important Security Notice**: The API documentation endpoints are now protected with HTTP Basic Authentication to prevent unauthorized access.
+
+### Protected Endpoints
+
+- `/docs` - Swagger UI documentation
+- `/redoc` - ReDoc documentation
+- `/openapi.json` - OpenAPI schema
+
+### Default Credentials
+
+- **Username**: `admin`
+- **Password**: `admin123`
+
+### Security Configuration
+
+To change the default credentials, set these environment variables:
+
+```bash
+# Create a .env file in the project root
+DOCS_USERNAME=your_secure_username
+DOCS_PASSWORD=your_secure_password
+DOCS_AUTH_ENABLED=true
+```
+
+**⚠️ Security Recommendations:**
+
+1. **Change default credentials immediately** in production
+2. Use strong, unique passwords
+3. Consider using environment variables for credentials
+4. Regularly rotate credentials
+5. Monitor access logs for suspicious activity
+
+### Disabling Authentication
+
+To disable authentication (not recommended for production), set:
+
+```bash
+DOCS_AUTH_ENABLED=false
+```
 
 ## ⚙️ Environment Variables
 
@@ -123,6 +165,11 @@ GMAIL_PASSWORD=your_gmail_app_password
 
 # AI Service Configuration
 AI_SERVICE_URL=http://localhost:5000
+
+# API Documentation Authentication
+DOCS_USERNAME=your_secure_username
+DOCS_PASSWORD=your_secure_password
+DOCS_AUTH_ENABLED=true
 ```
 
 ## 🚀 Quick Start
@@ -153,24 +200,29 @@ python -m src.main
 
 ### 5. Access the API
 
-- **API Documentation**: http://localhost:4000/docs
-- **Alternative Docs**: http://localhost:4000/redoc
+- **API Documentation**: http://localhost:4000/docs (Authentication Required)
+- **Alternative Docs**: http://localhost:4000/redoc (Authentication Required)
 - **Health Check**: http://localhost:4000/health
+
+**Note**: API documentation requires authentication. Default credentials are `admin:admin123`. Change these in production!
 
 ## 🔧 Testing
 
 ### Test S3 Integration
+
 ```bash
 python test_s3_integration.py
 ```
 
 ### Test File Upload
+
 ```bash
 curl -X POST http://localhost:4000/upload \
   -F "file=@test.pdf"
 ```
 
 ### Test Application Submission
+
 ```bash
 curl -X POST http://localhost:4000/api/jobs/{job_id}/apply \
   -F "cv_file=@resume.pdf" \
@@ -181,6 +233,7 @@ curl -X POST http://localhost:4000/api/jobs/{job_id}/apply \
 ## 📋 Features Overview
 
 ### AWS S3 Integration
+
 - **Direct Upload**: Files uploaded directly to S3 bucket
 - **Public Access**: Files accessible via direct URLs
 - **Unique Naming**: Timestamp + UUID to prevent conflicts
@@ -188,6 +241,7 @@ curl -X POST http://localhost:4000/api/jobs/{job_id}/apply \
 - **Error Handling**: Comprehensive S3 operation error handling
 
 ### Application Workflow
+
 1. **File Upload**: CV uploaded to S3 via `/upload` endpoint
 2. **URL Storage**: S3 file URL stored in database
 3. **AI Processing**: File content extracted for CV evaluation
@@ -197,6 +251,7 @@ curl -X POST http://localhost:4000/api/jobs/{job_id}/apply \
 ## 🛠️ Development
 
 ### Project Structure
+
 ```
 src/
 ├── config/          # Settings and configuration
@@ -213,6 +268,7 @@ src/
 ```
 
 ### Key Files
+
 - **S3 Integration**: `src/services/s3_service.py`
 - **Upload Routes**: `src/routes/upload_routes.py`
 - **Settings**: `src/config/settings.py`

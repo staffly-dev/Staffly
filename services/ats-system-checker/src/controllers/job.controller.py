@@ -395,9 +395,7 @@ class JobController:
                 "job_title": job_posting.title,
                 "status": "submitted",
                 "message": "Your application has been submitted successfully!",
-                "next_steps": "Our system is evaluating your CV. You will receive an email with the results shortly.",
-                "file_url": file_url,
-                "s3_key": s3_key
+                "next_steps": "Our system is evaluating your CV. You will receive an email with the results shortly."
             }
             
             if evaluation_result:

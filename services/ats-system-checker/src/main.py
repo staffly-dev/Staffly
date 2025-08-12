@@ -26,7 +26,8 @@ from src.middlewares import (
     EXCEPTION_HANDLERS,
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
-    FileUploadSecurityMiddleware
+    FileUploadSecurityMiddleware,
+    DocsAuthenticationMiddleware
 )
 
 # Services
@@ -83,9 +84,10 @@ async def lifespan(app: FastAPI):
         
         # Use localhost for user-friendly URLs (regardless of bind host)
         display_host = "localhost" if settings.API_HOST == "0.0.0.0" else settings.API_HOST
-        print(f"API Documentation: http://{display_host}:{settings.API_PORT}/docs")
-        print(f"Alternative Docs: http://{display_host}:{settings.API_PORT}/redoc")
-        print(f"OpenAPI Schema: http://{display_host}:{settings.API_PORT}/openapi.json")
+        print(f"API Documentation: http://{display_host}:{settings.API_PORT}/docs (Authentication Required)")
+        print(f"Alternative Docs: http://{display_host}:{settings.API_PORT}/redoc (Authentication Required)")
+        print(f"OpenAPI Schema: http://{display_host}:{settings.API_PORT}/openapi.json (Authentication Required)")
+        print(f"Default credentials: {settings.DOCS_USERNAME}:{settings.DOCS_PASSWORD}")
         
     except Exception as e:
         logger.error(f" Failed to initialize application: {e}")
@@ -148,6 +150,7 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(FileUploadSecurityMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(DocsAuthenticationMiddleware)
     
     # Add CORS middleware
     app.add_middleware(
@@ -199,10 +202,11 @@ def root():
     return {
         "message": " FastAPI connected to mongoose db connected",
         "version": "2.0.0",
-        "docs": f"http://{settings.API_HOST}:{settings.API_PORT}/docs",
-        "redoc": f"http://{settings.API_HOST}:{settings.API_PORT}/redoc",
-        "openapi": f"http://{settings.API_HOST}:{settings.API_PORT}/openapi.json",
-        "status": "operational"
+        "docs": "Available at /docs (authentication required)",
+        "redoc": "Available at /redoc (authentication required)",
+        "openapi": "Available at /openapi.json (authentication required)",
+        "status": "operational",
+        "note": "API documentation requires authentication. Contact your administrator for credentials."
     }
 
 
