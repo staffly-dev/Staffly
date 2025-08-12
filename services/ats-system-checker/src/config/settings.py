@@ -68,6 +68,7 @@ class Settings(BaseSettings):
     # File Storage
     UPLOAD_FOLDER: str = Field(default="uploads", description="Upload folder path")
     EVALUATIONS_FOLDER: str = Field(default="evaluations", description="Evaluations folder path")
+    UPLOADS_BASE_URL: str = Field(default="https://stafflyhr.tech", description="Base URL for uploads and CV files")
     
     # Quiz Configuration
     QUIZ_TIME_LIMIT: int = Field(default=300, description="Quiz time limit in seconds")

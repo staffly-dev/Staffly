@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 
 from src.controllers import ApplicationController
 from src.utils.dependencies import get_application_controller
-from src.models.api_models import ApplicationsListResponse
+from src.models.api_models import ApplicationsListResponse, SingleApplicationResponse
 
 router = APIRouter(tags=["applications"])
 
@@ -33,6 +33,30 @@ async def get_all_applications(
     This endpoint provides a comprehensive overview of all candidates who have applied for jobs in the system.
     """
     return await controller.get_all_applications()
+
+
+@router.get("/applications/{application_id}", response_model=SingleApplicationResponse, summary="Get Application by ID")
+async def get_application_by_id(
+    application_id: str,
+    controller: ApplicationController = Depends(get_application_controller) # type: ignore
+):
+    """
+    Get a single job application by its ID.
+    
+    Returns a single application with the following information:
+    - **application_id**: Unique application identifier
+    - **candidate_email**: Candidate's email address
+    - **candidate_name**: Candidate's name
+    - **cv_score**: CV evaluation score (0-100)
+    - **cv_filename**: CV file URL
+    - **decision**: CV evaluation decision (ACCEPTED, REJECTED, PENDING)
+    - **job_id**: Associated job ID
+    - **quiz_score**: Quiz score (0-10) if quiz was completed
+    - **status**: Application status
+    
+    This endpoint provides detailed information about a specific application.
+    """
+    return await controller.get_application_by_id(application_id)
 
 
 @router.delete("/applications/{application_id}", summary="Delete Application")
