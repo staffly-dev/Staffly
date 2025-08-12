@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, description="Access token expiration in minutes")
     REFRESH_TOKEN_EXPIRE_MINUTES: int = Field(default=43200, description="Refresh token expiration in minutes (30 days)")
     
+    # API Documentation Authentication
+    DOCS_USERNAME: str = Field(default="admin", description="Username for API documentation access")
+    DOCS_PASSWORD: str = Field(default="admin123", description="Password for API documentation access")
+    DOCS_AUTH_ENABLED: bool = Field(default=True, description="Enable authentication for API documentation")
+    
     # CORS Configuration
     CORS_ALLOW_ORIGINS: str = Field(
         default="http://localhost:3000,https://your-production-frontend.com",
