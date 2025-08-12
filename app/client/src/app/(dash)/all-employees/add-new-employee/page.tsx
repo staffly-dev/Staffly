@@ -54,7 +54,7 @@ export default function MultiStepForm() {
   } = useForm<NewEmployeeFormData>({
     resolver: zodResolver(newEmployeeSchema),
     defaultValues: {
-      mobileNumber: "+201018562905",
+      mobileNumber: "+201000000000",
     },
   });
 

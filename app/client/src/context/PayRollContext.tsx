@@ -10,289 +10,238 @@ import React, {
 import axiosInstance from "@/lib/axiosInstance";
 
 // Types for Dashboard
-interface RecentActivity {
-  type: string;
-  description: string;
-  timestamp: string;
+export interface CreatePayRollRequest {
+  employeeId: string;
+  ctc: number;
+  salaryByMonth: number;
+  deduction: number;
 }
 
-interface DashboardData {
-  totalEmployees: number;
-  totalAttendance: number;
-  totalApplicants: number;
-  totalProjects: number;
-  recentActivity: RecentActivity[];
-}
-
-interface EmployeeInfo {
+interface Employee {
   _id: string;
   firstName: string;
   lastName: string;
-  designation: string;
-  employeeType: string;
+  profilePicture: string | null;
 }
 
-// Types for Attendance
-interface AttendanceRecord {
+export interface Payroll {
   _id: string;
-  employeeId: EmployeeInfo;
-  date: string;
-  checkInTime: string;
-  checkOutTime: string | null;
+  employeeId: Employee;
+  ctc: number;
+  salaryByMonth: number;
+  deduction?: number;
   status: string;
-}
-
-interface CheckInRequest {
-  employeeId: string;
-  checkInTime: string;
-}
-
-interface AttendanceSearchParams {
-  firstName?: string;
-  lastName?: string;
-}
-
-// Types for Settings
-interface UserSettings {
-  _id: string;
-  userId: string;
-  appearance: "light" | "dark";
-  language: string;
-  emailNotifications: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-interface UpdateSettingsRequest {
-  appearance?: "light" | "dark";
-  language?: string;
-  emailNotifications?: boolean;
+interface PayrollResponse {
+  message: string;
+  payroll: Payroll;
+}
+
+interface PayrollsSearchParams {
+  firstName?: string;
+  lastName?: string;
+}
+
+interface PayrollsResponse {
+  message: string;
+  payroll: Payroll[];
 }
 
 // Context State Interface
-interface AttendanceContextType {
-  // Dashboard
-  dashboardData: DashboardData | null;
-  isLoadingDashboard: boolean;
-  fetchDashboard: () => Promise<void>;
-
-  // Attendance
-  attendanceRecords: AttendanceRecord[];
-  isLoadingAttendance: boolean;
-  fetchAttendance: () => Promise<void>;
-  fetchAttendanceById: (id: string) => Promise<AttendanceRecord | null>;
-  checkIn: (data: CheckInRequest) => Promise<AttendanceRecord | null>;
-  fetchAttendanceSearch: (params?: AttendanceSearchParams) => Promise<void>;
-  // Settings
-  userSettings: UserSettings | null;
-  isLoadingSettings: boolean;
-  fetchSettings: (userId: string) => Promise<void>;
-  updateSettings: (
-    userId: string,
-    data: UpdateSettingsRequest
-  ) => Promise<void>;
+interface PayRollContextType {
+  // Payroll
+  createPayroll: (
+    data: CreatePayRollRequest
+  ) => Promise<PayrollResponse | null>;
+  fetchPayrolls: (
+    params?: PayrollsSearchParams
+  ) => Promise<PayrollsResponse | null>;
+  updatePayroll: (
+    id: string,
+    data: CreatePayRollRequest | null
+  ) => Promise<PayrollResponse | null>;
+  deletePayroll: (id: string) => Promise<string>;
+  fetchPayrollSearch: (
+    params?: PayrollsSearchParams
+  ) => Promise<PayrollsResponse | null>;
 
   // Error handling
   error: string | null;
   clearError: () => void;
+  payrolls: Payroll[];
+  isLoadingPayrolls: boolean;
+  deleteLoading: boolean;
 }
 
-const AttendanceContext = createContext<AttendanceContextType | undefined>(
-  undefined
-);
+const PayRollContext = createContext<PayRollContextType | undefined>(undefined);
 
-export function AttendanceProvider({ children }: { children: ReactNode }) {
-  // Dashboard state
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null
-  );
-  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
-
-  // Attendance state
-  const [attendanceRecords, setAttendanceRecords] = useState<
-    AttendanceRecord[]
-  >([]);
-  const [isLoadingAttendance, setIsLoadingAttendance] = useState(false);
-
-  // Settings state
-  const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
-  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
-
+export function PayRollProvider({ children }: { children: ReactNode }) {
+  // Payroll state
+  const [payrolls, setPayrolls] = useState<Payroll[]>([]);
+  const [isLoadingPayrolls, setIsLoadingPayrolls] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   // Error state
   const [error, setError] = useState<string | null>(null);
 
-  // Dashboard functions
-  const fetchDashboard = useCallback(async () => {
+  // Payroll functions
+  const fetchPayrolls = useCallback(async (): Promise<PayrollsResponse> => {
     try {
-      setIsLoadingDashboard(true);
+      setIsLoadingPayrolls(true);
       setError(null);
-      const response = await axiosInstance.get("/dashboard");
-      setDashboardData(response.data.dashboard);
+      const response = await axiosInstance.get("/payroll/getAllPayroll");
+      const payrolls = response.data.payroll;
+      setPayrolls(payrolls);
+      return {
+        message: "Payrolls fetched successfully",
+        payroll: payrolls,
+      };
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch dashboard data";
+        err instanceof Error ? err.message : "Failed to fetch payroll data";
       setError(errorMessage);
+      return {
+        message: errorMessage,
+        payroll: [],
+      };
     } finally {
-      setIsLoadingDashboard(false);
+      setIsLoadingPayrolls(false);
     }
   }, []);
 
-  // Attendance functions
-  const fetchAttendance = useCallback(async () => {
-    try {
-      setIsLoadingAttendance(true);
-      setError(null);
-      const response = await axiosInstance.get("/attendance/getAllAttendance ");
-      setAttendanceRecords(response.data.attendance);
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to fetch attendance records";
-      setError(errorMessage);
-    } finally {
-      setIsLoadingAttendance(false);
-    }
-  }, []);
-
-  // Attendance search functions
-  const fetchAttendanceSearch = useCallback(
-    async (params?: AttendanceSearchParams) => {
+  // Payroll functions
+  const createPayroll = useCallback(
+    async (data: CreatePayRollRequest): Promise<PayrollResponse> => {
       try {
-        setIsLoadingAttendance(true);
+        setIsLoadingPayrolls(true);
         setError(null);
-        const response = await axiosInstance.get("/attendance/search ", {
+        const response = await axiosInstance.post(
+          "/payroll/createPayroll",
+          data
+        );
+        const payroll = response.data.payroll;
+        setPayrolls((prev) => [...prev, payroll]);
+        return {
+          message: "Payroll created successfully",
+          payroll,
+        };
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to create payroll";
+        setError(errorMessage);
+      } finally {
+        setIsLoadingPayrolls(false);
+      }
+    },
+    []
+  );
+
+  // Payroll search functions
+  const fetchPayrollSearch = useCallback(
+    async (params?: PayrollsSearchParams): Promise<PayrollsResponse> => {
+      try {
+        setIsLoadingPayrolls(true);
+        setError(null);
+        const response = await axiosInstance.get("/payroll/search", {
           params,
         });
-        setAttendanceRecords(response.data.attendance);
+        const payrolls = response.data.payroll;
+        setPayrolls(payrolls);
+        return {
+          message: "Payroll search fetched successfully",
+          payroll: payrolls,
+        };
       } catch (err: unknown) {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to fetch attendance records";
+            : "Failed to fetch payroll records";
         setError(errorMessage);
       } finally {
-        setIsLoadingAttendance(false);
+        setIsLoadingPayrolls(false);
       }
     },
     []
   );
 
-  const fetchAttendanceById = useCallback(
-    async (id: string): Promise<AttendanceRecord | null> => {
+  const updatePayroll = useCallback(
+    async (
+      id: string,
+      data: CreatePayRollRequest
+    ): Promise<PayrollResponse> => {
       try {
         setError(null);
-        const response = await axiosInstance.get(`/attendance/${id}`);
-        return response.data.attendance[0] || null;
+        const response = await axiosInstance.put(
+          `/payroll/updatePayroll/${id}`,
+          data
+        );
+        return {
+          message: "Payroll updated successfully",
+          payroll: response.data.payroll,
+        };
       } catch (err: unknown) {
         const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch attendance record";
+          err instanceof Error ? err.message : "Failed to update payroll";
         setError(errorMessage);
-        return null;
+        return {
+          message: errorMessage,
+          payroll: null,
+        };
       }
     },
     []
   );
 
-  const checkIn = useCallback(
-    async (data: CheckInRequest): Promise<AttendanceRecord | null> => {
-      try {
-        setError(null);
-        const response = await axiosInstance.post("/attendance/checkin", data);
-        return response.data.attendance;
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to check in";
-        setError(errorMessage);
-        return null;
-      }
-    },
-    []
-  );
-
-  // Settings functions
-  const fetchSettings = useCallback(async (userId: string) => {
+  // Payroll functions
+  const deletePayroll = useCallback(async (id: string): Promise<string> => {
     try {
-      setIsLoadingSettings(true);
+      setDeleteLoading(true);
       setError(null);
-      const response = await axiosInstance.get(`/settings/${userId}`);
-      setUserSettings(response.data.settings);
+      await axiosInstance.delete(`/payroll/deletePayroll/${id}`);
+      setPayrolls((prev) => prev.filter((payroll) => payroll._id !== id));
+      return "Payroll deleted successfully";
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch settings";
+        err instanceof Error ? err.message : "Failed to delete payroll";
       setError(errorMessage);
     } finally {
-      setIsLoadingSettings(false);
+      setDeleteLoading(false);
     }
   }, []);
-
-  const updateSettings = useCallback(
-    async (userId: string, data: UpdateSettingsRequest) => {
-      try {
-        setIsLoadingSettings(true);
-        setError(null);
-        await axiosInstance.put(`/settings/${userId}`, data);
-        // Update local state with new settings
-        if (userSettings) {
-          setUserSettings({
-            ...userSettings,
-            ...data,
-            updatedAt: new Date().toISOString(),
-          });
-        }
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to update settings";
-        setError(errorMessage);
-      } finally {
-        setIsLoadingSettings(false);
-      }
-    },
-    [userSettings]
-  );
 
   // Error handling
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  const value: AttendanceContextType = {
-    // Dashboard
-    dashboardData,
-    isLoadingDashboard,
-    fetchDashboard,
+  const value: PayRollContextType = {
+    // Payroll
+    payrolls,
+    isLoadingPayrolls,
+    fetchPayrolls,
 
-    // Attendance
-    attendanceRecords,
-    isLoadingAttendance,
-    fetchAttendance,
-    fetchAttendanceById,
-    checkIn,
-    fetchAttendanceSearch,
-    // Settings
-    userSettings,
-    isLoadingSettings,
-    fetchSettings,
-    updateSettings,
-
+    // Payroll
+    createPayroll,
+    fetchPayrollSearch,
+    updatePayroll,
+    deletePayroll,
+    deleteLoading,
     // Error handling
     error,
     clearError,
   };
 
   return (
-    <AttendanceContext.Provider value={value}>
-      {children}
-    </AttendanceContext.Provider>
+    <PayRollContext.Provider value={value}>{children}</PayRollContext.Provider>
   );
 }
 
-export function useAttendance() {
-  const context = useContext(AttendanceContext);
+export function usePayRoll() {
+  const context = useContext(PayRollContext);
   if (!context) {
-    throw new Error("useAttendance must be used within a AttendanceProvider");
+    throw new Error("usePayRoll must be used within a PayRollProvider");
   }
   return context;
 }
