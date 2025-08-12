@@ -147,8 +147,8 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
                     }
                   />
                   <AvatarFallback>
-                    {payroll.employeeId.firstName.charAt(0) +
-                      payroll.employeeId.lastName.charAt(0)}
+                    {payroll.employeeId?.firstName.charAt(0) +
+                      payroll.employeeId?.lastName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 {payroll.employeeId.firstName +
