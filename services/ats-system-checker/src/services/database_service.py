@@ -940,7 +940,37 @@ class DatabaseService:
             logger.error(f" Failed to update application status: {e}")
             return None
     
-
+    async def update_application_cv_filename(
+        self,
+        application_id: str,
+        cv_filename: str
+    ) -> bool:
+        """
+        Update application CV filename
+        
+        Args:
+            application_id: Application ID
+            cv_filename: New CV filename
+            
+        Returns:
+            bool: True if updated successfully, False otherwise
+        """
+        try:
+            application = await Application.find_one(Application.application_id == application_id)
+            if not application:
+                logger.warning(f"Application not found: {application_id}")
+                return False
+            
+            # Update CV filename
+            application.cv_filename = cv_filename
+            await application.save()
+            
+            logger.info(f" Updated application CV filename: {application_id} -> {cv_filename}")
+            return True
+            
+        except Exception as e:
+            logger.error(f" Failed to update application CV filename: {e}")
+            return False
     
     async def get_applications_for_job(self, job_id: str) -> List[Application]:
         """

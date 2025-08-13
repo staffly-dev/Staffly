@@ -315,11 +315,12 @@ class JobController:
                         logger.error(f"Failed to write file: {write_error}")
                         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(write_error)}")
                     
-                    # Generate local file URL
-                    file_url = f"http://localhost:{settings.API_PORT}/uploads/{unique_filename}"
+                    # Store only the filename in the database, not the full URL
+                    # The application controller will construct the proper URL when needed
+                    file_url = unique_filename
                     s3_key = unique_filename
                     
-                    logger.info(f"File uploaded successfully to local storage: {file_url}")
+                    logger.info(f"File uploaded successfully to local storage: {unique_filename}")
             except Exception as upload_error:
                 logger.error(f"File upload failed: {upload_error}")
                 raise HTTPException(

@@ -169,15 +169,40 @@ def create_app() -> FastAPI:
     app.include_router(api_router)
     
     # Mount static files for local uploads (when S3 is not configured)
-    uploads_dir = os.path.join(os.path.dirname(__file__), "..", settings.UPLOAD_FOLDER)
+    # Try multiple possible paths for uploads directory
+    uploads_paths = [
+        os.path.join(os.path.dirname(__file__), "..", settings.UPLOAD_FOLDER),  # Local development
+        os.path.join(os.path.dirname(__file__), "..", "..", settings.UPLOAD_FOLDER),  # Alternative local path
+        os.path.join("/app", settings.UPLOAD_FOLDER),  # Docker container path
+        os.path.join(os.getcwd(), settings.UPLOAD_FOLDER),  # Current working directory
+    ]
+    
+    uploads_dir = None
+    for path in uploads_paths:
+        if os.path.exists(path):
+            uploads_dir = path
+            break
+    
     # Ensure uploads directory exists and mount it
-    try:
-        os.makedirs(uploads_dir, exist_ok=True)
-        app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
-        logger.info(f"Mounted static files for uploads at: {uploads_dir}")
-    except Exception as e:
-        logger.warning(f"Failed to mount uploads directory: {e}")
-        # Continue without static files - files can still be uploaded but won't be served statically
+    if uploads_dir:
+        try:
+            os.makedirs(uploads_dir, exist_ok=True)
+            app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+            logger.info(f"Mounted static files for uploads at: {uploads_dir}")
+            logger.info(f"Uploads will be accessible at: /uploads/")
+        except Exception as e:
+            logger.warning(f"Failed to mount uploads directory: {e}")
+            # Continue without static files - files can still be uploaded but won't be served statically
+    else:
+        logger.warning(f"Uploads directory not found in any of these paths: {uploads_paths}")
+        # Try to create the default path
+        try:
+            default_path = os.path.join(os.path.dirname(__file__), "..", settings.UPLOAD_FOLDER)
+            os.makedirs(default_path, exist_ok=True)
+            app.mount("/uploads", StaticFiles(directory=default_path), name="uploads")
+            logger.info(f"Mounted static files for uploads at default path: {default_path}")
+        except Exception as e:
+            logger.warning(f"Failed to mount uploads directory at default path: {e}")
     
     return app
 

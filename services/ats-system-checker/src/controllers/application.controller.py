@@ -6,6 +6,7 @@ Handles job posting creation, retrieval, and management
 from typing import Optional, List
 from datetime import datetime
 from fastapi import HTTPException, UploadFile
+import os
 
 from src.utils.logging_config import get_logger
 from src.utils.responses import success_response
@@ -45,14 +46,9 @@ class ApplicationController:
             
             application_responses = []
             for app in applications:
-                # Ensure cv_filename uses the correct base URL
-                cv_filename = app.cv_filename
-                if cv_filename and not cv_filename.startswith('http'):
-                    # If it's just a filename, construct the full URL
-                    cv_filename = f"{settings.UPLOADS_BASE_URL}/uploads/{cv_filename}"
-                elif cv_filename and 'localhost:4000' in cv_filename:
-                    # Replace localhost URLs with production URL
-                    cv_filename = cv_filename.replace('http://localhost:4000', settings.UPLOADS_BASE_URL)
+                # Fix CV filename URL construction
+                cv_filename = self._fix_cv_filename_url(app.cv_filename)
+                s3_key = self._extract_s3_key(app.cv_filename)
                 
                 app_response = ApplicationListResponse(
                     application_id=app.application_id,
@@ -60,6 +56,7 @@ class ApplicationController:
                     candidate_name=app.candidate_name,
                     cv_score=app.cv_score,
                     cv_filename=cv_filename,
+                    s3_key=s3_key,
                     decision=app.decision if app.decision else None,
                     job_id=app.job_id,
                     quiz_score=app.quiz_score,
@@ -78,6 +75,85 @@ class ApplicationController:
         except Exception as e:
             logger.error(f" Failed to get applications: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to get applications: {str(e)}")
+    
+    def _extract_s3_key(self, cv_filename: str) -> str:
+        """
+        Extract S3 key or local filename from CV filename/URL
+        
+        Args:
+            cv_filename: CV filename or URL
+            
+        Returns:
+            str: S3 key or local filename
+        """
+        if not cv_filename:
+            return ""
+        
+        # If it's a full URL, extract just the filename
+        if cv_filename.startswith('http'):
+            # Extract filename from URL path
+            if '/uploads/' in cv_filename:
+                return cv_filename.split('/uploads/')[-1]
+            elif '/s3/' in cv_filename:
+                return cv_filename.split('/s3/')[-1]
+            else:
+                # For other URL formats, try to get the last part after the last slash
+                return cv_filename.split('/')[-1]
+        
+        # If it's just a filename, return as is
+        return cv_filename
+
+    def _fix_cv_filename_url(self, cv_filename: str) -> str:
+        """
+        Fix CV filename URL to ensure proper file access
+        
+        Args:
+            cv_filename: Original CV filename or URL
+            
+        Returns:
+            str: Corrected CV filename URL
+        """
+        if not cv_filename:
+            return ""
+        
+        # If it's already a full URL, check if it's accessible
+        if cv_filename.startswith('http'):
+            # If it's a localhost URL, replace with production URL
+            if 'localhost:' in cv_filename:
+                return cv_filename.replace('http://localhost:4000', settings.UPLOADS_BASE_URL)
+            # If it's already a production URL, return as is
+            return cv_filename
+        
+        # If it's just a filename, construct the full URL
+        # Check if the file exists locally first
+        # Try multiple possible paths for the uploads directory
+        uploads_paths = [
+            os.path.join(os.path.dirname(__file__), "..", "..", settings.UPLOAD_FOLDER),  # Local development
+            os.path.join("/app", settings.UPLOAD_FOLDER),  # Docker container path
+            os.path.join(os.getcwd(), settings.UPLOAD_FOLDER),  # Current working directory
+            settings.UPLOAD_FOLDER,  # Relative path
+        ]
+        
+        file_found = False
+        for uploads_dir in uploads_paths:
+            local_file_path = os.path.join(uploads_dir, cv_filename)
+            if os.path.exists(local_file_path):
+                logger.info(f"File exists locally: {local_file_path}")
+                file_found = True
+                break
+        
+        if file_found:
+            # File exists locally, serve from uploads endpoint
+            return f"{settings.UPLOADS_BASE_URL}/uploads/{cv_filename}"
+        else:
+            # File doesn't exist locally, might be in S3
+            # Try to construct S3 URL if S3 is configured
+            if hasattr(settings, 'AWS_S3_BUCKET') and settings.AWS_S3_BUCKET:
+                return f"{settings.s3_bucket_url}/{cv_filename}"
+            else:
+                # Fallback to uploads endpoint
+                logger.warning(f"File not found locally in any of these paths: {uploads_paths}, but will try to serve from uploads endpoint")
+                return f"{settings.UPLOADS_BASE_URL}/uploads/{cv_filename}"
     
     async def get_application_by_id(self, application_id: str) -> SingleApplicationResponse:
         """
@@ -99,14 +175,9 @@ class ApplicationController:
                     detail="Application not found"
                 )
             
-            # Ensure cv_filename uses the correct base URL
-            cv_filename = application.cv_filename
-            if cv_filename and not cv_filename.startswith('http'):
-                # If it's just a filename, construct the full URL
-                cv_filename = f"{settings.UPLOADS_BASE_URL}/uploads/{cv_filename}"
-            elif cv_filename and 'localhost:4000' in cv_filename:
-                # Replace localhost URLs with production URL
-                cv_filename = cv_filename.replace('http://localhost:4000', settings.UPLOADS_BASE_URL)
+            # Fix CV filename URL construction
+            cv_filename = self._fix_cv_filename_url(application.cv_filename)
+            s3_key = self._extract_s3_key(application.cv_filename)
             
             app_response = SingleApplicationResponse(
                 application_id=application.application_id,
@@ -114,6 +185,7 @@ class ApplicationController:
                 candidate_name=application.candidate_name,
                 cv_score=application.cv_score if application.cv_score is not None else 0,
                 cv_filename=cv_filename,
+                s3_key=s3_key,
                 decision=application.decision if application.decision else "PENDING",
                 job_id=application.job_id,
                 quiz_score=application.quiz_score,
