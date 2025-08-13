@@ -18,6 +18,7 @@
     "express-mongo-sanitize": "^2.2.0",
     "helmet": "^8.1.0",
     "http-proxy-middleware": "^3.0.5",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.5",
     "morgan": "^1.10.0",
     "xss": "^1.0.15",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0"
