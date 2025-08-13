@@ -15,6 +15,10 @@ const envConfig = () => ({
     SERVER_URL: getEnv("SERVER_URL", "http://localhost:4004"),
     ATS_SYSTEM_URL: getEnv("ATS_SYSTEM_URL", "http://localhost:4000"),
 
+    //? =========== Auth ===========
+    JWT_SECRET: getEnv("JWT_SECRET"),
+    JWT_AUDIENCE: getEnv("JWT_AUDIENCE", "user"),
+
     //! =========== Security Layer===========
     // Rate limiting
     RATE_LIMIT_WINDOW_MS: getEnv("RATE_LIMIT_WINDOW_MS", "900000"),
