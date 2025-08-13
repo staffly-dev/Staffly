@@ -1,5 +1,5 @@
-import ComingSoon from "@/components/global/coming-soon";
+import ContactSection from "@/components/marketing/company/contact-us";
 
 export default function ContactPage() {
-  return <ComingSoon />;
+  return <ContactSection />;
 }

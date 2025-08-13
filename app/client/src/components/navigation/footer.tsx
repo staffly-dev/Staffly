@@ -9,6 +9,9 @@ const companyLinks = [
   { href: "/about", label: "About" },
   { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
+  { href: "/community", label: "Community" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/tutorials", label: "Tutorials" },
   { href: "/help-center", label: "Help Center" },
 ];
 

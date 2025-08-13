@@ -1,5 +1,5 @@
-import ComingSoon from "@/components/global/coming-soon";
+import AboutUSSection from "@/components/marketing/company/about-us";
 
 export default function AboutPage() {
-  return <ComingSoon />;
+  return <AboutUSSection />;
 }
