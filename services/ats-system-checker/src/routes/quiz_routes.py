@@ -12,7 +12,7 @@ from src.utils.dependencies import get_quiz_controller
 from src.models.api_models import AllQuizUsersResponse, QuizDisplayResponse
 from src.models.evaluation_models import APIResponse
 
-router = APIRouter(prefix="/api/quiz", tags=["quiz"])
+router = APIRouter(prefix="/quiz", tags=["quiz"])
 
 
 @router.post("/submit", response_model=APIResponse, summary="Submit Quiz")

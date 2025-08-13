@@ -5,11 +5,9 @@ Modern, async replacement for the original Flask application
 
 import sys
 import os
+from datetime import datetime
 
-# Add the ai directory to sys.path so ai/services/cohere_service.py can import models.evaluation_models
-ai_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../ai'))
-if ai_path not in sys.path:
-    sys.path.insert(0, ai_path)
+# Add the parent directory to sys.path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -25,7 +23,7 @@ from src.utils.logging_config import setup_logging, get_logger
 from src.middlewares import (
     EXCEPTION_HANDLERS,
     RequestLoggingMiddleware,
-    SecurityHeadersMiddleware,
+    EnhancedSecurityMiddleware,
     FileUploadSecurityMiddleware,
     DocsAuthenticationMiddleware
 )
@@ -35,13 +33,10 @@ from src.services.database_service import DatabaseService
 from src.services.email_service import EmailService
 from src.services.evaluation_service import EvaluationService
 
+
 # Routes
 from src.routes import api_router
 from src.routes.health_routes import router as health_router
-from src.routes.jobs_routes import router as jobs_router
-from src.routes.quiz_routes import router as quiz_router
-from src.routes.statistics_routes import router as statistics_router
-from src.routes.applications_routes import router as applications_router
 from src.routes.upload_routes import router as upload_router
 
 # Initialize settings and logging
@@ -82,12 +77,8 @@ async def lifespan(app: FastAPI):
         # Print startup success message
         print("FastAPI connected to mongoose db connected")
         
-        # Use localhost for user-friendly URLs (regardless of bind host)
-        display_host = "localhost" if settings.API_HOST == "0.0.0.0" else settings.API_HOST
-        print(f"API Documentation: http://{display_host}:{settings.API_PORT}/docs (Authentication Required)")
-        print(f"Alternative Docs: http://{display_host}:{settings.API_PORT}/redoc (Authentication Required)")
-        print(f"OpenAPI Schema: http://{display_host}:{settings.API_PORT}/openapi.json (Authentication Required)")
-        print(f"Default credentials: {settings.DOCS_USERNAME}:{settings.DOCS_PASSWORD}")
+        # Display startup information using environment-based configuration
+        _display_startup_info(settings)
         
     except Exception as e:
         logger.error(f" Failed to initialize application: {e}")
@@ -99,160 +90,124 @@ async def lifespan(app: FastAPI):
     try:
         await app.state.database_service.disconnect()
         await close_database()
+        logger.info("Application shutdown complete")
     except Exception as e:
-        logger.error(f" Error during shutdown: {e}")
+        logger.error(f"Error during shutdown: {e}")
 
 
-def create_app() -> FastAPI:
-    """
-    Create and configure FastAPI application
+def _display_startup_info(settings):
+    """Display startup information using environment configuration"""
+    # Use environment-based host display
+    display_host = "localhost" if settings.API_HOST == "0.0.0.0" else settings.API_HOST
     
-    Returns:
-        FastAPI: Configured application instance
-    """
-    # Create FastAPI app
-    app = FastAPI(
-        title="ATS System API",
-        version="2.0.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json",
-        lifespan=lifespan,
-        openapi_tags=[
-            {
-                "name": "health",
-                "description": "System health checks and status monitoring"
-            },
-            {
-                "name": "jobs",
-                "description": "Job posting management and CV application submission"
-            },
-            {
-                "name": "quiz",
-                "description": "Quiz generation and evaluation"
-            },
-            {
-                "name": "statistics",
-                "description": "System analytics and metrics"
-            },
-            {
-                "name": "applications",
-                "description": "Application management and retrieval"
-            },
-            {
-                "name": "upload",
-                "description": "File upload to AWS S3 bucket"
-            }
-        ]
-    )
+    print(f"ATS System Backend Started Successfully")
+    print(f"Environment: {settings.ENV.upper()}")
+    print(f"API Host: {settings.API_HOST}:{settings.API_PORT}")
+    print(f"API Documentation: http://{display_host}:{settings.API_PORT}/docs (Authentication Required)")
+    print(f"Alternative Docs: http://{display_host}:{settings.API_PORT}/redoc (Authentication Required)")
+    print(f"OpenAPI Schema: http://{display_host}:{settings.API_PORT}/openapi.json (Authentication Required)")
     
-    # Add middleware (order matters!)
-    app.add_middleware(SecurityHeadersMiddleware)
-    app.add_middleware(FileUploadSecurityMiddleware)
-    app.add_middleware(RequestLoggingMiddleware)
-    app.add_middleware(DocsAuthenticationMiddleware)
+    if settings.DOCS_AUTH_ENABLED:
+        print(f"Default credentials: {settings.DOCS_USERNAME}:{settings.DOCS_PASSWORD}")
     
-    # Add CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.get_cors_origins(),
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # Display service URLs
+    if settings.FRONTEND_URL:
+        print(f" Frontend URL: {settings.FRONTEND_URL}")
     
-    # Add exception handlers
-    for exception_type, handler in EXCEPTION_HANDLERS.items():
-        app.add_exception_handler(exception_type, handler)
+    if settings.AI_SERVICE_URL:
+        print(f"AI Service URL: {settings.AI_SERVICE_URL}")
     
-    # Include all routes
-    app.include_router(api_router)
+    if settings.UPLOADS_BASE_URL:
+        print(f"Uploads Base URL: {settings.UPLOADS_BASE_URL}")
     
-    # Mount static files for local uploads (when S3 is not configured)
-    # Try multiple possible paths for uploads directory
-    uploads_paths = [
-        os.path.join(os.path.dirname(__file__), "..", settings.UPLOAD_FOLDER),  # Local development
-        os.path.join(os.path.dirname(__file__), "..", "..", settings.UPLOAD_FOLDER),  # Alternative local path
-        os.path.join("/app", settings.UPLOAD_FOLDER),  # Docker container path
-        os.path.join(os.getcwd(), settings.UPLOAD_FOLDER),  # Current working directory
-    ]
-    
-    uploads_dir = None
-    for path in uploads_paths:
-        if os.path.exists(path):
-            uploads_dir = path
-            break
-    
-    # Ensure uploads directory exists and mount it
-    if uploads_dir:
-        try:
-            os.makedirs(uploads_dir, exist_ok=True)
-            app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
-            logger.info(f"Mounted static files for uploads at: {uploads_dir}")
-            logger.info(f"Uploads will be accessible at: /uploads/")
-        except Exception as e:
-            logger.warning(f"Failed to mount uploads directory: {e}")
-            # Continue without static files - files can still be uploaded but won't be served statically
+    # Security information
+    if settings.is_production:
+        print("Production Mode: Enhanced security enabled")
+        if settings.FORCE_HTTPS:
+            print("HTTPS enforcement enabled")
     else:
-        logger.warning(f"Uploads directory not found in any of these paths: {uploads_paths}")
-        # Try to create the default path
-        try:
-            default_path = os.path.join(os.path.dirname(__file__), "..", settings.UPLOAD_FOLDER)
-            os.makedirs(default_path, exist_ok=True)
-            app.mount("/uploads", StaticFiles(directory=default_path), name="uploads")
-            logger.info(f"Mounted static files for uploads at default path: {default_path}")
-        except Exception as e:
-            logger.warning(f"Failed to mount uploads directory at default path: {e}")
+        print("Development Mode: Relaxed security for development")
     
-    return app
+    print("=" * 60)
 
 
-# Create the app instance
-app = create_app()
+# Create FastAPI app
+app = FastAPI(
+    title="ATS System Backend",
+    description="Modern FastAPI backend for ATS (Applicant Tracking System)",
+    version="2.0.0",
+    lifespan=lifespan,
+    docs_url="/docs" if settings.DOCS_AUTH_ENABLED else None,
+    redoc_url="/redoc" if settings.DOCS_AUTH_ENABLED else None,
+    openapi_url="/openapi.json" if settings.DOCS_AUTH_ENABLED else None
+)
 
-# Explicitly include routers to ensure all endpoints are registered
-app.include_router(jobs_router)
-app.include_router(quiz_router)
-app.include_router(statistics_router)
-app.include_router(applications_router)
-app.include_router(upload_router)
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.get_cors_origins(),
+    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["*"],
+)
 
-@app.get("/", tags=["health"], summary="API Status")
-def root():
-    """
-    Get API status and information.
-    
-    Returns basic API information and links to documentation.
-    """
+# Add security middleware (order matters - most restrictive first)
+app.add_middleware(EnhancedSecurityMiddleware)
+app.add_middleware(FileUploadSecurityMiddleware)
+app.add_middleware(DocsAuthenticationMiddleware)
+
+# Add request logging middleware
+app.add_middleware(RequestLoggingMiddleware)
+
+# Add exception handlers
+for exception_class, handler in EXCEPTION_HANDLERS.items():
+    app.add_exception_handler(exception_class, handler)
+
+# Create necessary directories before mounting
+os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(settings.EVALUATIONS_FOLDER, exist_ok=True)
+
+# Mount static files
+app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_FOLDER), name="uploads")
+app.mount("/evaluations", StaticFiles(directory=settings.EVALUATIONS_FOLDER), name="evaluations")
+
+# Root endpoint
+@app.get("", tags=["Root"])
+async def root():
+    """Root endpoint with service information"""
     return {
-        "message": " FastAPI connected to mongoose db connected",
+        "message": "ATS System Backend",
         "version": "2.0.0",
-        "docs": "Available at /docs (authentication required)",
-        "redoc": "Available at /redoc (authentication required)",
-        "openapi": "Available at /openapi.json (authentication required)",
-        "status": "operational",
-        "note": "API documentation requires authentication. Contact your administrator for credentials."
+        "description": "Modern FastAPI backend for ATS (Applicant Tracking System)",
+        "environment": settings.ENV,
+        "status": "running",
+        "docs": f"/docs" if settings.DOCS_AUTH_ENABLED else "disabled",
+        "timestamp": datetime.now().isoformat()
     }
 
+# Include routers
+app.include_router(health_router, prefix="/health", tags=["health"])
+app.include_router(api_router, prefix="/api")
+app.include_router(upload_router, prefix="/upload", tags=["upload"])
 
-@app.get("/test", tags=["health"], summary="Simple Test Endpoint")
-def test_endpoint():
-    """
-    Simple test endpoint to verify API documentation is working.
-    
-    Returns a simple test message.
-    """
-    return {"test": "success", "message": "API documentation is working!"}
+# Add debug endpoint
+@app.get("/debug/s3", tags=["debug"])
+async def debug_s3():
+    """Debug S3 service configuration"""
+    from src.utils.dependencies import get_upload_controller
+    controller = await get_upload_controller()
+    return await controller.check_s3_status()
 
 
 if __name__ == "__main__":
     import uvicorn
     
+    # Run the application
     uvicorn.run(
         "src.main:app",
         host=settings.API_HOST,
         port=settings.API_PORT,
-        reload=settings.is_development,
+        reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower(),
         reload_excludes=["venv", ".pytest_cache", "__pycache__", "uploads", "ats_system.log"]
     ) 
