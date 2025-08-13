@@ -1,15 +1,24 @@
 import React from "react";
-import Link from "next/link";
+import Header from "@/components/navigation/header";
+import HeroSection from "@/components/marketing/hero-section";
+import TestimonialSection from "@/components/marketing/testimonial-section";
+import HRFlowSection from "@/components/marketing/hrflow-section";
+import FeaturesSection from "@/components/marketing/features-section";
+import BalanceSection from "@/components/marketing/balance-section";
+import CTASection from "@/components/marketing/cta-section";
+import Footer from "@/components/navigation/footer";
 
-export default function page() {
+export default function Homepage() {
   return (
-    <div className="flex flex-col items-center justify-center">
-      <h1 className="text-3xl font-bold">Home Page (Landing)</h1>
-      <nav className="flex gap-4 text-lg">
-        <Link href="/login">Sign In</Link>
-        <Link href="/sign-up">Sign Up</Link>
-        <Link href="/dashboard">Dashboard</Link>
-      </nav>
+    <div>
+      <Header />
+      <HeroSection />
+      <TestimonialSection />
+      <HRFlowSection />
+      <FeaturesSection />
+      <BalanceSection />
+      <CTASection />
+      <Footer />
     </div>
   );
 }

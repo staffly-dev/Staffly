@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { Navbar } from "./Navbar";
-import { Sidebar } from "./Sidebar";
+import { Navbar } from "./navbar";
+import { Sidebar } from "./sidebar";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
