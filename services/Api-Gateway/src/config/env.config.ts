@@ -16,8 +16,12 @@ const envConfig = () => ({
     ATS_SYSTEM_URL: getEnv("ATS_SYSTEM_URL", "http://localhost:4000"),
 
     //? =========== Auth ===========
-    JWT_SECRET: getEnv("JWT_SECRET"),
-    JWT_AUDIENCE: getEnv("JWT_AUDIENCE", "user"),
+    JWT: {
+      SECRET: getEnv("JWT_SECRET"),
+      EXPIRES_IN: getEnv("JWT_EXPIRES_IN"),
+      REFRESH_SECRET: getEnv("JWT_REFRESH_SECRET"),
+      REFRESH_EXPIRES_IN: getEnv("JWT_REFRESH_EXPIRES_IN"),
+    },
 
     //! =========== Security Layer===========
     // Rate limiting
