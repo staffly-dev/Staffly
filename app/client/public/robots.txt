@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://stafflyhr.tech
+
+# Sitemaps
+Sitemap: https://stafflyhr.tech/sitemap.xml
