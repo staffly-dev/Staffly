@@ -39,7 +39,7 @@ class EvaluationService:
         Initialize evaluation service with required dependencies
         
         Args:
-            ai_service_url: URL for the AI service (e.g., http://localhost:8000)
+            ai_service_url: URL for the AI service (e.g., http://localhost:5000)
             email_service: Service for sending email notifications
             database_service: Service for database operations
         """

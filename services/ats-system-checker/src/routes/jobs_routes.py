@@ -14,7 +14,7 @@ from src.models.api_models import JobPostingResponse
 router = APIRouter(tags=["jobs"])
 
 
-@router.get("/api/jobs", response_model=list[JobPostingResponse], summary="Get All Job Postings")
+@router.get("/jobs", response_model=list[JobPostingResponse], summary="Get All Job Postings")
 async def get_all_job_postings(
     include_inactive: bool = Query(False, description="Whether to include inactive job postings"),
     controller: JobController = Depends(get_job_controller)  # type: ignore
@@ -29,7 +29,7 @@ async def get_all_job_postings(
     return await controller.get_all_job_postings(include_inactive=include_inactive)
 
 
-@router.post("/api/jobs", response_model=JobPostingResponse, summary="Create Job Posting")
+@router.post("/jobs", response_model=JobPostingResponse, summary="Create Job Posting")
 async def create_job_posting(
     title: str = Form(..., description="Job title", example="Senior Python Developer"),
     description: str = Form(..., description="Job description", example="We are looking for an experienced Python developer..."),
@@ -70,7 +70,7 @@ async def create_job_posting(
     )
 
 
-@router.get("/api/jobs/{job_id}", response_model=JobPostingResponse, summary="Get Job Details")
+@router.get("/jobs/{job_id}", response_model=JobPostingResponse, summary="Get Job Details")
 async def get_job_posting(
     job_id: str,
     controller: JobController = Depends(get_job_controller)  # type: ignore
@@ -85,7 +85,7 @@ async def get_job_posting(
     return await controller.get_job_posting(job_id)
 
 
-@router.post("/api/jobs/{job_id}/apply", summary="Submit Job Application")
+@router.post("/jobs/{job_id}/apply", summary="Submit Job Application")
 async def submit_application(
     job_id: str,
     cv_file: UploadFile = File(..., description="CV file (PDF or DOCX)"),
@@ -119,7 +119,7 @@ async def submit_application(
     )
 
 
-@router.delete("/api/jobs/{job_id}", summary="Delete Job Posting")
+@router.delete("/jobs/{job_id}", summary="Delete Job Posting")
 async def delete_job_posting(
     job_id: str,
     controller: JobController = Depends(get_job_controller)  # type: ignore

@@ -27,8 +27,25 @@ logger = setup_ai_logger(__name__, "ats_ai.log", "INFO")
 cohere_service = None
 document_service = None
 
-# Load environment variables from model/.env
+# Load environment variables from .env
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+
+# Environment configuration
+def get_env_config():
+    """Get environment configuration with defaults"""
+    return {
+        'COHERE_API_KEY': os.getenv('COHERE_API_KEY', ''),
+        'CORS_ALLOW_ORIGINS': os.getenv('CORS_ALLOW_ORIGINS', ''),
+        'CORS_ALLOW_CREDENTIALS': os.getenv('CORS_ALLOW_CREDENTIALS', 'true').lower() == 'true',
+        'DOCS_USERNAME': os.getenv('DOCS_USERNAME', 'admin'),
+        'DOCS_PASSWORD': os.getenv('DOCS_PASSWORD', 'admin123'),
+        'DOCS_AUTH_ENABLED': os.getenv('DOCS_AUTH_ENABLED', 'true').lower() == 'true',
+        'ENV': os.getenv('ENV', 'development'),
+        'AI_HOST': os.getenv('AI_HOST', '0.0.0.0'),
+        'AI_PORT': int(os.getenv('AI_PORT', '5000')),
+    }
+
+config = get_env_config()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,7 +56,10 @@ async def lifespan(app: FastAPI):
     logger.info("Starting AI Service...")
     
     # Initialize services
-    api_key = os.getenv("COHERE_API_KEY")
+    api_key = config['COHERE_API_KEY']
+    if not api_key:
+        logger.warning("COHERE_API_KEY not set - AI features will be limited")
+    
     cohere_service = CohereService(api_key)
     document_service = DocumentProcessingService()
     
@@ -54,36 +74,49 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="ATS AI Service",
     description="AI-powered CV evaluation and quiz generation service",
-    version="1.0.0",
-    lifespan=lifespan
+    version="2.0.0",
+    lifespan=lifespan,
+    docs_url="/docs" if config['DOCS_AUTH_ENABLED'] else None,
+    redoc_url="/redoc" if config['DOCS_AUTH_ENABLED'] else None,
+    openapi_url="/openapi.json" if config['DOCS_AUTH_ENABLED'] else None
 )
 
 # CORS configuration
 def get_cors_origins() -> list:
     """Get CORS allowed origins from environment"""
-    cors_origins = os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:3000,http://localhost:4000")
-    origins = [origin.strip() for origin in cors_origins.split(",")]
+    origins = []
     
-    # Add localhost variants for development
-    dev_origins = [
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:4000"
-    ]
-    origins.extend(dev_origins)
+    # Use CORS_ALLOW_ORIGINS if configured
+    if config['CORS_ALLOW_ORIGINS']:
+        origins = [origin.strip() for origin in config['CORS_ALLOW_ORIGINS'].split(",")]
+    
+    # Add development origins if in development mode
+    if config['ENV'] == 'development':
+        dev_origins = [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:4000",
+            "http://127.0.0.1:4000",
+            "http://localhost:5000",
+            "http://127.0.0.1:5000"
+        ]
+        for origin in dev_origins:
+            if origin not in origins:
+                origins.append(origin)
+    
     return origins
-
-cors_credentials = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_cors_origins(),
-    allow_credentials=cors_credentials,
+    allow_credentials=config['CORS_ALLOW_CREDENTIALS'],
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
 # Add authentication middleware for docs endpoints
-app.add_middleware(DocsAuthenticationMiddleware)
+if config['DOCS_AUTH_ENABLED']:
+    app.add_middleware(DocsAuthenticationMiddleware)
 
 # Request/Response Models
 class EvaluateRequest(BaseModel):
@@ -99,274 +132,215 @@ class QuizAnswerRequest(BaseModel):
     answers: List[int] = Field(..., description="List of selected answer indices")
     quiz_questions: List[Dict[str, Any]] = Field(..., description="Original quiz questions")
 
+
+# Root endpoint
+@app.get("", tags=["Root"])
+async def root():
+    """Root endpoint with service information"""
+    return {
+        "message": "ATS AI Service",
+        "version": "2.0.0",
+        "description": "AI-powered CV evaluation and quiz generation",
+        "environment": config['ENV'],
+        "status": "running",
+        "docs": f"/docs" if config['DOCS_AUTH_ENABLED'] else "disabled",
+        "timestamp": datetime.now().isoformat()
+    }
+
+
 # Health check endpoint
-@app.get("/health")
+@app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint"""
     return {
         "status": "healthy",
         "service": "ATS AI Service",
-        "version": "1.0.0",
-        "timestamp": datetime.now().isoformat()
-    }
-
-# Root endpoint
-@app.get("/")
-async def root():
-    """
-    Get AI service status and information.
-    
-    Returns basic service information and links to documentation.
-    """
-    return {
-        "service": "ATS AI Service",
-        "version": "1.0.0",
-        "status": "operational",
-        "docs": "Available at /docs (authentication required)",
-        "redoc": "Available at /redoc (authentication required)",
-        "openapi": "Available at /openapi.json (authentication required)",
-        "note": "API documentation requires authentication. Contact your administrator for credentials."
+        "version": "2.0.0",
+        "environment": config['ENV'],
+        "timestamp": datetime.now().isoformat(),
+        "ai_service_available": cohere_service is not None and cohere_service.api_key is not None
     }
 
 # CV Evaluation endpoint
-@app.post("/evaluate", response_model=EvaluationResult)
+@app.post("/evaluate", tags=["CV Evaluation"])
 async def evaluate_cv(request: EvaluateRequest):
     """
-    Evaluate a CV against job requirements
+    Evaluate CV against job description using AI
+    
+    Args:
+        request: CV evaluation request
+        
+    Returns:
+        EvaluationResult: AI-generated evaluation
     """
     try:
-        logger.info(f"Starting CV evaluation for: {request.filename or 'unknown'}")
-        
-        if not cohere_service:
-            raise HTTPException(status_code=500, detail="AI service not initialized")
-        
-        # Generate evaluation
-        evaluation_text = cohere_service.evaluate_cv(
-            request.cv_text, 
-            request.job_description
-        )
-        
-        if not evaluation_text:
+        if not cohere_service or not cohere_service.api_key:
             raise HTTPException(
-                status_code=500, 
-                detail="Failed to generate CV evaluation"
+                status_code=503, 
+                detail="AI service not available - COHERE_API_KEY not configured"
             )
         
-        # Parse results
-        decision, score = cohere_service.parse_evaluation_result(evaluation_text)
-        
-        # Extract email if possible
-        email = None
-        if document_service:
-            email = document_service.extract_email_from_text(request.cv_text)
-        
-        # Save evaluation log
-        if request.filename:
-            save_evaluation_log(
-                filename=request.filename,
-                job_description=request.job_description,
-                cv_text=request.cv_text,
-                evaluation_result=evaluation_text,
-                decision=decision,
-                score=score,
-                email=email
-            )
-        
-        result = EvaluationResult(
-            decision=decision,
-            score=score,
-            evaluation_text=evaluation_text,
-            # email=email,
-            reasoning=evaluation_text,  # Ensure this field is always present
-            # extracted_skills=[],  # Add other fields as needed
-            # experience_years=None,
-            # match_percentage=None,
-            # strengths=[],
-            # weaknesses=[],
-            # recommendations=None,
-            # filename=request.filename
+        # Perform evaluation
+        evaluation = await cohere_service.evaluate_cv(
+            cv_text=request.cv_text,
+            job_description=request.job_description,
+            filename=request.filename
         )
         
-        logger.info(f"CV evaluation completed: {decision} ({score}/100)")
+        # Log evaluation
+        save_evaluation_log(evaluation, "cv_evaluation")
+        
+        return evaluation
+        
+    except Exception as e:
+        logger.error(f"CV evaluation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Quiz Generation endpoint
+@app.post("/quiz/generate", tags=["Quiz"])
+async def generate_quiz(request: QuizGenerationRequest):
+    """
+    Generate quiz questions based on job description
+    
+    Args:
+        request: Quiz generation request
+        
+    Returns:
+        Dict: Generated quiz questions
+    """
+    try:
+        if not cohere_service or not cohere_service.api_key:
+            raise HTTPException(
+                status_code=503, 
+                detail="AI service not available - COHERE_API_KEY not configured"
+            )
+        
+        # Generate quiz
+        quiz = await cohere_service.generate_quiz(
+            job_description=request.job_description,
+            num_questions=request.num_questions
+        )
+        
+        # Log quiz generation
+        save_evaluation_log({"quiz": quiz, "job_description": request.job_description}, "quiz_generation")
+        
+        return quiz
+        
+    except Exception as e:
+        logger.error(f"Quiz generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Quiz Evaluation endpoint
+@app.post("/quiz/evaluate", tags=["Quiz"])
+async def evaluate_quiz(request: QuizAnswerRequest):
+    """
+    Evaluate quiz answers
+    
+    Args:
+        request: Quiz evaluation request
+        
+    Returns:
+        Dict: Quiz evaluation results
+    """
+    try:
+        if not cohere_service or not cohere_service.api_key:
+            raise HTTPException(
+                status_code=503, 
+                detail="AI service not available - COHERE_API_KEY not configured"
+            )
+        
+        # Evaluate quiz
+        evaluation = await cohere_service.evaluate_quiz(
+            answers=request.answers,
+            quiz_questions=request.quiz_questions
+        )
+        
+        # Log quiz evaluation
+        save_evaluation_log(evaluation, "quiz_evaluation")
+        
+        return evaluation
+        
+    except Exception as e:
+        logger.error(f"Quiz evaluation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# File Upload endpoint
+@app.post("/upload", tags=["File Upload"])
+async def upload_file(file: UploadFile = File(...)):
+    """
+    Upload and process document file
+    
+    Args:
+        file: Document file to upload
+        
+    Returns:
+        FileUploadInfo: File processing information
+    """
+    try:
+        if not document_service:
+            raise HTTPException(status_code=503, detail="Document service not available")
+        
+        # Process file
+        result = await document_service.process_file(file)
+        
+        # Log file upload
+        save_evaluation_log(result, "file_upload")
+        
         return result
         
     except Exception as e:
-        logger.error(f"CV evaluation failed: {e}")
+        logger.error(f"File upload error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Document processing endpoint
-@app.post("/extract-text")
-async def extract_text_from_document(file: UploadFile = File(...)):
-    """
-    Extract text from uploaded document (PDF or DOCX)
-    """
-    try:
-        logger.info(f"Processing file: {file.filename}")
-        
-        if not document_service:
-            raise HTTPException(status_code=500, detail="Document service not initialized")
-        
-        # Check file type
-        if not document_service.is_allowed_file(file.filename):
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Unsupported file type. Allowed: {document_service.allowed_extensions}"
-            )
-        
-        # Read file content
-        file_content = await file.read()
-        
-        # Extract text
-        text_content = document_service._extract_text_from_file_sync(
-            file_content, file.filename
-        )
-        
-        if not text_content:
-            raise HTTPException(
-                status_code=422, 
-                detail="Failed to extract text from document"
-            )
-        
-        # Extract additional info
-        email = document_service.extract_email_from_text(text_content)
-        name = document_service.extract_name_from_text(text_content)
-        
-        # File info
-        file_info = FileUploadInfo(
-            filename=file.filename,
-            size_bytes=len(file_content),
-            size_mb=round(len(file_content) / (1024 * 1024), 2),
-            extension=file.filename.rsplit('.', 1)[1].lower(),
-            is_allowed=True
-        )
-        
-        logger.info(f"Text extracted successfully: {len(text_content)} characters")
-        
-        return {
-            "text_content": text_content,
-            "email": email,
-            "name": name,
-            "file_info": file_info.dict()
+# Service Status endpoint
+@app.get("/status", tags=["Status"])
+async def service_status():
+    """Get detailed service status"""
+    return {
+        "service": "ATS AI Service",
+        "version": "2.0.0",
+        "status": "running",
+        "environment": config['ENV'],
+        "timestamp": datetime.now().isoformat(),
+        "services": {
+            "cohere_service": {
+                "available": cohere_service is not None,
+                "configured": cohere_service.api_key is not None if cohere_service else False
+            },
+            "document_service": {
+                "available": document_service is not None
+            }
+        },
+        "configuration": {
+            "docs_auth_enabled": config['DOCS_AUTH_ENABLED'],
+            "cors_origins": get_cors_origins(),
+            "cors_credentials": config['CORS_ALLOW_CREDENTIALS']
         }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Document processing failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Quiz generation endpoint
-@app.post("/generate-quiz")
-async def generate_quiz(request: QuizGenerationRequest):
-    """
-    Generate a quiz based on job description
-    """
-    try:
-        logger.info(f"Generating quiz with {request.num_questions} questions")
-        
-        if not cohere_service:
-            raise HTTPException(status_code=500, detail="AI service not initialized")
-        
-        # Generate quiz
-        quiz_questions = cohere_service.generate_quiz(
-            request.job_description, 
-            request.num_questions
-        )
-        
-        if not quiz_questions:
-            raise HTTPException(
-                status_code=500, 
-                detail="Failed to generate quiz questions"
-            )
-        
-        logger.info(f"Quiz generated successfully: {len(quiz_questions)} questions")
-        
-        return {
-            "questions": quiz_questions,
-            "total_questions": len(quiz_questions),
-            "time_limit": 300,  # 5 minutes
-            "pass_threshold": 7
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Quiz generation failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Quiz evaluation endpoint
-@app.post("/evaluate-quiz")
-async def evaluate_quiz_answers(request: QuizAnswerRequest):
-    """
-    Evaluate quiz answers and return score
-    """
-    try:
-        logger.info("Evaluating quiz answers")
-        
-        if not cohere_service:
-            raise HTTPException(status_code=500, detail="AI service not initialized")
-        
-        # Evaluate answers
-        score = cohere_service.evaluate_quiz_answers(
-            request.answers, 
-            request.quiz_questions
-        )
-        
-        total_questions = len(request.quiz_questions)
-        percentage = (score / total_questions) * 100 if total_questions > 0 else 0
-        passed = score >= 7  # Pass threshold
-        
-        logger.info(f"Quiz evaluated: {score}/{total_questions} ({percentage:.1f}%)")
-        
-        return {
-            "score": score,
-            "total_questions": total_questions,
-            "percentage": round(percentage, 1),
-            "passed": passed,
-            "pass_threshold": 7
-        }
-        
-    except Exception as e:
-        logger.error(f"Quiz evaluation failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Error handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    """Global exception handler"""
-    logger.error(f"Unhandled exception: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content=ErrorResponse(
-            error="Internal server error",
-            detail=str(exc)
-        ).dict()
-    )
+    }
 
 if __name__ == "__main__":
     import uvicorn
     
-    port = int(os.getenv("AI_PORT", 5000))
-    host = os.getenv("AI_HOST", "0.0.0.0")
+    # Display startup information
+    print("ATS AI Service Starting...")
+    print(f"Environment: {config['ENV'].upper()}")
+    print(f"Host: {config['AI_HOST']}:{config['AI_PORT']}")
+    print(f"API Documentation: http://{config['AI_HOST']}:{config['AI_PORT']}/docs" + 
+          (" (Authentication Required)" if config['DOCS_AUTH_ENABLED'] else ""))
     
-    logger.info(f"Starting AI Service on {host}:{port}")
+    if config['DOCS_AUTH_ENABLED']:
+        print(f"Default credentials: {config['DOCS_USERNAME']}:{config['DOCS_PASSWORD']}")
     
-    # Log authentication information
-    auth_enabled = os.getenv("DOCS_AUTH_ENABLED", "true").lower() == "true"
-    username = os.getenv("DOCS_USERNAME", "admin")
-    password = os.getenv("DOCS_PASSWORD", "admin123")
+    if not config['COHERE_API_KEY']:
+        print("Warning: COHERE_API_KEY not set - AI features will be limited")
     
-    if auth_enabled:
-        logger.info(f"API Documentation Authentication: ENABLED")
-        logger.info(f"Default credentials: {username}:{password}")
-        logger.info(f"Protected endpoints: /docs, /redoc, /openapi.json")
-    else:
-        logger.warning("API Documentation Authentication: DISABLED (not recommended for production)")
+    print("=" * 60)
     
+    # Run the application
     uvicorn.run(
         "main:app",
-        host=host,
-        port=port,
-        reload=True,
+        host=config['AI_HOST'],
+        port=config['AI_PORT'],
+        reload=config['ENV'] == 'development',
         log_level="info"
     ) 

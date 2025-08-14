@@ -40,6 +40,11 @@ class JobController:
         self.database_service = database_service
         self.evaluation_service = evaluation_service
         self.s3_service = S3Service()
+        
+        # Debug: Log S3 service status on initialization
+        logger.info(f"JobController initialized with S3 service: {self.s3_service.is_configured()}")
+        logger.info(f"S3 bucket: {self.s3_service.bucket_name}")
+        logger.info(f"S3 client ready: {self.s3_service.s3_client is not None}")
     
     async def create_job_posting(
         self,
@@ -97,7 +102,7 @@ class JobController:
             )
             
             # Generate shareable link
-            base_url = settings.FRONTEND_URL or "http://localhost:8000"
+            base_url = settings.get_frontend_url()
             shareable_link = f"{base_url}/apply/{job_posting.job_id}"
             
             logger.info(f" Created job posting with ID: {job_posting.job_id}")
@@ -146,7 +151,7 @@ class JobController:
                 )
             
             # Generate shareable link
-            base_url = settings.FRONTEND_URL or "http://localhost:8000"
+            base_url = settings.get_frontend_url()
             shareable_link = f"{base_url}/apply/{job_posting.job_id}"
             
             return JobPostingResponse(
@@ -187,7 +192,7 @@ class JobController:
                     title=job.title,
                     description=job.description,
                     required_skills=job.required_skills,
-                    shareable_link=f"{settings.FRONTEND_URL or 'http://localhost:8000'}/apply/{job.job_id}",
+                    shareable_link=f"{settings.get_frontend_url()}/apply/{job.job_id}",
                     created_at=job.created_at,
                     is_active=job.is_active
                 )
@@ -248,29 +253,48 @@ class JobController:
             # Try to upload file to S3, fallback to local storage if S3 fails
             cv_content = None
             use_local_storage = False
+            file_url = None
+            s3_key = None
+            
+            # Debug: Check S3 service status
+            logger.info(f"S3 service configured: {self.s3_service.is_configured()}")
+            logger.info(f"S3 service client ready: {self.s3_service.s3_client is not None}")
+            logger.info(f"S3 bucket name: {self.s3_service.bucket_name}")
+            logger.info(f"S3 region: {self.s3_service.region}")
             
             try:
                 if self.s3_service.is_configured():
+                    logger.info("S3 service is configured, attempting S3 upload...")
                     try:
+                        logger.info("About to call S3 upload_file method...")
                         s3_result = await self.s3_service.upload_file(cv_file)
+                        logger.info(f"S3 upload successful! Result: {s3_result}")
                         file_url = s3_result['file_url']
                         s3_key = s3_result['s3_key']
                         # Read file content for AI processing after S3 upload
                         await cv_file.seek(0)
                         cv_content = await cv_file.read()
                         logger.info(f"File successfully uploaded to S3: {file_url}")
+                        logger.info(f"S3 key: {s3_key}")
+                        logger.info(f"File URL to be stored: {file_url}")
+                        # Skip local storage logic since S3 upload succeeded
+                        use_local_storage = False
+                        logger.info("S3 upload completed successfully, skipping local storage")
                     except HTTPException as s3_error:
-                        logger.warning(f"S3 upload failed: {s3_error.detail}, falling back to local storage")
+                        logger.warning(f"S3 upload failed with HTTPException: {s3_error.detail}, falling back to local storage")
                         use_local_storage = True
                         await cv_file.seek(0)  # Reset file position for local storage
                     except Exception as s3_error:
-                        logger.warning(f"S3 upload failed: {str(s3_error)}, falling back to local storage")
+                        logger.warning(f"S3 upload failed with Exception: {str(s3_error)}, falling back to local storage")
+                        logger.warning(f"Exception type: {type(s3_error)}")
+                        logger.warning(f"Exception details: {s3_error}")
                         use_local_storage = True
                         await cv_file.seek(0)  # Reset file position for local storage
                 else:
-                    logger.info("S3 not configured, using local storage")
+                    logger.warning("S3 not configured, using local storage")
                     use_local_storage = True
                 
+                # Only execute local storage logic if S3 failed or wasn't configured
                 if use_local_storage:
                     # Fallback to local storage
                     logger.info("Using local storage for file upload")
@@ -315,9 +339,8 @@ class JobController:
                         logger.error(f"Failed to write file: {write_error}")
                         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(write_error)}")
                     
-                    # Store only the filename in the database, not the full URL
-                    # The application controller will construct the proper URL when needed
-                    file_url = unique_filename
+                    # For local storage, construct the full URL
+                    file_url = f"{settings.UPLOADS_BASE_URL}/uploads/{unique_filename}"
                     s3_key = unique_filename
                     
                     logger.info(f"File uploaded successfully to local storage: {unique_filename}")
@@ -359,9 +382,12 @@ class JobController:
             final_name = candidate_name or extracted_name or "Unknown Candidate"
             
             # Create application with S3 file URL
+            logger.info(f"Creating application with file_url: {file_url}")
+            logger.info(f"Creating application with s3_key: {s3_key}")
+            
             application = await self.database_service.create_application(
                 job_id=job_id,
-                cv_filename=file_url,  # Store the S3 URL instead of filename
+                cv_filename=file_url,  # Store the full URL (S3 or local)
                 candidate_email=candidate_email,
                 candidate_name=final_name
             )

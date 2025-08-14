@@ -56,6 +56,23 @@ async def check_s3_status(
     return JSONResponse(status_code=200, content=status)
 
 
+@router.get("/debug/s3", summary="Debug S3 Service")
+async def debug_s3_service(
+    controller = Depends(get_upload_controller)
+):
+    """
+    Debug S3 service configuration and status.
+    
+    Returns detailed debugging information about:
+    - S3 service configuration
+    - AWS credentials status
+    - Bucket configuration
+    - Service connectivity
+    """
+    debug_info = await controller.check_s3_status()
+    return JSONResponse(status_code=200, content=debug_info)
+
+
 @router.delete("/upload/{s3_key}", summary="Delete File from S3")
 async def delete_file(
     s3_key: str,

@@ -10,7 +10,7 @@ from src.controllers import HealthController
 from src.utils.dependencies import get_health_controller
 from src.models.evaluation_models import APIResponse
 
-router = APIRouter(prefix="/health", tags=["health"])
+router = APIRouter(tags=["health"])
 
 
 @router.get("", summary="Health Check")
@@ -39,5 +39,19 @@ async def simple_health_check() -> Dict[str, str]:
     return {
         "status": "healthy",
         "message": "ATS System is operational",
+        "version": "2.0.0"
+    }
+
+
+@router.get("/test", summary="Test Health Check")
+async def test_health_check() -> Dict[str, str]:
+    """
+    Test health check endpoint
+    
+    Returns test system status.
+    """
+    return {
+        "status": "test",
+        "message": "ATS System test endpoint",
         "version": "2.0.0"
     } 
