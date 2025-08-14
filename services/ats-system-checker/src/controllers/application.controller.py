@@ -116,12 +116,12 @@ class ApplicationController:
         if not cv_filename:
             return ""
         
-        # If it's already a full URL, check if it's accessible
+        # If it's already a full URL, return as is (including S3 URLs)
         if cv_filename.startswith('http'):
             # If it's a localhost URL, replace with production URL
             if 'localhost:' in cv_filename:
-                return cv_filename.replace('http://localhost:4000', settings.UPLOADS_BASE_URL)
-            # If it's already a production URL, return as is
+                return cv_filename.replace('http://localhost:4000', settings.get_uploads_url())
+            # If it's already a production URL or S3 URL, return as is
             return cv_filename
         
         # If it's just a filename, construct the full URL

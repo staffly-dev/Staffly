@@ -9,8 +9,7 @@ from src.controllers import StatisticsController
 from src.utils.dependencies import get_statistics_controller
 from src.models.api_models import StatisticsResponse
 
-router = APIRouter(prefix="/api/statistics", tags=["statistics"])
-
+router = APIRouter(prefix="/statistics", tags=["statistics"])
 
 @router.get("", response_model=StatisticsResponse, summary="Get System Statistics")
 async def get_statistics(

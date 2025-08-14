@@ -133,7 +133,7 @@ class SingleApplicationResponse(BaseModel):
     candidate_email: str = Field(..., description="Candidate email address", example="mohamedaboelyazeed920@gmail.com")
     candidate_name: str = Field(..., description="Candidate name", example="Mohamed Aboelyazeed")
     cv_score: int = Field(..., description="CV evaluation score (0-100)", example=55)
-    cv_filename: str = Field(..., description="CV file URL", example="https://stafflyhr.tech/uploads/cv_20250812_180436_ba61fca9.pdf")
+    cv_filename: str = Field(..., description="CV file URL", example="uploads/cv_20250812_180436_ba61fca9.pdf")
     s3_key: str = Field(..., description="S3 key or local filename for the CV file", example="cv_20250812_180436_ba61fca9.pdf")
     decision: str = Field(..., description="CV evaluation decision", example="REJECTED")
     job_id: str = Field(..., description="Associated job ID", example="840b87f9")
