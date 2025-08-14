@@ -1,20 +1,20 @@
 import { Request, Response, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
-import { Env } from "../../config/env.config";
-import { UnauthorizedException } from "../../utils/app-error";
+import { UnauthorizedException, ForbiddenException } from "../../utils/app-error";
+import { verifyAccessToken } from "../../utils/jwt";
+import UserModel, { UserDocument } from "../../models/user.model";
 
-// Optionally extend Request to carry minimal user context through the gateway
 declare global {
   namespace Express {
     interface Request {
+      user?: UserDocument;
       userId?: string;
     }
   }
 }
 
-export const isAuthenticated = (
+export const isAuthenticated = async (
   req: Request,
-  _res: Response,
+  res: Response,
   next: NextFunction
 ) => {
   try {
@@ -30,22 +30,95 @@ export const isAuthenticated = (
       throw new UnauthorizedException("Access token required");
     }
 
-    const decoded = jwt.verify(token, Env.JWT_SECRET, {
-      audience: Env.JWT_AUDIENCE,
-    }) as JwtPayload | string;
+    const { payload, error } = verifyAccessToken(token);
 
-    // Attach minimal context for downstream services (via header and req)
-    if (decoded && typeof decoded === "object") {
-      const userId = (decoded as any).userId as string | undefined;
-      if (userId) {
-        req.userId = userId;
-        // Forward user id to downstream services via header
-        req.headers["x-user-id"] = userId;
+    if (error || !payload) {
+      throw new UnauthorizedException("Invalid or expired access token");
+    }
+
+    // Verify user still exists and is active
+    const user = await UserModel.findById(payload.userId);
+
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException("Account has been deactivated");
+    }
+
+    // Attach user to request
+    req.user = user;
+    req.userId = user._id!.toString();
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requireVerifiedEmail = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!req.user) {
+    throw new UnauthorizedException("Authentication required");
+  }
+
+  if (!req.user.isVerified) {
+    throw new ForbiddenException("Email verification required");
+  }
+
+  next();
+};
+
+export const requireRole = (roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      throw new UnauthorizedException("Authentication required");
+    }
+
+    if (!roles.includes(req.user.role)) {
+      throw new ForbiddenException("Insufficient permissions");
+    }
+
+    next();
+  };
+};
+
+// Optional authentication - doesn't throw error if no token
+export const optionalAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+      return next();
+    }
+
+    const { payload } = verifyAccessToken(token);
+
+    if (payload) {
+      const user = await UserModel.findById(payload.userId);
+      if (user && user.isActive) {
+        req.user = user;
+        req.userId = user._id!.toString();
       }
     }
 
-    return next();
-  } catch (err) {
-    return next(new UnauthorizedException("Invalid or expired access token"));
+    next();
+  } catch (error) {
+    // For optional auth, we don't want to throw errors
+    next();
   }
 };
