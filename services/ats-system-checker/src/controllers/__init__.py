@@ -25,7 +25,7 @@ JobController = load_controller_from_file('job.controller.py', 'JobController')
 QuizController = load_controller_from_file('quiz.controller.py', 'QuizController')
 StatisticsController = load_controller_from_file('statistics.controller.py', 'StatisticsController')
 ApplicationController = load_controller_from_file('application.controller.py', 'ApplicationController')
-UploadController = load_controller_from_file('upload.controller.py', 'UploadController')
+AWS_S3Controller = load_controller_from_file('aws_s3.controller.py', 'AWS_S3Controller')
 
 __all__ = [
     'HealthController',
@@ -33,5 +33,5 @@ __all__ = [
     'QuizController',
     'StatisticsController',
     'ApplicationController',
-    'UploadController'
+    'AWS_S3Controller'
 ] 

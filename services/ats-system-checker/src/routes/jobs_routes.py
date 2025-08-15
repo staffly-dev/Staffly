@@ -129,7 +129,7 @@ async def delete_job_posting(
     
     - **job_id**: Unique identifier of the job posting to delete
     
-    This will permanently delete the job posting and all applications associated with it.
+    This will permanently delete the job posting and all associated data.
     Use with caution as this action cannot be undone.
     """
     return await controller.delete_job_posting(job_id) 
