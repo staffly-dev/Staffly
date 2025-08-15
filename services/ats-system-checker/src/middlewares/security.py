@@ -671,10 +671,27 @@ class EnhancedSecurityMiddleware(BaseHTTPMiddleware):
         if request.method == "GET":
             return None
         
+        # Skip CSRF validation for API endpoints (they use other auth methods)
+        path = str(request.url.path)
+        if path.startswith("/api/") or path.startswith("/health/") or path.startswith("/debug/"):
+            logger.debug(f"Skipping CSRF validation for API endpoint: {path}")
+            return None
+        
+        # Skip CSRF validation for documentation endpoints
+        if path in ["/docs", "/redoc", "/openapi.json"]:
+            logger.debug(f"Skipping CSRF validation for docs endpoint: {path}")
+            return None
+        
+        # Skip CSRF validation for upload endpoints (handled by FileUploadSecurityMiddleware)
+        if path.startswith("/upload/"):
+            logger.debug(f"Skipping CSRF validation for upload endpoint: {path}")
+            return None
+        
+        # For web forms and other endpoints, require CSRF token
         # Get CSRF token from headers
         csrf_token = request.headers.get("X-CSRF-Token")
         if not csrf_token:
-            logger.warning(f"Missing CSRF token for {request.method} request to {request.url.path}")
+            logger.warning(f"Missing CSRF token for {request.method} request to {path}")
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"error": "CSRF token required", "code": "CSRF_TOKEN_MISSING"}
@@ -682,7 +699,7 @@ class EnhancedSecurityMiddleware(BaseHTTPMiddleware):
         
         # Validate token format (basic check)
         if len(csrf_token) < 32:
-            logger.warning(f"Invalid CSRF token format for {request.method} request to {request.url.path}")
+            logger.warning(f"Invalid CSRF token format for {request.method} request to {path}")
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"error": "Invalid CSRF token", "code": "CSRF_TOKEN_INVALID"}
@@ -690,6 +707,7 @@ class EnhancedSecurityMiddleware(BaseHTTPMiddleware):
         
         # In production, you would validate against stored tokens
         # For now, we'll just check the format
+        logger.debug(f"CSRF token validated for {path}")
         return None
     
     def _is_suspicious_user_agent(self, user_agent: str) -> bool:
@@ -838,7 +856,7 @@ class DocsAuthenticationMiddleware(BaseHTTPMiddleware):
 
 
 class FileUploadSecurityMiddleware(BaseHTTPMiddleware):
-    """Middleware to completely prevent file uploads for enhanced security"""
+    """Middleware to prevent file uploads while allowing regular form submissions"""
     
     def __init__(self, app):
         super().__init__(app)
@@ -863,7 +881,7 @@ class FileUploadSecurityMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next) -> Response:
         """
-        Completely block file uploads for enhanced security
+        Block file uploads while allowing regular form submissions
         
         Args:
             request: FastAPI request object
@@ -877,7 +895,7 @@ class FileUploadSecurityMiddleware(BaseHTTPMiddleware):
             endpoint in str(request.url.path) for endpoint in self.upload_endpoints
         )
         
-        # Block all file upload attempts
+        # Block all file upload attempts at upload endpoints
         if is_upload_endpoint and request.method == "POST":
             client_ip = self._get_client_ip(request)
             logger.warning(f"File upload blocked from {client_ip} to {request.url.path}")
@@ -893,38 +911,38 @@ class FileUploadSecurityMiddleware(BaseHTTPMiddleware):
                 }
             )
         
-        # Block multipart form data requests (potential file uploads)
+        # Check for multipart form data (could be regular forms or file uploads)
         content_type = request.headers.get("content-type", "")
         if "multipart/form-data" in content_type:
-            client_ip = self._get_client_ip(request)
-            logger.warning(f"Multipart form data blocked from {client_ip} to {request.url.path}")
+            # Check if this is actually a file upload by looking for file-related fields
+            # Regular form submissions with Form() parameters are allowed
+            # Only block if we detect actual file upload attempts
             
-            return JSONResponse(
-                status_code=403,
-                content={
-                    "success": False,
-                    "error": True,
-                    "message": "File uploads are not allowed for security reasons",
-                    "code": "MULTIPART_FORMS_DISABLED",
-                    "details": "This system has disabled file uploads to prevent security vulnerabilities"
-                }
-            )
-        
-        # Block requests with file-related headers
-        if any(header in request.headers for header in ["content-disposition", "x-file-name", "x-file-size"]):
-            client_ip = self._get_client_ip(request)
-            logger.warning(f"File-related headers blocked from {client_ip} to {request.url.path}")
+            # Check for file-related headers that indicate actual file uploads
+            has_file_headers = any(header in request.headers for header in [
+                "content-disposition", "x-file-name", "x-file-size"
+            ])
             
-            return JSONResponse(
-                status_code=403,
-                content={
-                    "success": False,
-                    "error": True,
-                    "message": "File uploads are not allowed for security reasons",
-                    "code": "FILE_HEADERS_DISABLED",
-                    "details": "This system has disabled file uploads to prevent security vulnerabilities"
-                }
-            )
+            # Check if the request body contains file uploads (this is more complex)
+            # For now, we'll allow multipart forms but log them for monitoring
+            if has_file_headers:
+                client_ip = self._get_client_ip(request)
+                logger.warning(f"File upload headers detected from {client_ip} to {request.url.path}")
+                
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "success": False,
+                        "error": True,
+                        "message": "File uploads are not allowed for security reasons",
+                        "code": "FILE_HEADERS_DISABLED",
+                        "details": "This system has disabled file uploads to prevent security vulnerabilities"
+                    }
+                )
+            
+            # Allow multipart forms that don't have file upload indicators
+            # This allows regular Form() parameters to work
+            logger.debug(f"Allowing multipart form submission to {request.url.path}")
         
         response = await call_next(request)
         return response

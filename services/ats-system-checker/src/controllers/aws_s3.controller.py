@@ -14,8 +14,8 @@ logger = get_logger(__name__)
 settings = get_settings()
 
 
-class UploadController:
-    """Controller for file upload operations"""
+class AWS_S3Controller:
+    """Controller for AWS S3 file operations"""
     
     def __init__(self):
         """Initialize upload controller with S3 service"""

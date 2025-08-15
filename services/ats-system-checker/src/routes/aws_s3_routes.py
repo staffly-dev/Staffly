@@ -6,17 +6,17 @@ File upload endpoints for S3 integration
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from src.utils.dependencies import get_upload_controller
+from src.utils.dependencies import get_aws_s3_controller
 from src.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
-router = APIRouter(tags=["upload"])
+router = APIRouter(tags=["aws-s3"])
 
 
-@router.post("/upload", summary="Upload File to S3")
+@router.post("/s3/upload", summary="Upload File to S3")
 async def upload_file(
     file: UploadFile = File(..., description="File to upload (PDF or DOCX)"),
-    controller = Depends(get_upload_controller)
+    controller = Depends(get_aws_s3_controller)
 ):
     """
     Upload a file to AWS S3 bucket.
@@ -38,9 +38,9 @@ async def upload_file(
     return JSONResponse(status_code=200, content=result)
 
 
-@router.get("/upload/status", summary="Check S3 Service Status")
+@router.get("/s3/status", summary="Check S3 Service Status")
 async def check_s3_status(
-    controller = Depends(get_upload_controller)
+    controller = Depends(get_aws_s3_controller)
 ):
     """
     Check the status of the S3 service configuration.
@@ -56,9 +56,9 @@ async def check_s3_status(
     return JSONResponse(status_code=200, content=status)
 
 
-@router.get("/debug/s3", summary="Debug S3 Service")
+@router.get("/s3/debug", summary="Debug S3 Service")
 async def debug_s3_service(
-    controller = Depends(get_upload_controller)
+    controller = Depends(get_aws_s3_controller)
 ):
     """
     Debug S3 service configuration and status.
@@ -73,10 +73,10 @@ async def debug_s3_service(
     return JSONResponse(status_code=200, content=debug_info)
 
 
-@router.delete("/upload/{s3_key}", summary="Delete File from S3")
+@router.delete("/s3/{s3_key}", summary="Delete File from S3")
 async def delete_file(
     s3_key: str,
-    controller = Depends(get_upload_controller)
+    controller = Depends(get_aws_s3_controller)
 ):
     """
     Delete a file from S3 bucket.
@@ -89,10 +89,10 @@ async def delete_file(
     return JSONResponse(status_code=200, content=result)
 
 
-@router.get("/upload/url/{s3_key}", summary="Get File URL from S3")
+@router.get("/s3/url/{s3_key}", summary="Get File URL from S3")
 async def get_file_url(
     s3_key: str,
-    controller = Depends(get_upload_controller)
+    controller = Depends(get_aws_s3_controller)
 ):
     """
     Get the public URL for a file in S3.

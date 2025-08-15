@@ -13,7 +13,7 @@ from src.models.evaluation_models import APIResponse
 router = APIRouter(tags=["health"])
 
 
-@router.get("", summary="Health Check")
+@router.get("/health", summary="Health Check")
 async def health_check(
     controller: HealthController = Depends(get_health_controller)
 ) -> APIResponse:
@@ -29,7 +29,7 @@ async def health_check(
     return await controller.health_check()
 
 
-@router.get("/simple", summary="Simple Health Check")
+@router.get("/health/simple", summary="Simple Health Check")
 async def simple_health_check() -> Dict[str, str]:
     """
     Simple health check endpoint
@@ -43,7 +43,7 @@ async def simple_health_check() -> Dict[str, str]:
     }
 
 
-@router.get("/test", summary="Test Health Check")
+@router.get("/health/test", summary="Test Health Check")
 async def test_health_check() -> Dict[str, str]:
     """
     Test health check endpoint

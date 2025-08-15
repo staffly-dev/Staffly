@@ -32,12 +32,16 @@ from src.middlewares import (
 from src.services.database_service import DatabaseService
 from src.services.email_service import EmailService
 from src.services.evaluation_service import EvaluationService
+from src.services.s3_service import S3Service
 
 
 # Routes
-from src.routes import api_router
 from src.routes.health_routes import router as health_router
-from src.routes.upload_routes import router as upload_router
+from src.routes.aws_s3_routes import router as aws_s3_router
+from src.routes.jobs_routes import router as jobs_router
+from src.routes.quiz_routes import router as quiz_router
+from src.routes.statistics_routes import router as statistics_router
+from src.routes.applications_routes import router as applications_router
 
 # Initialize settings and logging
 settings = get_settings()
@@ -69,6 +73,9 @@ async def lifespan(app: FastAPI):
             email_service=app.state.email_service,
             database_service=app.state.database_service
         )
+        
+        # Initialize S3 service once and reuse it
+        app.state.s3_service = S3Service()
         
         # Create necessary directories
         os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
@@ -186,17 +193,115 @@ async def root():
     }
 
 # Include routers
-app.include_router(health_router, prefix="/health", tags=["health"])
-app.include_router(api_router, prefix="/api")
-app.include_router(upload_router, prefix="/upload", tags=["upload"])
+app.include_router(health_router, prefix="/ats-checker")
+app.include_router(jobs_router, prefix="/ats-checker")
+app.include_router(quiz_router, prefix="/ats-checker")
+app.include_router(statistics_router, prefix="/ats-checker")
+app.include_router(applications_router, prefix="/ats-checker")
+app.include_router(aws_s3_router, prefix="/ats-checker")
 
-# Add debug endpoint
-@app.get("/debug/s3", tags=["debug"])
-async def debug_s3():
-    """Debug S3 service configuration"""
-    from src.utils.dependencies import get_upload_controller
-    controller = await get_upload_controller()
-    return await controller.check_s3_status()
+# Add debug endpoints (must be before catch-all route)
+# Note: S3 debug endpoints are now handled by aws_s3_router at /ats-checker/s3/debug
+
+# Add debug endpoint for database
+@app.get("/ats-checker/debug/db", tags=["debug"])
+async def debug_database():
+    """Debug database connection and status"""
+    try:
+        db_service = app.state.database_service
+        health_status = await db_service.health_check()
+        
+        # Try to get some basic counts
+        from src.models.database_models import JobPosting, Application, CVEvaluation
+        
+        job_count = await JobPosting.count()
+        application_count = await Application.count()
+        evaluation_count = await CVEvaluation.count()
+        
+        return {
+            "database_connected": health_status,
+            "mongodb_url": db_service.mongodb_url,
+            "database_name": db_service.database_name,
+            "counts": {
+                "job_postings": job_count,
+                "applications": application_count,
+                "cv_evaluations": evaluation_count
+            },
+            "status": "healthy" if health_status else "unhealthy"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "status": "error"
+        }
+
+# Add sample data creation endpoint
+@app.post("/ats-checker/debug/sample-data", tags=["debug"])
+async def create_sample_data():
+    """Create sample job posting for testing"""
+    try:
+        from src.models.database_models import JobPosting
+        
+        # Check if sample data already exists
+        existing_jobs = await JobPosting.find_all().to_list()
+        if existing_jobs:
+            return {
+                "message": "Sample data already exists",
+                "existing_jobs": len(existing_jobs)
+            }
+        
+        # Use the database service to create the job posting properly
+        db_service = app.state.database_service
+        sample_job = await db_service.create_job_posting(
+            title="Software Engineer",
+            description="We are looking for a talented software engineer to join our team.",
+            required_skills=["Python", "JavaScript", "React", "Node.js"],
+            additional_details="This is a full-time position with competitive salary and benefits.",
+            hr_email="hr@example.com",
+            hr_name="HR Manager",
+            evaluation_threshold=70,
+            quiz_required=True,
+            quiz_pass_threshold=7
+        )
+        
+        return {
+            "message": "Sample job posting created successfully",
+            "job_id": sample_job.job_id,
+            "title": sample_job.title
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "status": "error"
+        }
+
+# Catch-all route for better error handling (must be last)
+@app.get("/ats-checker/{full_path:path}", tags=["Catch-All"])
+async def catch_all(full_path: str):
+    """Catch-all route for undefined paths"""
+    return {
+        "error": "Endpoint not found",
+        "message": f"The path '/{full_path}' does not exist",
+        "available_endpoints": {
+            "root": "/",
+            "health": "/health",
+            "api": "/ats-checker",
+            "docs": "/docs" if settings.DOCS_AUTH_ENABLED else "disabled",
+            "upload": "/ats-checker/s3/upload",
+            "debug": "/ats-checker/debug/db"
+        },
+        "suggestions": [
+            "Use /ats-checker/jobs for job-related endpoints",
+            "Use /ats-checker/applications for application-related endpoints",
+            "Use /ats-checker/quiz for quiz endpoints",
+            "Use /ats-checker/statistics for system statistics",
+            "Use /health for health checks",
+            "Use /ats-checker/s3/upload for file uploads",
+            "Use /docs for API documentation",
+            "Use /ats-checker/debug/db for database status",
+            "Use /ats-checker/s3/debug for S3 status"
+        ]
+    }
 
 
 if __name__ == "__main__":
@@ -204,7 +309,7 @@ if __name__ == "__main__":
     
     # Run the application
     uvicorn.run(
-        "src.main:app",
+        app,
         host=settings.API_HOST,
         port=settings.API_PORT,
         reload=settings.DEBUG,
