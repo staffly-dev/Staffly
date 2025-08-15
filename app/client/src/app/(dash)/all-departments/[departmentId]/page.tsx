@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { EmployeesCard } from "../../all-employees/page";
 import { useEmployee } from "@/context/EmployeeContext";
 import { useParams } from "next/navigation";
-import { departments } from "@/app/constants";
+import { departments } from "@/constants";
 import LoadingComponent from "@/components/LoadingComponent";
 import ErrorComponent from "@/components/ErrorComponent";
 import { useEffect } from "react";

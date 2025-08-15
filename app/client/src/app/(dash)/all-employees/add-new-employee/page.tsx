@@ -30,7 +30,7 @@ import {
   nationalities,
   offices,
   states,
-} from "@/app/constants";
+} from "@/constants";
 import Combobox from "@/components/ui/combobox";
 
 export default function MultiStepForm() {

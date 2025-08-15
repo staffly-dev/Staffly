@@ -35,7 +35,7 @@ import {
   nationalities,
   offices,
   states,
-} from "@/app/constants";
+} from "@/constants";
 
 const labelStyle = "text-sm font-normal block mb-1";
 
