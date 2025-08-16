@@ -179,7 +179,7 @@ app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_FOLDER), name="uploa
 app.mount("/evaluations", StaticFiles(directory=settings.EVALUATIONS_FOLDER), name="evaluations")
 
 # Root endpoint
-@app.get("", tags=["Root"])
+@app.get("/", tags=["Root"])
 async def root():
     """Root endpoint with service information"""
     return {
@@ -189,6 +189,13 @@ async def root():
         "environment": settings.ENV,
         "status": "running",
         "docs": f"/docs" if settings.DOCS_AUTH_ENABLED else "disabled",
+        "available_endpoints": {
+            "health": "/ats-checker/health/simple",
+            "jobs": "/ats-checker/jobs",
+            "s3_upload": "/ats-checker/s3/upload",
+            "s3_status": "/ats-checker/s3/status",
+            "documentation": "/docs" if settings.DOCS_AUTH_ENABLED else "disabled"
+        },
         "timestamp": datetime.now().isoformat()
     }
 
@@ -309,7 +316,7 @@ if __name__ == "__main__":
     
     # Run the application
     uvicorn.run(
-        app,
+        "src.main:app",
         host=settings.API_HOST,
         port=settings.API_PORT,
         reload=settings.DEBUG,

@@ -409,7 +409,7 @@ class EnhancedSecurityMiddleware(BaseHTTPMiddleware):
         
         # Check for suspicious request patterns
         if self._is_suspicious_request(request):
-            logger.warning(f"Suspicious request pattern detected from {client_ip}")
+            logger.warning(f"Suspicious request pattern detected from {self._get_client_ip(request)}")
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"error": "Access denied", "code": "SUSPICIOUS_REQUEST_PATTERN"}
@@ -512,6 +512,12 @@ class EnhancedSecurityMiddleware(BaseHTTPMiddleware):
         """Check request body for security threats"""
         
         try:
+            # Skip body inspection for our API namespace to avoid consuming the stream
+            # which can interfere with downstream parsing (e.g., Form() in FastAPI routes)
+            path = str(request.url.path)
+            if path.startswith("/ats-checker/"):
+                return None
+            
             # Get content type
             content_type = request.headers.get("content-type", "")
             
@@ -673,7 +679,7 @@ class EnhancedSecurityMiddleware(BaseHTTPMiddleware):
         
         # Skip CSRF validation for API endpoints (they use other auth methods)
         path = str(request.url.path)
-        if path.startswith("/api/") or path.startswith("/health/") or path.startswith("/debug/"):
+        if path.startswith("/api/") or path.startswith("/health/") or path.startswith("/debug/") or path.startswith("/ats-checker/"):
             logger.debug(f"Skipping CSRF validation for API endpoint: {path}")
             return None
         
