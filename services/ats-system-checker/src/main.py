@@ -105,18 +105,23 @@ async def lifespan(app: FastAPI):
 def _display_startup_info(settings):
     """Display startup information using environment configuration"""
     # Use environment-based host display
-    display_host = "localhost" if settings.API_HOST == "0.0.0.0" else settings.API_HOST
+    display_host = "0.0.0.0" if settings.API_HOST == "0.0.0.0" else settings.API_HOST
+    
+    # Get port from environment or use default
+    port = os.getenv("PORT", settings.API_PORT)
     
     print(f"ATS System Backend Started Successfully")
     print(f"Environment: {settings.ENV.upper()}")
-    print(f"API Host: {settings.API_HOST}:{settings.API_PORT}")
+    print(f"API Host: {display_host}:{port}")
+    
     # Use computed properties to get the correct base URLs
-    print(f"API Documentation: {settings.api_documentation_url}/docs")
-    print(f"Alternative Docs: {settings.alternative_docs_url}/redoc")
-    print(f"OpenAPI Schema: {settings.openapi_schema_url}/openapi.json")
-
     if settings.DOCS_AUTH_ENABLED:
+        print(f"API Documentation: http://{display_host}:{port}/docs")
+        print(f"Alternative Docs: http://{display_host}:{port}/redoc")
+        print(f"OpenAPI Schema: http://{display_host}:{port}/openapi.json")
         print(f"Default credentials: {settings.DOCS_USERNAME}:{settings.DOCS_PASSWORD}")
+    else:
+        print("API Documentation: DISABLED (DOCS_AUTH_ENABLED=false)")
     
     # Display service URLs
     if settings.FRONTEND_URL:
@@ -150,7 +155,7 @@ app = FastAPI(
     openapi_url="/openapi.json" if settings.DOCS_AUTH_ENABLED else None
 )
 
-# Add CORS middleware
+# Add CORS middleware with Railway-friendly configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.get_cors_origins(),
@@ -160,9 +165,12 @@ app.add_middleware(
 )
 
 # Add security middleware (order matters - most restrictive first)
+# Only add DocsAuthenticationMiddleware if authentication is enabled
+if settings.DOCS_AUTH_ENABLED:
+    app.add_middleware(DocsAuthenticationMiddleware)
+
 app.add_middleware(EnhancedSecurityMiddleware)
 app.add_middleware(FileUploadSecurityMiddleware)
-app.add_middleware(DocsAuthenticationMiddleware)
 
 # Add request logging middleware
 app.add_middleware(RequestLoggingMiddleware)
@@ -315,12 +323,19 @@ async def catch_all(full_path: str):
 if __name__ == "__main__":
     import uvicorn
     
-    # Run the application
+    # Get port from environment (Railway sets PORT)
+    port = int(os.getenv("PORT", 4000))
+    host = os.getenv("API_HOST", "0.0.0.0")
+    
+    print(f"Starting ATS System Backend on {host}:{port}")
+    print(f"Environment: {os.getenv('ENV', 'development')}")
+    print(f"Debug mode: {os.getenv('DEBUG', 'false').lower() == 'true'}")
+    
+    # Start the server
     uvicorn.run(
         "src.main:app",
-        host=settings.API_HOST,
-        port=settings.API_PORT,
-        reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower(),
-        reload_excludes=["venv", ".pytest_cache", "__pycache__", "uploads", "ats_system.log"]
+        host=host,
+        port=port,
+        reload=os.getenv("DEBUG", "false").lower() == "true",
+        log_level=os.getenv("LOG_LEVEL", "info").lower()
     ) 

@@ -791,13 +791,17 @@ class DocsAuthenticationMiddleware(BaseHTTPMiddleware):
         )
         
         if is_docs_endpoint and settings.DOCS_AUTH_ENABLED:
+            # Log the authentication attempt
+            logger.info(f"Authentication required for docs endpoint: {request.url.path}")
+            
             # Extract credentials from Authorization header
             auth_header = request.headers.get("authorization")
             
             if not auth_header or not auth_header.startswith("Basic "):
                 # Return 401 with WWW-Authenticate header
+                logger.warning(f"Missing or invalid Authorization header for {request.url.path}")
                 response = Response(
-                    content="Authentication required",
+                    content="Authentication required for API documentation. Please provide valid credentials.",
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     media_type="text/plain"
                 )
@@ -809,53 +813,37 @@ class DocsAuthenticationMiddleware(BaseHTTPMiddleware):
             
             try:
                 # Decode credentials
-                credentials = base64.b64decode(auth_header[6:]).decode("utf-8")
-                username, password = credentials.split(":", 1)
+                credentials = auth_header.replace("Basic ", "")
+                decoded_credentials = base64.b64decode(credentials).decode("utf-8")
+                username, password = decoded_credentials.split(":", 1)
                 
-                # Check credentials with timing attack protection
-                if self._verify_credentials(username, password):
-                    # Authentication successful, continue
-                    logger.info(f"Successful docs access by user: {username}")
+                # Validate credentials
+                if (username == settings.DOCS_USERNAME and 
+                    password == settings.DOCS_PASSWORD):
+                    logger.info(f"Successful authentication for docs endpoint: {request.url.path}")
+                    return await call_next(request)
                 else:
-                    # Invalid credentials
-                    logger.warning(f"Failed docs access attempt with username: {username}")
+                    logger.warning(f"Invalid credentials for docs endpoint: {request.url.path}")
                     response = Response(
-                        content="Invalid credentials",
+                        content="Invalid credentials. Please check your username and password.",
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         media_type="text/plain"
                     )
                     response.headers["WWW-Authenticate"] = 'Basic realm="API Documentation"'
                     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-                    response.headers["Pragma"] = "no-cache"
-                    response.headers["Expires"] = "0"
                     return response
                     
             except Exception as e:
-                logger.error(f"Error processing authentication: {e}")
+                logger.error(f"Error during authentication: {e}")
                 response = Response(
-                    content="Authentication error",
-                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    content="Authentication error. Please try again.",
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     media_type="text/plain"
                 )
-                response.headers["WWW-Authenticate"] = 'Basic realm="API Documentation"'
-                response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-                response.headers["Pragma"] = "no-cache"
-                response.headers["Expires"] = "0"
                 return response
         
-        response = await call_next(request)
-        return response
-    
-    def _verify_credentials(self, username: str, password: str) -> bool:
-        """Verify credentials with timing attack protection"""
-        expected_username = settings.DOCS_USERNAME
-        expected_password = settings.DOCS_PASSWORD
-        
-        # Use constant-time comparison to prevent timing attacks
-        username_match = hmac.compare_digest(username, expected_username)
-        password_match = hmac.compare_digest(password, expected_password)
-        
-        return username_match and password_match
+        # For non-docs endpoints or when auth is disabled, proceed normally
+        return await call_next(request)
 
 
 
