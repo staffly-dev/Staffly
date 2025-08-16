@@ -19,16 +19,16 @@ COPY ./src ./src
 RUN mkdir -p uploads evaluations
 
 # Expose port (Railway will override this with $PORT)
-EXPOSE 4000
+EXPOSE 4002
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH="/app"
-ENV PORT=4000
+ENV PORT=4002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:$PORT/ats-checker/health/simple || exit 1
 
 # Start the backend service
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "4000"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "4002"]
