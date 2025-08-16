@@ -111,6 +111,11 @@ class Settings(BaseSettings):
     API_HOST: str = Field(default="0.0.0.0", description="API host")
     API_PORT: int = Field(default=4000, description="API port")
     
+    # API Documentation URLs
+    API_DOCUMENTATION: str = Field(default="", description="API documentation base URL")
+    ALTERNATIVE_DOCS: str = Field(default="", description="Alternative documentation base URL")
+    OPENAPI_SCHEMA: str = Field(default="", description="OpenAPI schema base URL")
+    
     # Additional Ports & Hosts
     PORT: int = Field(default=4005, description="Port")
     API_GATEWAY_PORT: int = Field(default=4005, description="API Gateway port")
@@ -160,7 +165,7 @@ class Settings(BaseSettings):
         case_sensitive = True
         extra = "ignore"  # Ignore extra environment variables
     
-    @validator('FRONTEND_URL', 'MONGODB_URL', 'UPLOADS_BASE_URL', 'AI_SERVICE_URL', pre=True)
+    @validator('FRONTEND_URL', 'MONGODB_URL', 'UPLOADS_BASE_URL', 'AI_SERVICE_URL', 'API_DOCUMENTATION', 'ALTERNATIVE_DOCS', 'OPENAPI_SCHEMA', pre=True)
     def validate_urls(cls, v):
         """Validate and set default URLs based on environment"""
         if not v:
@@ -173,6 +178,12 @@ class Settings(BaseSettings):
                     return "http://localhost:4000"
                 elif 'AI_SERVICE_URL' in cls.__fields__:
                     return "http://localhost:5000"
+                elif 'API_DOCUMENTATION' in cls.__fields__:
+                    return "http://localhost:4000"
+                elif 'ALTERNATIVE_DOCS' in cls.__fields__:
+                    return "http://localhost:4000"
+                elif 'OPENAPI_SCHEMA' in cls.__fields__:
+                    return "http://localhost:4000"
             else:
                 # Production defaults - these should be set in .env
                 return ""
@@ -209,6 +220,24 @@ class Settings(BaseSettings):
             return f"https://{self.AWS_S3_BUCKET}.s3.{self.AWS_REGION}.amazonaws.com"
         else:
             return ""
+    
+    @property
+    def api_documentation_url(self) -> str:
+        """Get API documentation URL based on current host and port"""
+        host = "localhost" if self.API_HOST == "0.0.0.0" else self.API_HOST
+        return f"http://{host}:{self.API_PORT}"
+    
+    @property
+    def alternative_docs_url(self) -> str:
+        """Get alternative documentation URL based on current host and port"""
+        host = "localhost" if self.API_HOST == "0.0.0.0" else self.API_HOST
+        return f"http://{host}:{self.API_PORT}"
+    
+    @property
+    def openapi_schema_url(self) -> str:
+        """Get OpenAPI schema URL based on current host and port"""
+        host = "localhost" if self.API_HOST == "0.0.0.0" else self.API_HOST
+        return f"http://{host}:{self.API_PORT}"
     
     def get_cors_origins(self) -> list:
         """Get CORS allowed origins from environment variables"""

@@ -110,16 +110,17 @@ def _display_startup_info(settings):
     print(f"ATS System Backend Started Successfully")
     print(f"Environment: {settings.ENV.upper()}")
     print(f"API Host: {settings.API_HOST}:{settings.API_PORT}")
-    print(f"API Documentation: http://{display_host}:{settings.API_PORT}/docs (Authentication Required)")
-    print(f"Alternative Docs: http://{display_host}:{settings.API_PORT}/redoc (Authentication Required)")
-    print(f"OpenAPI Schema: http://{display_host}:{settings.API_PORT}/openapi.json (Authentication Required)")
-    
+    # Use computed properties to get the correct base URLs
+    print(f"API Documentation: {settings.api_documentation_url}/docs")
+    print(f"Alternative Docs: {settings.alternative_docs_url}/redoc")
+    print(f"OpenAPI Schema: {settings.openapi_schema_url}/openapi.json")
+
     if settings.DOCS_AUTH_ENABLED:
         print(f"Default credentials: {settings.DOCS_USERNAME}:{settings.DOCS_PASSWORD}")
     
     # Display service URLs
     if settings.FRONTEND_URL:
-        print(f" Frontend URL: {settings.FRONTEND_URL}")
+        print(f"Frontend URL: {settings.FRONTEND_URL}")
     
     if settings.AI_SERVICE_URL:
         print(f"AI Service URL: {settings.AI_SERVICE_URL}")
