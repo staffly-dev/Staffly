@@ -1,20 +1,24 @@
 import { Router } from "express";
 import { authenticateToken } from "../../middlewares/auth/isAuthenticated.middleware";
 import { securityStack } from "../../middlewares/security";
-import { getSettingsController, updateSettingsController } from "../../controllers/app/settings.controller";
+import { 
+  getSettingsController, 
+  updateSettingsController, 
+  updateSettingsSectionController,
+  resetSettingsController 
+} from "../../controllers/app/settings.controller";
 
 const settingsRoutes = Router();
 
-// Apply security stack to all employee routes
+// Apply security stack to all settings routes
 settingsRoutes.use(...securityStack);
 
-// Apply authentication to all employee routes
+// Apply authentication to all settings routes
 settingsRoutes.use(authenticateToken);
 
-// get settings by userId
-// /settings/:userId
-settingsRoutes.get('/getSettings/:userId', getSettingsController)
-
-settingsRoutes.put('/updateSettings/:userId', updateSettingsController)
+settingsRoutes.get('/', getSettingsController);
+settingsRoutes.put('/', updateSettingsController);
+settingsRoutes.patch('/:section', updateSettingsSectionController);
+settingsRoutes.delete('/reset', resetSettingsController);
 
 export default settingsRoutes;
