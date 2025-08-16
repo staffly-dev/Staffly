@@ -32,10 +32,13 @@ applySecurityStack(app, {
 });
 
 app.get(
-  '/',
+  '/hrms/health',
   asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     return res.status(HTTPSTATUS.OK).json({
       status: "Healthy!",
+      service: "HRMS Service",
+      version: "1.0.0",
+      timestamp: new Date().toISOString(),
     });
   })
 );
@@ -47,20 +50,20 @@ if (Env.NODE_ENV !== 'development') {
 }
 
 // /auth
-app.use(`/auth`, authRoutes);
+app.use(`/hrms/auth`, authRoutes);
 // /users
-app.use(`/users`, userRoutes);
+app.use(`/hrms/users`, userRoutes);
 // /employees
-app.use(`/employees`, employeeRoutes);
+app.use(`/hrms/employees`, employeeRoutes);
 // /attendance
-app.use(`/attendance`, attendanceRoutes);
+app.use(`/hrms/attendance`, attendanceRoutes);
 // /dashboard
-app.use(`/dashboard`, dashboardRoutes);
+app.use(`/hrms/dashboard`, dashboardRoutes);
 // /settings
-app.use(`/settings`, settingsRoutes);
+app.use(`/hrms/settings`, settingsRoutes);
 
 // /payroll
-app.use('/payroll', payrollRoutes);
+app.use('/hrms/payroll', payrollRoutes);
 
 app.use(errorHandler);
 

@@ -9,7 +9,10 @@ import {
   resetPasswordController,
   logOutController,
   logOutAllDevicesController,
+  verifyTokenController,
 } from "../../controllers/auth/auth.controller";
+import { validateRequest } from "../../middlewares/validateRequest.middleware";
+import { verifyTokenSchema } from "../../validation/auth/auth.validation";
 
 const authRoutes = Router();
 
@@ -29,5 +32,12 @@ authRoutes.post("/reset-password", resetPasswordController);
 // Logout route
 authRoutes.post("/logout", logOutController);
 authRoutes.post("/logout-all", logOutAllDevicesController);
+
+// Utility endpoints for inter-service communication
+authRoutes.post(
+  "/verify-token",
+  validateRequest(verifyTokenSchema),
+  verifyTokenController
+);
 
 export default authRoutes;

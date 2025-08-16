@@ -12,6 +12,7 @@ import {
   RefreshTPayload,
   signJwtToken,
   verifyJwtToken,
+  verifyAccessToken,
 } from "../../utils/jwt";
 import RefreshTokenModel from "../../models/auth/refreshToken.model";
 import PasswordResetModel from "../../models/auth/passwordReset.model";
@@ -278,9 +279,9 @@ export const verifyResetPasswordCodeService = async (
     }
   );
 
-  return { 
+  return {
     resetToken,
-    message: "Reset code verified successfully" 
+    message: "Reset code verified successfully"
   };
 };
 
@@ -348,4 +349,34 @@ export const logoutAllDevicesService = async (
   await revokeAllUserTokens(payload.userId as string);
 
   return { message: "Logged out from all devices successfully" };
+};
+
+// ============== Utility Services for Inter-Service Communication ==============
+export const verifyTokenService = async (token: string) => {
+  const { payload, error } = verifyAccessToken(token);
+
+  if (error || !payload) {
+    throw new UnauthorizedException("Invalid or expired token");
+  }
+
+  const user = await UserModel.findById(payload.userId);
+  if (!user) {
+    throw new UnauthorizedException("User not found");
+  }
+
+  if (!user.isActive) {
+    throw new UnauthorizedException("User account is deactivated");
+  }
+
+  return {
+    valid: true,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      isVerified: user.isVerified
+    }
+  };
 };

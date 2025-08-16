@@ -11,6 +11,7 @@ import {
   resetPasswordService,
   verifyEmailCodeService,
   verifyResetPasswordCodeService,
+  verifyTokenService,
 } from "../../services/auth/auth.service";
 import { UnauthorizedException } from "../../utils/app-error";
 import {
@@ -53,7 +54,7 @@ export const verifyEmailCodeController = asyncHandler(
 // ============== Login controllers ==============
 export const loginController = asyncHandler(
   async (req: Request, res: Response) => {
-    const body = loginSchema.parse({...req.body});
+    const body = loginSchema.parse({ ...req.body });
 
     const userAgent = req.headers["user-agent"] || "unknown";
 
@@ -170,6 +171,19 @@ export const logOutAllDevicesController = asyncHandler(
 
     return res.status(HTTPSTATUS.OK).json({
       message: result.message,
+    });
+  }
+);
+
+// ============== Utility Controllers for Inter-Service Communication ==============
+export const verifyTokenController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { token } = req.body;
+    const result = await verifyTokenService(token);
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Token verification successful",
+      data: result,
     });
   }
 );
