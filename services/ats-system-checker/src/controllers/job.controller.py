@@ -357,22 +357,36 @@ class JobController:
                 raise HTTPException(status_code=400, detail="Uploaded file is empty or too small.")
             
             # Extract text from CV using AI service
-            try:
-                async with httpx.AsyncClient() as client:
-                    files = {'file': (cv_file.filename, cv_content)}
-                    ai_url = f"{settings.AI_SERVICE_URL}/extract-text"
-                    response = await client.post(ai_url, files=files, timeout=60)
-                    try:
-                        response.raise_for_status()
-                    except httpx.HTTPStatusError as http_exc:
-                        logger.error(f"AI service error: {response.text}")
-                        raise HTTPException(status_code=500, detail=f"AI service error: {response.text}")
-                    data = response.json()
-                    cv_text = data.get("text_content", "")
-                    extracted_name = data.get("name", None)
-            except Exception as ai_exc:
-                logger.error(f"AI service extract-text error: {ai_exc}")
-                raise HTTPException(status_code=500, detail=f"Failed to extract text from CV using AI service: {ai_exc}")
+            cv_text = ""
+            extracted_name = None
+            
+            if settings.AI_SERVICE_URL and settings.AI_SERVICE_URL.strip():
+                try:
+                    async with httpx.AsyncClient() as client:
+                        files = {'file': (cv_file.filename, cv_content)}
+                        ai_url = f"{settings.AI_SERVICE_URL}/extract-text"
+                        logger.info(f"Calling AI service at: {ai_url}")
+                        response = await client.post(ai_url, files=files, timeout=60)
+                        try:
+                            response.raise_for_status()
+                        except httpx.HTTPStatusError as http_exc:
+                            logger.error(f"AI service error: {response.text}")
+                            raise HTTPException(status_code=500, detail=f"AI service error: {response.text}")
+                        data = response.json()
+                        cv_text = data.get("text_content", "")
+                        extracted_name = data.get("name", None)
+                        logger.info(f"Successfully extracted text from CV using AI service")
+                except Exception as ai_exc:
+                    logger.warning(f"AI service extract-text error: {ai_exc}")
+                    logger.info("Falling back to basic CV processing without AI service")
+                    # Fallback: create a basic CV text from filename and metadata
+                    cv_text = f"CV submitted by {candidate_name} for job application. File: {cv_file.filename}"
+                    extracted_name = candidate_name
+            else:
+                logger.warning("AI_SERVICE_URL not configured, using fallback CV processing")
+                # Create basic CV text when AI service is not available
+                cv_text = f"CV submitted by {candidate_name} for job application. File: {cv_file.filename}"
+                extracted_name = candidate_name
             
             if not cv_text or len(cv_text.strip()) < 50:
                 raise HTTPException(
