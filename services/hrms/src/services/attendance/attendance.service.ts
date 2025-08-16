@@ -1,19 +1,21 @@
+import mongoose from "mongoose";
 import Attendance, { IAttendance } from "../../models/attendance/attendance.model";
 import EmployeeModel from "../../models/employees/employee.model";
 import { NotFoundException } from "../../utils/app-error";
 
 export const recordCheckInService = async (
   employeeId: string,
-  checkInTime?: Date
+  checkInTime?: Date,
+  userId?: string
 ): Promise<IAttendance> => {
-
   const finalCheckInTime = checkInTime || new Date();
 
-  const employee = await EmployeeModel.findById(employeeId);
-  if (!employee) throw new NotFoundException("Employee not found");
+  const employee = await EmployeeModel.findOne({ _id: employeeId, createdBy: userId });
+  if (!employee) throw new NotFoundException("Employee not found or access denied");
 
   const attendance = await Attendance.findOne({
     employeeId,
+    createdBy: userId,
     date: {
       $gte: new Date(new Date().setHours(0, 0, 0, 0)),
       $lt: new Date(new Date().setHours(23, 59, 59, 999)),
@@ -33,6 +35,7 @@ export const recordCheckInService = async (
 
   const newAttendance = new Attendance({
     employeeId,
+    createdBy: userId,
     checkInTime: finalCheckInTime,
     status,
   });
@@ -40,36 +43,43 @@ export const recordCheckInService = async (
   return await newAttendance.save();
 };
 
-export const getAllAttendanceService = async (): Promise<IAttendance[]> => {
-  return await Attendance.find().populate({
+export const getAllAttendanceService = async (userId: string): Promise<IAttendance[]> => {
+  return await Attendance.find({ createdBy: userId }).populate({
     path: "employeeId",
     model: EmployeeModel,
+    match: { createdBy: userId },
     select: "firstName lastName designation employeeType"
   });
 };
 
-export const getAttendanceService = async (id: string): Promise<IAttendance> => {
-  const attendance = await Attendance.findById(id).populate({
+export const getAttendanceService = async (id: string, userId: string): Promise<IAttendance> => {
+  const attendance = await Attendance.findOne({ _id: id, createdBy: userId }).populate({
     path: "employeeId",
     model: EmployeeModel,
+    match: { createdBy: userId },
     select: "firstName lastName designation employeeType"
   });
-  if (!attendance) throw new NotFoundException("Attendance not found");
+  
+  if (!attendance) throw new NotFoundException("Attendance not found or access denied");
   return attendance;
 };
 
-export const searchAttendanceService = async (firstName?: string, lastName?: string): Promise<IAttendance[]> => {
-  const matchStage: any = {};
+export const searchAttendanceService = async (userId: string, firstName?: string, lastName?: string): Promise<IAttendance[]> => {
+  const matchStage: any = { createdBy: new mongoose.Types.ObjectId(userId) };
+  const employeeMatch: any = {};
 
   if (firstName) {
-    matchStage['employee.firstName'] = { $regex: firstName, $options: 'i' };
+    employeeMatch['firstName'] = { $regex: firstName, $options: 'i' };
   }
 
   if (lastName) {
-    matchStage['employee.lastName'] = { $regex: lastName, $options: 'i' };
+    employeeMatch['lastName'] = { $regex: lastName, $options: 'i' };
   }
 
   const result = await Attendance.aggregate([
+    {
+      $match: { createdBy: new mongoose.Types.ObjectId(userId) }
+    },
     {
       $lookup: {
         from: "employees",
@@ -79,7 +89,11 @@ export const searchAttendanceService = async (firstName?: string, lastName?: str
       }
     },
     { $unwind: "$employee" },
-    { $match: matchStage },
+    {
+      $match: {
+        ...(Object.keys(employeeMatch).length > 0 ? { 'employee': { $elemMatch: employeeMatch } } : {})
+      }
+    },
     {
       $project: {
         _id: 1,
