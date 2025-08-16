@@ -38,8 +38,16 @@ class HealthController:
             # Check database connectivity
             db_healthy = await self.database_service.health_check()
             
-            # Check AI service
-            ai_healthy = self.cohere_service.client is not None
+            # Check AI service (handle case when cohere_service is None)
+            ai_healthy = False
+            if self.cohere_service is not None and hasattr(self.cohere_service, 'client'):
+                try:
+                    ai_healthy = self.cohere_service.client is not None
+                except Exception:
+                    ai_healthy = False
+            else:
+                # Cohere service not available - mark as degraded but not unhealthy
+                ai_healthy = False
             
             # Check email service (test connection method)
             email_healthy = True
@@ -52,17 +60,16 @@ class HealthController:
                 email_healthy = False
             
             # Determine overall health status
-            # Email service is considered optional, so system can be healthy without it
-            if db_healthy and ai_healthy:
-                status = "healthy"
-            elif db_healthy and not ai_healthy:
-                # Database is healthy but AI is not - system is degraded
-                status = "degraded"
-            elif not db_healthy:
-                # Database is not healthy - system is degraded
-                status = "degraded"
+            # Database is required, AI and email are optional
+            if db_healthy:
+                if ai_healthy and email_healthy:
+                    status = "healthy"
+                else:
+                    # Database is healthy but some optional services are not - system is degraded
+                    status = "degraded"
             else:
-                status = "degraded"
+                # Database is not healthy - system is unhealthy
+                status = "unhealthy"
             
             services_status = {
                 "database": db_healthy,

@@ -1,9 +1,9 @@
 "use client";
 import { Card } from "@/components/ui/card";
-import { AdminStatistics, useJob } from "@/context/JobContext";
 import { cn } from "@/lib/utils";
+import { useAttendance } from "@/context/AttendanceContext";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   IoPersonOutline,
   IoBriefcaseOutline,
@@ -15,22 +15,15 @@ import ErrorComponent from "../ErrorComponent";
 
 interface StatusCardProps {
   title: string;
-  value: string;
+  value: number;
   icon: React.ReactNode;
   change: {
     value: string;
     isPositive: boolean;
   };
-  lastUpdate: string;
 }
 
-function StatusCard({
-  title,
-  value,
-  icon,
-  change,
-  lastUpdate,
-}: StatusCardProps) {
+function StatusCard({ title, value, icon, change }: StatusCardProps) {
   return (
     <Card className="border-hrms-gray/20 bg-transparent">
       <div className="space-y-4">
@@ -63,7 +56,7 @@ function StatusCard({
         </div>
         <div className="h-[1px] w-full bg-hrms-gray/20" />
         <p className="text-xs text-muted-foreground px-4 pb-2">
-          Update: {lastUpdate}
+          Update: {new Date().toLocaleDateString()}
         </p>
       </div>
     </Card>
@@ -73,59 +66,56 @@ function StatusCard({
 const statusData = [
   {
     title: "Total Employees",
-    value: "560",
     icon: <IoPersonOutline className="h-5 w-5" />,
+    value: "0",
     change: {
       value: "12%",
       isPositive: true,
     },
-    lastUpdate: "July 16, 2023",
   },
   {
     title: "Total Applicants",
-    value: "1050",
     icon: <IoBriefcaseOutline className="h-5 w-5" />,
+    value: "0",
     change: {
       value: "5%",
       isPositive: true,
     },
-    lastUpdate: "July 14, 2023",
   },
   {
     title: "Today's Attendance",
-    value: "470",
     icon: <IoTimeOutline className="h-5 w-5" />,
+    value: "0",
     change: {
       value: "8%",
       isPositive: false,
     },
-    lastUpdate: "July 14, 2023",
   },
   {
     title: "Total Jobs Posted",
-    value: "250",
     icon: <IoFolderOpenOutline className="h-5 w-5" />,
+    value: "0",
     change: {
       value: "12%",
       isPositive: true,
     },
-    lastUpdate: "July 10, 2023",
   },
 ];
 
 export function StatusCards() {
-  const { getAdminStatistics, loading, error, clearError } = useJob();
-  const [adminStatistics, setAdminStatistics] = useState<AdminStatistics>();
+  const {
+    dashboardData,
+    isLoadingDashboard,
+    error,
+    clearError,
+    fetchDashboard,
+  } = useAttendance();
 
   useEffect(() => {
-    getAdminStatistics().then((data) => {
-      setAdminStatistics(data);
-    });
-  }, [getAdminStatistics]);
+    fetchDashboard();
+  }, [fetchDashboard]);
 
-  console.log("adminStatistics", adminStatistics);
-
-  if (loading) {
+  if (isLoadingDashboard) {
     return <LoadingComponent className="h-[320px]" />;
   }
 
@@ -135,9 +125,22 @@ export function StatusCards() {
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      {statusData.map((data, index) => (
-        <StatusCard key={index} {...data} />
-      ))}
+      <StatusCard
+        {...statusData[0]}
+        value={dashboardData?.totalEmployees || 0}
+      />
+      <StatusCard
+        {...statusData[1]}
+        value={dashboardData?.totelApplicant || 0}
+      />
+      <StatusCard
+        {...statusData[2]}
+        value={dashboardData?.totalAttendance || 0}
+      />
+      <StatusCard
+        {...statusData[3]}
+        value={dashboardData?.totalProjects || 0}
+      />
     </div>
   );
 }

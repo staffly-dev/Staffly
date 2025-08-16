@@ -12,10 +12,10 @@ from src.utils.dependencies import get_quiz_controller
 from src.models.api_models import AllQuizUsersResponse, QuizDisplayResponse
 from src.models.evaluation_models import APIResponse
 
-router = APIRouter(prefix="/quiz", tags=["quiz"])
+router = APIRouter(tags=["quiz"])
 
 
-@router.post("/submit", response_model=APIResponse, summary="Submit Quiz")
+@router.post("/quiz/submit", response_model=APIResponse, summary="Submit Quiz")
 async def submit_quiz(
     answers: str = Form(..., description="Quiz answers as JSON string"),
     quiz_session_id: str = Form(..., description="Quiz session ID (required)"),
@@ -41,7 +41,7 @@ async def submit_quiz(
     )
 
 
-@router.get("/users", response_model=APIResponse, summary="Get All Quiz Users")
+@router.get("/quiz/users", response_model=APIResponse, summary="Get All Quiz Users")
 async def get_all_quiz_users(
     controller: QuizController = Depends(get_quiz_controller) # type: ignore
 ):
@@ -62,7 +62,7 @@ async def get_all_quiz_users(
     return await controller.get_all_quiz_users()
 
 
-@router.get("/{quiz_session_id}", response_model=APIResponse, summary="Get Quiz for Display")
+@router.get("/quiz/{quiz_session_id}", response_model=APIResponse, summary="Get Quiz for Display")
 async def get_quiz_for_display(
     quiz_session_id: str = Path(..., description="Quiz session ID"),
     controller: QuizController = Depends(get_quiz_controller) # type: ignore

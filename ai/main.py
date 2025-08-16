@@ -338,7 +338,7 @@ if __name__ == "__main__":
     
     # Run the application
     uvicorn.run(
-        "main:app",
+        app,
         host=config['AI_HOST'],
         port=config['AI_PORT'],
         reload=config['ENV'] == 'development',

@@ -5,14 +5,17 @@ FastAPI dependency providers for controllers and services
 
 from fastapi import Request
 
-from ..controllers import HealthController, JobController, QuizController, StatisticsController, ApplicationController, UploadController
+from ..controllers import HealthController, JobController, QuizController, StatisticsController, ApplicationController, AWS_S3Controller
 
 
 def get_health_controller(request: Request) -> HealthController:
     """Get health controller with dependencies"""
+    # Get cohere service if available, otherwise pass None
+    cohere_service = getattr(request.app.state, 'cohere_service', None)
+    
     return HealthController(
         database_service=request.app.state.database_service,
-        cohere_service=request.app.state.cohere_service,
+        cohere_service=cohere_service,
         email_service=request.app.state.email_service
     )
 
@@ -21,7 +24,8 @@ def get_job_controller(request: Request) -> JobController:
     """Get job controller with dependencies"""
     return JobController(
         database_service=request.app.state.database_service,
-        evaluation_service=request.app.state.evaluation_service
+        evaluation_service=request.app.state.evaluation_service,
+        s3_service=request.app.state.s3_service
     )
 
 
@@ -47,9 +51,9 @@ def get_application_controller(request: Request) -> ApplicationController:
     )
 
 
-def get_upload_controller(request: Request) -> UploadController:
-    """Get upload controller with dependencies"""
-    return UploadController()
+def get_aws_s3_controller(request: Request) -> AWS_S3Controller:
+    """Get AWS S3 controller with dependencies"""
+    return AWS_S3Controller()
 
 
 # Legacy dependency for backward compatibility

@@ -69,14 +69,15 @@ Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 | `/api/applications/{app_id}`                    | GET    | Get application details |
 | `/api/applications/{app_id}/schedule-interview` | POST   | Schedule interview      |
 
-### File Upload (AWS S3)
+### AWS S3 File Operations
 
-| Endpoint               | Method | Description                |
-| ---------------------- | ------ | -------------------------- |
-| `/upload`              | POST   | Upload file to S3 bucket   |
-| `/upload/status`       | GET    | Check S3 service status    |
-| `/upload/{s3_key}`     | DELETE | Delete file from S3 bucket |
-| `/upload/url/{s3_key}` | GET    | Get public URL for file    |
+| Endpoint                    | Method | Description                |
+| --------------------------- | ------ | -------------------------- |
+| `/ats-checker/upload`       | POST   | Upload file to S3 bucket   |
+| `/ats-checker/status`       | GET    | Check S3 service status    |
+| `/ats-checker/debug/s3`     | GET    | Debug S3 service status    |
+| `/ats-checker/{s3_key}`     | DELETE | Delete file from S3 bucket |
+| `/ats-checker/url/{s3_key}` | GET    | Get public URL for file    |
 
 ### Quiz System
 
@@ -217,7 +218,7 @@ python test_s3_integration.py
 ### Test File Upload
 
 ```bash
-curl -X POST http://localhost:4000/upload \
+curl -X POST http://localhost:4000/ats-checker/upload \
   -F "file=@test.pdf"
 ```
 
@@ -270,7 +271,7 @@ src/
 ### Key Files
 
 - **S3 Integration**: `src/services/s3_service.py`
-- **Upload Routes**: `src/routes/upload_routes.py`
+- **AWS S3 Routes**: `src/routes/aws_s3_routes.py`
 - **Settings**: `src/config/settings.py`
 - **Job Controller**: `src/controllers/job.controller.py`
 

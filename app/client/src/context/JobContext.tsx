@@ -154,7 +154,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${JOBS_API_BASE}/api/jobs`);
+      const response = await axios.get(`${JOBS_API_BASE}/jobs`);
       setJobs(response.data);
       return response.data;
     } catch (err: unknown) {
@@ -171,7 +171,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${JOBS_API_BASE}/api/jobs/${id}`);
+      const response = await axios.get(`${JOBS_API_BASE}/jobs/${id}`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -188,7 +188,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.post(`${JOBS_API_BASE}/api/jobs`, jobData);
+        const response = await axios.post(`${JOBS_API_BASE}/jobs`, jobData);
         const newJob = response.data;
         setJobs((prev) => [...prev, newJob]);
         return newJob;
@@ -213,7 +213,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const response = await axios.post(
-          `${JOBS_API_BASE}/api/jobs/${jobId}/apply`,
+          `${JOBS_API_BASE}/jobs/${jobId}/apply`,
           application
         );
         return response.data;
@@ -236,7 +236,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const response = await axios.get(
-          `${JOBS_API_BASE}/api/quiz/${quizSessionId}`
+          `${JOBS_API_BASE}/quiz/${quizSessionId}`
         );
         return response.data?.data;
       } catch (err: unknown) {
@@ -255,7 +255,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${JOBS_API_BASE}/api/quiz/users`);
+      const response = await axios.get(`${JOBS_API_BASE}/quiz/users`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -289,7 +289,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${JOBS_API_BASE}/api/statistics`);
+      const response = await axios.get(`${JOBS_API_BASE}/statistics`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -311,7 +311,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const response = await axios.post(
-          `${JOBS_API_BASE}/api/quiz/submit`,
+          `${JOBS_API_BASE}/quiz/submit`,
           {
             answers,
             quiz_session_id,
@@ -364,7 +364,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setDeleteLoading(true);
     setError(null);
     try {
-      const response = await axios.delete(`${JOBS_API_BASE}/api/jobs/${id}`);
+      const response = await axios.delete(`${JOBS_API_BASE}/jobs/${id}`);
       setJobs((prev) => prev.filter((job) => job.job_id !== id));
       return response.data;
     } catch (err: unknown) {

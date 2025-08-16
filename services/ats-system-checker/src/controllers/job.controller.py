@@ -29,6 +29,7 @@ class JobController:
         self,
         database_service: DatabaseService,
         evaluation_service: EvaluationService,
+        s3_service: S3Service,
     ):
         """
         Initialize job controller
@@ -36,10 +37,11 @@ class JobController:
         Args:
             database_service: Database service instance
             evaluation_service: Evaluation service instance
+            s3_service: S3 service instance
         """
         self.database_service = database_service
         self.evaluation_service = evaluation_service
-        self.s3_service = S3Service()
+        self.s3_service = s3_service
         
         # Debug: Log S3 service status on initialization
         logger.info(f"JobController initialized with S3 service: {self.s3_service.is_configured()}")

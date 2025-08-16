@@ -19,7 +19,7 @@ interface RecentActivity {
 interface DashboardData {
   totalEmployees: number;
   totalAttendance: number;
-  totalApplicants: number;
+  totelApplicant: number;
   totalProjects: number;
   recentActivity: RecentActivity[];
 }
