@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { logSecurityEvent } from '../../utils/securityLogger';
+import { logSecurityEvent } from '../../services/securityLogger.service';
 
 // Optional Redis import - will be undefined if redis is not installed
 let createClient: any;
@@ -104,7 +104,7 @@ class MemoryStore {
 
   async increment(key: string, windowMs: number): Promise<{ count: number; resetTime: number }> {
     const data = await this.get(key);
-
+    
     if (!data) {
       await this.set(key, 1, windowMs);
       return { count: 1, resetTime: Date.now() + windowMs };
@@ -143,12 +143,18 @@ export function createRateLimitMiddleware(
       const key = config.keyGenerator(req);
       const rateLimitKey = `rate_limit:${key}`;
 
-      // Use default limit for API Gateway (no user authentication)
-      const limit = config.limits.default;
+      // Determine limit based on user type
+      let limit = config.limits.default;
+      const user = (req as any).user;
+      if (user && user.role === 'admin') {
+        limit = config.limits.admin || config.limits.default;
+      } else if (user) {
+        limit = config.limits.authenticated || config.limits.default;
+      }
 
       // Get current rate limit data
       const data = await store.increment(rateLimitKey, config.windowMs);
-
+      
       // Calculate remaining requests and reset time
       const remaining = Math.max(0, limit - data.count);
       const resetTime = new Date(data.resetTime);
