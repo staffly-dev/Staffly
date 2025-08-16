@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface EmployeeDocument extends Document {
+  createdBy: mongoose.Schema.Types.ObjectId;
   profilePicture: string | null;
   firstName: string;
   lastName: string;
@@ -29,6 +30,11 @@ export interface EmployeeDocument extends Document {
 }
 
 const employeeSchema = new Schema<EmployeeDocument>({
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   profilePicture: {
     type: String,
     default: null

@@ -11,7 +11,8 @@ import {
 
 export const createEmployeeController = asyncHandler(
   async (req: Request, res: Response) => {
-    const employee = await createEmployeeService(req.body);
+    const userId = req.user!.id;
+    const employee = await createEmployeeService(req.body, userId);
     return res.status(HTTPSTATUS.CREATED).json({
       message: "Employee created successfully",
       employee,
@@ -21,7 +22,8 @@ export const createEmployeeController = asyncHandler(
 
 export const getAllEmployeesController = asyncHandler(
   async (req: Request, res: Response) => {
-    const employees = await getAllEmployeesService();
+    const userId = req.user!.id;
+    const employees = await getAllEmployeesService(userId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Employees fetched successfully",
       employees,
@@ -31,7 +33,8 @@ export const getAllEmployeesController = asyncHandler(
 
 export const getEmployeeByIdController = asyncHandler(
   async (req: Request, res: Response) => {
-    const employee = await getEmployeeByIdService(req.params.id);
+    const userId = req.user!.id;
+    const employee = await getEmployeeByIdService(req.params.id, userId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Employee fetched successfully",
       employee,
@@ -41,7 +44,8 @@ export const getEmployeeByIdController = asyncHandler(
 
 export const updateEmployeeController = asyncHandler(
   async (req: Request, res: Response) => {
-    const employee = await updateEmployeeService(req.params.id, req.body);
+    const userId = req.user!.id;
+    const employee = await updateEmployeeService(req.params.id, req.body, userId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Employee updated successfully",
       employee
@@ -51,7 +55,8 @@ export const updateEmployeeController = asyncHandler(
 
 export const deleteEmployeeController = asyncHandler(
   async (req: Request, res: Response) => {
-    await deleteEmployeeService(req.params.id);
+    const userId = req.user!.id;
+    await deleteEmployeeService(req.params.id, userId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Employee deleted successfully",
     });
