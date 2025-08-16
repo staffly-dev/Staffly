@@ -170,7 +170,7 @@ async def get_application_email_by_session_id(self, quiz_session_id: str) -> Opt
 **Before**:
 
 ```
-POST /api/quiz/submit
+POST /ats-checker/quiz/submit
 {
   "answers": "...",
   "quiz_data": "...",
@@ -182,7 +182,7 @@ POST /api/quiz/submit
 **After**:
 
 ```
-POST /api/quiz/submit
+POST /ats-checker/quiz/submit
 {
   "answers": "...",
   "quiz_data": "...",
@@ -260,7 +260,7 @@ const submitQuiz = async (quizData) => {
   formData.append("quiz_session_id", quizSessionId);
   formData.append("email", userEmail); // Must match original application
 
-  const response = await fetch("/api/quiz/submit", {
+  const response = await fetch("/ats-checker/quiz/submit", {
     method: "POST",
     body: formData,
   });

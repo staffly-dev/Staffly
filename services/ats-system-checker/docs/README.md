@@ -108,15 +108,15 @@ cp .env.example .env
 # Edit .env with your configuration
 
 # Run the application
-uvicorn src.main:app --reload
+python -m src.main
 ```
 
 ### API Documentation
 
 Once the server is running, visit:
 
-- **Swagger UI**: http://localhost:8000/docs (Authentication Required)
-- **ReDoc**: http://localhost:8000/redoc (Authentication Required)
+- **Swagger UI**: http://localhost:4002/docs (Authentication Required)
+- **ReDoc**: http://localhost:4002/redoc (Authentication Required)
 
 **Note**: API documentation requires authentication. Default credentials are `admin:admin123`. See [API Documentation Security](07-api-documentation-security.md) for details.
 
@@ -193,7 +193,7 @@ pytest --cov=src
 docker build -t ats-system .
 
 # Run the container
-docker run -p 8000:8000 ats-system
+docker run -p 4000:4000 ats-system
 ```
 
 ### Environment Variables

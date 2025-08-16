@@ -94,36 +94,36 @@ src/
 ### Job Management
 
 ```
-POST   /api/jobs                    # Create job posting
-GET    /api/jobs                    # List all jobs
-GET    /api/jobs/{job_id}           # Get specific job
-PUT    /api/jobs/{job_id}           # Update job
-DELETE /api/jobs/{job_id}           # Delete job
-POST   /api/jobs/{job_id}/apply     # Submit application
+POST   /ats-checker/jobs                    # Create job posting
+GET    /ats-checker/jobs                    # List all jobs
+GET    /ats-checker/jobs/{job_id}           # Get specific job
+PUT    /ats-checker/jobs/{job_id}           # Update job
+DELETE /ats-checker/jobs/{job_id}           # Delete job
+POST   /ats-checker/jobs/{job_id}/apply     # Submit application
 ```
 
 ### Application Management
 
 ```
-GET    /api/applications                    # List all applications
-GET    /api/applications/{app_id}           # Get specific application
-POST   /api/applications/{app_id}/schedule-interview  # Schedule interview
+GET    /ats-checker/applications                    # List all applications
+GET    /ats-checker/applications/{app_id}           # Get specific application
+POST   /ats-checker/applications/{app_id}/schedule-interview  # Schedule interview
 ```
 
 ### Quiz System
 
 ```
-GET    /api/quiz/{session_id}       # Get quiz questions
-POST   /api/quiz/submit             # Submit quiz answers
-GET    /api/quiz/users              # List quiz participants
+GET    /ats-checker/quiz/{session_id}       # Get quiz questions
+POST   /ats-checker/quiz/submit             # Submit quiz answers
+GET    /ats-checker/quiz/users              # List quiz participants
 ```
 
 ### Statistics & Analytics
 
 ```
-GET    /api/statistics/applications # Application statistics
-GET    /api/statistics/jobs         # Job posting statistics
-GET    /api/statistics/quiz         # Quiz performance statistics
+GET    /ats-checker/statistics/applications # Application statistics
+GET    /ats-checker/statistics/jobs         # Job posting statistics
+GET    /ats-checker/statistics/quiz         # Quiz performance statistics
 ```
 
 ## Data Models

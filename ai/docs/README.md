@@ -5,14 +5,18 @@ Welcome to the comprehensive documentation for the ATS AI Service. This document
 ## 📚 Documentation Structure
 
 ### 1. [API Documentation Security](01-api-documentation-security.md)
+
 **Protecting API documentation endpoints**
+
 - HTTP Basic Authentication implementation
 - Middleware configuration and security flow
 - Credential management and best practices
 - Monitoring, logging, and troubleshooting
 
 ### 2. [API Endpoints Reference](02-api-endpoints-reference.md)
+
 **Complete API documentation and usage**
+
 - All endpoint details with examples
 - Request/response formats
 - Status codes and error handling
@@ -20,7 +24,9 @@ Welcome to the comprehensive documentation for the ATS AI Service. This document
 - Performance and rate limiting information
 
 ### 3. [Data Models Reference](03-data-models-reference.md)
+
 **Comprehensive data model documentation**
+
 - Request and response models
 - Field validation rules
 - Data types and constraints
@@ -28,7 +34,9 @@ Welcome to the comprehensive documentation for the ATS AI Service. This document
 - Model relationships and usage
 
 ### 4. [Troubleshooting and Deployment](04-troubleshooting-and-deployment.md)
+
 **Complete troubleshooting and deployment guide**
+
 - Common issues and solutions
 - Development environment setup
 - Production deployment
@@ -36,7 +44,9 @@ Welcome to the comprehensive documentation for the ATS AI Service. This document
 - Security best practices
 
 ### 5. [Integration Guide](05-integration-guide.md)
+
 **Developer integration and usage guide**
+
 - API integration patterns
 - Code examples in multiple languages
 - Error handling and best practices
@@ -46,11 +56,13 @@ Welcome to the comprehensive documentation for the ATS AI Service. This document
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.9+
 - Cohere API key
 - Docker (optional)
 
 ### Installation
+
 ```bash
 # Navigate to AI service directory
 cd ai
@@ -63,11 +75,13 @@ cp env.template .env
 # Edit .env with your configuration
 
 # Run the service
-python -m main
+python -m ai.main
 ```
 
 ### API Documentation
+
 Once the service is running, visit:
+
 - **Swagger UI**: http://localhost:5000/docs (Authentication Required)
 - **ReDoc**: http://localhost:5000/redoc (Authentication Required)
 
@@ -76,6 +90,7 @@ Once the service is running, visit:
 ## 🔧 Development
 
 ### Project Structure
+
 ```
 ai/
 ├── main.py              # Main FastAPI application
@@ -89,6 +104,7 @@ ai/
 ```
 
 ### Key Features
+
 - **CV Evaluation**: AI-powered CV analysis against job requirements
 - **Quiz Generation**: Dynamic quiz creation from job descriptions
 - **Text Extraction**: Document processing and text extraction
@@ -104,11 +120,13 @@ ai/
 ## 🔍 Testing
 
 ### Test Authentication
+
 ```bash
 python test_auth.py
 ```
 
 ### Test API Endpoints
+
 ```bash
 # Health check (no auth required)
 curl http://localhost:5000/health
@@ -123,6 +141,7 @@ curl -u "admin:admin123" http://localhost:5000/docs
 ## 🚀 Deployment
 
 ### Docker Deployment
+
 ```bash
 # Build the image
 docker build -t ats-ai .
@@ -132,6 +151,7 @@ docker run --env-file .env -p 5000:5000 ats-ai
 ```
 
 ### Environment Variables
+
 ```bash
 # AI Service Configuration
 COHERE_API_KEY=your_cohere_api_key_here
