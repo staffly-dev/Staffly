@@ -60,6 +60,7 @@ export default function OtpCode() {
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           {verifyEmailError && (
             <p className="text-sm text-red-500 mt-1">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {(verifyEmailError as any).response?.data?.message ||
                 "Error: Check your network"}
             </p>

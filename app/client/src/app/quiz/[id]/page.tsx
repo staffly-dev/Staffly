@@ -58,13 +58,6 @@ const QuizPage = () => {
     formData.append("answers", JSON.stringify(answersString));
     formData.append("email", quiz.candidate_email);
     formData.append("quiz_session_id", id as string);
-    console.log(
-      "formData",
-      formData.get("answers"),
-      formData.get("email"),
-      formData.get("quiz_session_id")
-    );
-
     const result = await submitQuiz({
       answers: formData.get("answers") as string,
       email: formData.get("email") as string,
