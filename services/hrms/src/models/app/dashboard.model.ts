@@ -1,7 +1,7 @@
 import mongoose, { Document, model, Schema } from 'mongoose';
 
 export interface IAttendance extends Document {
-  employeeId: mongoose.Types.ObjectId;
+  createdBy: mongoose.Schema.Types.ObjectId;
   date: Date;
   checkInTime?: Date;
   checkOutTime?: Date;
@@ -9,7 +9,11 @@ export interface IAttendance extends Document {
 }
 
 const attendanceSchema: Schema = new Schema({
-  employeeId: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   date: { type: Date, default: Date.now },
   checkInTime: { type: Date },
   checkOutTime: { type: Date },

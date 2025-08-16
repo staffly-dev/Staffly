@@ -5,7 +5,9 @@ import { dashboardService, getAllAttendanceDashboardService } from "../../servic
 
 export const dashboardController = asyncHandler(
   async (req: Request, res: Response) => {
-    const dashboard = await dashboardService()
+    const userId = req.user!.id;
+    const dashboard = await dashboardService(userId);
+
     return res.status(HTTPSTATUS.OK).json({
       message: "Dashboard fetched successfully",
       dashboard,
@@ -15,7 +17,9 @@ export const dashboardController = asyncHandler(
 
 export const getAllAttendanceDashboardController = asyncHandler(
   async (req: Request, res: Response) => {
-    const attendance = await getAllAttendanceDashboardService();
+    const userId = req.user!.id;
+    const attendance = await getAllAttendanceDashboardService(userId);
+
     return res.status(HTTPSTATUS.OK).json({
       message: "Attendance fetched successfully",
       attendance,
