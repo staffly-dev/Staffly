@@ -1339,7 +1339,7 @@ class DatabaseService:
                 if quiz_session.candidate_email:
                     from src.config.settings import get_settings
                     settings = get_settings()
-                    base_url = settings.get_frontend_url()
+                    base_url = settings.get_backend_url()
                     quiz_link = f"{base_url}/api/quiz/{str(quiz_session.id)}"
                 
                 # Extract application_id from associated_cv_filename

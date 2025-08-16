@@ -104,7 +104,7 @@ class JobController:
             )
             
             # Generate shareable link
-            base_url = settings.get_frontend_url()
+            base_url = settings.get_backend_url()
             shareable_link = f"{base_url}/apply/{job_posting.job_id}"
             
             logger.info(f" Created job posting with ID: {job_posting.job_id}")
@@ -153,7 +153,7 @@ class JobController:
                 )
             
             # Generate shareable link
-            base_url = settings.get_frontend_url()
+            base_url = settings.get_backend_url()
             shareable_link = f"{base_url}/apply/{job_posting.job_id}"
             
             return JobPostingResponse(
@@ -194,7 +194,7 @@ class JobController:
                     title=job.title,
                     description=job.description,
                     required_skills=job.required_skills,
-                    shareable_link=f"{settings.get_frontend_url()}/apply/{job.job_id}",
+                    shareable_link=f"{settings.get_backend_url()}/apply/{job.job_id}",
                     created_at=job.created_at,
                     is_active=job.is_active
                 )
