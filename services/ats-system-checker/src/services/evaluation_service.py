@@ -139,29 +139,52 @@ class EvaluationService:
             if not greeting_name:
                 # Optionally, call AI API for name extraction
                 greeting_name = None
-            # Call AI service for evaluation
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{self.ai_service_url}/evaluate",
-                    json={
-                        "cv_text": cv_text,
-                        "job_description": job_posting.description,
-                        "filename": f"application_{application_id}"
-                    },
-                    timeout=60
+            # Call AI service for evaluation (with graceful fallback)
+            ai_result = None
+            decision = "UNKNOWN"
+            score = 0
+            evaluation_text = ""
+
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        f"{self.ai_service_url}/evaluate",
+                        json={
+                            "cv_text": cv_text,
+                            "job_description": job_posting.description,
+                            "filename": f"application_{application_id}"
+                        },
+                        timeout=60
+                    )
+                    response.raise_for_status()
+                    ai_result = response.json()
+                decision = ai_result.get("decision", "UNKNOWN")
+                score = ai_result.get("score", 0)
+                evaluation_text = ai_result.get("reasoning", "")
+            except Exception as ai_error:
+                logger.warning(f"AI evaluation failed, using heuristic fallback: {ai_error}")
+                # Heuristic fallback: score based on keyword coverage from job description
+                import re
+                job_desc = job_posting.description or ""
+                raw_tokens = re.split(r"[,\n\r;]+", job_desc)
+                skills = [t.strip().lower() for t in raw_tokens if t and len(t.strip()) > 1]
+                skills = [re.sub(r"[^a-z0-9+#\.\- ]", "", s) for s in skills]
+                skills = [s for s in skills if s]
+                cv_lower = (cv_text or "").lower()
+                matched = [s for s in skills if s and s in cv_lower]
+                coverage = (len(matched) / max(1, len(skills))) if skills else 0
+                score = int(round(coverage * 100))
+                decision = "ACCEPTED" if score >= job_posting.evaluation_threshold else "REJECTED"
+                evaluation_text = (
+                    f"Fallback evaluation: matched {len(matched)} of {len(skills)} job keywords."
                 )
-                response.raise_for_status()
-                ai_result = response.json()
-            decision = ai_result.get("decision", "UNKNOWN")
-            score = ai_result.get("score", 0)
-            evaluation_text = ai_result.get("reasoning", "")  # AI service returns "reasoning" not "evaluation_text"
             # AI service doesn't return email in the response, so use the provided candidate_email
             email = candidate_email
             # Determine if candidate meets threshold
             meets_threshold = score >= job_posting.evaluation_threshold
             final_decision = "ACCEPTED" if meets_threshold else "REJECTED"
             
-            # Save CV evaluation to database
+            # Save CV evaluation to database (from AI or fallback)
             await self.database_service.save_cv_evaluation(
                 filename=f"application_{application_id}",
                 job_description=job_posting.description,
@@ -260,12 +283,12 @@ class EvaluationService:
             
         except Exception as e:
             logger.error(f"Error in CV evaluation workflow: {e}")
-            # Update application status to failed
+            # As a last resort, ensure application reflects a failed but non-null score of 0
             try:
                 await self.database_service.update_application_status(
-                    application_id, "EVALUATION_FAILED"
+                    application_id, "EVALUATION_FAILED", cv_score=0
                 )
-            except:
+            except Exception:
                 pass
             return None
     
