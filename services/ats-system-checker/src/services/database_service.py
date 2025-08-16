@@ -1340,7 +1340,7 @@ class DatabaseService:
                     from src.config.settings import get_settings
                     settings = get_settings()
                     base_url = settings.get_backend_url()
-                    quiz_link = f"{base_url}/api/quiz/{str(quiz_session.id)}"
+                    quiz_link = f"{base_url}/ats-checker/quiz/{str(quiz_session.id)}"
                 
                 # Extract application_id from associated_cv_filename
                 application_id = None

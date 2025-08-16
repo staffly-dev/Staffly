@@ -679,7 +679,7 @@ class EnhancedSecurityMiddleware(BaseHTTPMiddleware):
         
         # Skip CSRF validation for API endpoints (they use other auth methods)
         path = str(request.url.path)
-        if path.startswith("/api/") or path.startswith("/health/") or path.startswith("/debug/") or path.startswith("/ats-checker/"):
+        if path.startswith("/health/") or path.startswith("/debug/") or path.startswith("/ats-checker/"):
             logger.debug(f"Skipping CSRF validation for API endpoint: {path}")
             return None
         
@@ -858,7 +858,7 @@ class FileUploadSecurityMiddleware(BaseHTTPMiddleware):
         self.settings = get_settings()
         
         # Remove /api/jobs/ from blocked endpoints since it's needed for job applications
-        self.upload_endpoints = ["/apply/", "/upload/", "/api/upload/"]
+        self.upload_endpoints = ["/apply/", "/upload/", "/ats-checker/upload/"]
         # Add specific job application endpoint that should be allowed
         # Include both the original route pattern and the API gateway pattern
         self.allowed_upload_endpoints = [
