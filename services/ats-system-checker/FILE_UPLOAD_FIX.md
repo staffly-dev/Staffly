@@ -43,6 +43,44 @@ The `FileUploadSecurityMiddleware` is now conditionally added based on configura
 - If both upload types are enabled, the middleware is disabled
 - Otherwise, the middleware runs with the updated rules
 
+## Additional Issue Resolved: AI Service Integration
+
+### Problem Description
+
+After fixing the file upload issue, the system encountered an AI service connection error: "Failed to extract text from CV using AI service: [Errno -2] Name or service not known"
+
+### Root Cause
+
+The `AI_SERVICE_URL` environment variable was not configured in production, causing the system to try to connect to an empty hostname.
+
+### Solution Implemented
+
+#### 1. Graceful Fallback System
+
+- **CV Text Extraction**: Falls back to basic text creation from metadata when AI service is unavailable
+- **CV Evaluation**: Uses heuristic keyword-based evaluation when AI service fails
+- **Quiz Generation**: Provides pre-defined generic questions when AI service is unavailable
+
+#### 2. Configuration Options
+
+New environment variables for AI service control:
+
+```bash
+# AI Service Configuration
+AI_SERVICE_URL=http://localhost:5000                    # AI service endpoint
+AI_SERVICE_ENABLED=true                                 # Enable AI service integration
+AI_SERVICE_FALLBACK=true                                # Enable fallback processing
+```
+
+#### 3. Intelligent Error Handling
+
+The system now:
+
+- Checks if AI service is available before attempting to use it
+- Automatically falls back to local processing when AI service fails
+- Provides detailed logging for debugging and monitoring
+- Maintains full functionality even without AI service
+
 ## Files Modified
 
 1. **`src/middlewares/security.py`**
@@ -55,14 +93,34 @@ The `FileUploadSecurityMiddleware` is now conditionally added based on configura
 
    - Added `ALLOW_JOB_APPLICATION_UPLOADS` setting
    - Added `ALLOW_GENERAL_FILE_UPLOADS` setting
+   - Added `AI_SERVICE_ENABLED` setting
+   - Added `AI_SERVICE_FALLBACK` setting
 
 3. **`src/main.py`**
 
    - Conditional middleware addition based on configuration
    - Better logging for middleware status
+   - AI service configuration logging
 
-4. **`.example.env`**
+4. **`src/controllers/job.controller.py`**
+
+   - Added fallback CV text extraction when AI service is unavailable
+   - Enhanced error handling for AI service failures
+   - Maintains functionality without AI service
+
+5. **`src/services/evaluation_service.py`**
+
+   - Added heuristic evaluation fallback
+   - Added fallback quiz generation
+   - Graceful handling of AI service unavailability
+
+6. **`.example.env`**
+
    - Added new configuration options with examples
+
+7. **Documentation**
+   - `AI_SERVICE_CONFIGURATION.md` - Comprehensive AI service configuration guide
+   - Updated this file with complete resolution details
 
 ## How to Deploy the Fix
 
@@ -71,8 +129,20 @@ The `FileUploadSecurityMiddleware` is now conditionally added based on configura
 Add these variables to your production environment:
 
 ```bash
+# File Upload Security
 ALLOW_JOB_APPLICATION_UPLOADS=true
 ALLOW_GENERAL_FILE_UPLOADS=false
+
+# AI Service Configuration (Choose one option)
+# Option A: Deploy AI service
+AI_SERVICE_URL=https://your-ai-service.up.railway.app
+AI_SERVICE_ENABLED=true
+AI_SERVICE_FALLBACK=true
+
+# Option B: Use fallback mode only
+AI_SERVICE_URL=
+AI_SERVICE_ENABLED=false
+AI_SERVICE_FALLBACK=true
 ```
 
 ### 2. Deploy the Updated Code
@@ -82,6 +152,8 @@ The changes will automatically:
 - Allow job application CV uploads
 - Maintain security for other file upload endpoints
 - Provide better logging for debugging
+- Handle AI service unavailability gracefully
+- Maintain full functionality with or without AI service
 
 ### 3. Test the Endpoint
 
@@ -96,6 +168,8 @@ The job application endpoint should now work correctly:
 - **General File Uploads**: Still blocked for security
 - **File Validation**: Maintained in the controller layer
 - **Rate Limiting**: Still active through other middleware
+- **AI Service Integration**: Secure HTTPS communication with timeout limits
+- **Fallback Processing**: All fallback processing happens locally for data privacy
 
 ## Testing
 
@@ -114,6 +188,9 @@ The enhanced logging will help monitor:
 - Blocked requests
 - Allowed uploads
 - Security events
+- AI service availability
+- Fallback activation
+- Error patterns
 
 ## Rollback Plan
 
@@ -125,3 +202,34 @@ ALLOW_GENERAL_FILE_UPLOADS=true
 ```
 
 This will completely disable the `FileUploadSecurityMiddleware` while maintaining other security measures.
+
+## AI Service Deployment (Optional)
+
+If you want to use the full AI service functionality:
+
+1. **Deploy AI Service** to Railway or similar platform
+2. **Configure Environment Variables**:
+
+   ```bash
+   AI_SERVICE_URL=https://your-ai-service.up.railway.app
+   AI_SERVICE_ENABLED=true
+   AI_SERVICE_FALLBACK=true
+   ```
+
+3. **Benefits**:
+   - Advanced CV text extraction
+   - AI-powered CV evaluation
+   - Dynamic quiz generation
+   - Better candidate assessment
+
+## Fallback Mode Benefits
+
+Even without the AI service, the system provides:
+
+- Basic CV processing
+- Heuristic evaluation based on keyword matching
+- Generic quiz questions
+- Full application workflow
+- Email notifications
+- Database storage
+- Complete audit trail

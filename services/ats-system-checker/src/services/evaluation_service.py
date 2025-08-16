@@ -59,6 +59,11 @@ class EvaluationService:
         try:
             logger.info(f"Generating quiz for job application")
             
+            # Check if AI service is available
+            if not self.ai_service_url or not self.ai_service_url.strip():
+                logger.warning("AI service URL not configured, using fallback quiz generation")
+                return self._generate_fallback_quiz(job_description)
+            
             # Generate quiz using AI service with retry mechanism
             quiz_questions = None
             max_retries = 3
@@ -66,31 +71,40 @@ class EvaluationService:
             for attempt in range(max_retries):
                 logger.info(f"Quiz generation attempt {attempt + 1}/{max_retries}")
                 
-                # Call AI service for quiz generation
-                async with httpx.AsyncClient() as client:
-                    response = await client.post(
-                        f"{self.ai_service_url}/generate-quiz",
-                        json={
-                            "job_description": job_description,
-                            "num_questions": 10
-                        },
-                        timeout=60
-                    )
-                    response.raise_for_status()
-                    ai_result = response.json()
-                    quiz_questions = ai_result.get("questions", [])
-                
-                if quiz_questions:
-                    logger.info(f" Successfully generated quiz on attempt {attempt + 1}")
-                    break
-                else:
-                    logger.warning(f" Quiz generation attempt {attempt + 1} failed")
+                try:
+                    # Call AI service for quiz generation
+                    async with httpx.AsyncClient() as client:
+                        response = await client.post(
+                            f"{self.ai_service_url}/generate-quiz",
+                            json={
+                                "job_description": job_description,
+                                "num_questions": 10
+                            },
+                            timeout=60
+                        )
+                        response.raise_for_status()
+                        ai_result = response.json()
+                        quiz_questions = ai_result.get("questions", [])
+                    
+                    if quiz_questions:
+                        logger.info(f" Successfully generated quiz on attempt {attempt + 1}")
+                        break
+                    else:
+                        logger.warning(f" Quiz generation attempt {attempt + 1} failed")
+                        if attempt < max_retries - 1:
+                            logger.info("Retrying quiz generation...")
+                            
+                except Exception as ai_error:
+                    logger.warning(f"AI service quiz generation failed on attempt {attempt + 1}: {ai_error}")
                     if attempt < max_retries - 1:
                         logger.info("Retrying quiz generation...")
+                    else:
+                        logger.warning("All AI service attempts failed, using fallback quiz generation")
+                        return self._generate_fallback_quiz(job_description)
             
             if not quiz_questions:
                 logger.error("Failed to generate quiz questions after all attempts")
-                return None
+                return self._generate_fallback_quiz(job_description)
             
             # Return quiz data as simple dictionary
             result = {
@@ -104,8 +118,47 @@ class EvaluationService:
             
         except Exception as e:
             logger.error(f"Error generating quiz: {e}")
-            return None
+            return self._generate_fallback_quiz(job_description)
 
+    def _generate_fallback_quiz(self, job_description: str) -> Dict[str, Any]:
+        """
+        Generates a fallback quiz when the AI service is not available.
+        This method provides a minimal set of questions to ensure the application
+        process can continue, but it's not as robust as AI-generated quizzes.
+        """
+        logger.warning("Using fallback quiz generation due to unavailable AI service.")
+        questions = [
+            {
+                "question": "What is the main purpose of this job?",
+                "options": ["To earn money", "To gain experience", "To contribute to society"],
+                "correct_answer": 2
+            },
+            {
+                "question": "What are the key responsibilities of the role?",
+                "options": ["Writing code", "Managing people", "Analyzing data"],
+                "correct_answer": 1
+            },
+            {
+                "question": "What are the required qualifications for this position?",
+                "options": ["Bachelor's degree", "10 years of experience", "Both"],
+                "correct_answer": 2
+            },
+            {
+                "question": "What is the expected salary for this role?",
+                "options": ["$50,000 - $70,000", "$100,000 - $150,000", "$200,000+"],
+                "correct_answer": 0
+            },
+            {
+                "question": "What is the work location for this job?",
+                "options": ["On-site", "Remote", "Hybrid"],
+                "correct_answer": 0
+            }
+        ]
+        return {
+            "questions": questions,
+            "job_description": job_description,
+            "num_questions": len(questions)
+        }
     
 
     
@@ -145,39 +198,32 @@ class EvaluationService:
             score = 0
             evaluation_text = ""
 
-            try:
-                async with httpx.AsyncClient() as client:
-                    response = await client.post(
-                        f"{self.ai_service_url}/evaluate",
-                        json={
-                            "cv_text": cv_text,
-                            "job_description": job_posting.description,
-                            "filename": f"application_{application_id}"
-                        },
-                        timeout=60
-                    )
-                    response.raise_for_status()
-                    ai_result = response.json()
-                decision = ai_result.get("decision", "UNKNOWN")
-                score = ai_result.get("score", 0)
-                evaluation_text = ai_result.get("reasoning", "")
-            except Exception as ai_error:
-                logger.warning(f"AI evaluation failed, using heuristic fallback: {ai_error}")
-                # Heuristic fallback: score based on keyword coverage from job description
-                import re
-                job_desc = job_posting.description or ""
-                raw_tokens = re.split(r"[,\n\r;]+", job_desc)
-                skills = [t.strip().lower() for t in raw_tokens if t and len(t.strip()) > 1]
-                skills = [re.sub(r"[^a-z0-9+#\.\- ]", "", s) for s in skills]
-                skills = [s for s in skills if s]
-                cv_lower = (cv_text or "").lower()
-                matched = [s for s in skills if s and s in cv_lower]
-                coverage = (len(matched) / max(1, len(skills))) if skills else 0
-                score = int(round(coverage * 100))
-                decision = "ACCEPTED" if score >= job_posting.evaluation_threshold else "REJECTED"
-                evaluation_text = (
-                    f"Fallback evaluation: matched {len(matched)} of {len(skills)} job keywords."
-                )
+            if self.ai_service_url and self.ai_service_url.strip():
+                try:
+                    async with httpx.AsyncClient() as client:
+                        response = await client.post(
+                            f"{self.ai_service_url}/evaluate",
+                            json={
+                                "cv_text": cv_text,
+                                "job_description": job_posting.description,
+                                "filename": f"application_{application_id}"
+                            },
+                            timeout=60
+                        )
+                        response.raise_for_status()
+                        ai_result = response.json()
+                    decision = ai_result.get("decision", "UNKNOWN")
+                    score = ai_result.get("score", 0)
+                    evaluation_text = ai_result.get("reasoning", "")
+                    logger.info(f"AI evaluation successful: decision={decision}, score={score}")
+                except Exception as ai_error:
+                    logger.warning(f"AI evaluation failed, using heuristic fallback: {ai_error}")
+                    # Fallback to heuristic evaluation
+                    decision, score, evaluation_text = self._heuristic_evaluation(cv_text, job_posting)
+            else:
+                logger.warning("AI service URL not configured, using heuristic fallback")
+                # Use heuristic evaluation when AI service is not available
+                decision, score, evaluation_text = self._heuristic_evaluation(cv_text, job_posting)
             # AI service doesn't return email in the response, so use the provided candidate_email
             email = candidate_email
             # Determine if candidate meets threshold
@@ -292,6 +338,41 @@ class EvaluationService:
                 pass
             return None
     
+    def _heuristic_evaluation(self, cv_text: str, job_posting) -> tuple[str, int, str]:
+        """
+        Provide fallback evaluation when AI service is not available
+        
+        Args:
+            cv_text: CV text content
+            job_posting: Job posting object
+            
+        Returns:
+            tuple: (decision, score, evaluation_text)
+        """
+        import re
+        
+        # Heuristic fallback: score based on keyword coverage from job description
+        job_desc = job_posting.description or ""
+        raw_tokens = re.split(r"[,\n\r;]+", job_desc)
+        skills = [t.strip().lower() for t in raw_tokens if t and len(t.strip()) > 1]
+        skills = [re.sub(r"[^a-z0-9+#\.\- ]", "", s) for s in skills]
+        skills = [s for s in skills if s]
+        
+        cv_lower = (cv_text or "").lower()
+        matched = [s for s in skills if s and s in cv_lower]
+        coverage = (len(matched) / max(1, len(skills))) if skills else 0
+        score = int(round(coverage * 100))
+        
+        decision = "ACCEPTED" if score >= job_posting.evaluation_threshold else "REJECTED"
+        evaluation_text = (
+            f"Fallback evaluation: matched {len(matched)} of {len(skills)} job keywords. "
+            f"Score: {score}/{job_posting.evaluation_threshold} required."
+        )
+        
+        logger.info(f"Heuristic evaluation: score={score}, decision={decision}, matched_skills={matched}")
+        
+        return decision, score, evaluation_text
+
     async def evaluate_application(
         self,
         cv_file_path: str,

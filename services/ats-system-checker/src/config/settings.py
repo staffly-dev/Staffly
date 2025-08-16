@@ -163,6 +163,10 @@ class Settings(BaseSettings):
         default="",
         description="Base URL for the AI microservice")
     
+    # AI Service Configuration
+    AI_SERVICE_ENABLED: bool = Field(default=True, description="Enable AI service integration")
+    AI_SERVICE_FALLBACK: bool = Field(default=True, description="Enable fallback processing when AI service is unavailable")
+    
     class Config:
         env_file = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
         env_file_encoding = "utf-8"

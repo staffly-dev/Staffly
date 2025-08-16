@@ -84,6 +84,15 @@ async def lifespan(app: FastAPI):
         # Print startup success message
         print("FastAPI connected to mongoose db connected")
         
+        # Log AI service configuration
+        if settings.AI_SERVICE_URL and settings.AI_SERVICE_URL.strip():
+            logger.info(f"AI Service configured: {settings.AI_SERVICE_URL}")
+            logger.info(f"AI Service enabled: {settings.AI_SERVICE_ENABLED}")
+            logger.info(f"AI Service fallback: {settings.AI_SERVICE_FALLBACK}")
+        else:
+            logger.warning("AI Service URL not configured - using fallback processing")
+            logger.info(f"AI Service fallback: {settings.AI_SERVICE_FALLBACK}")
+        
         # Display startup information using environment-based configuration
         _display_startup_info(settings)
         
