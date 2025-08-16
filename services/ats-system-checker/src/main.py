@@ -323,19 +323,12 @@ async def catch_all(full_path: str):
 if __name__ == "__main__":
     import uvicorn
     
-    # Get port from environment (Railway sets PORT)
-    port = int(os.getenv("PORT", 4000))
-    host = os.getenv("API_HOST", "0.0.0.0")
-    
-    print(f"Starting ATS System Backend on {host}:{port}")
-    print(f"Environment: {os.getenv('ENV', 'development')}")
-    print(f"Debug mode: {os.getenv('DEBUG', 'false').lower() == 'true'}")
-    
-    # Start the server
+    # Run the application
     uvicorn.run(
         "src.main:app",
-        host=host,
-        port=port,
-        reload=os.getenv("DEBUG", "false").lower() == "true",
-        log_level=os.getenv("LOG_LEVEL", "info").lower()
+        host=settings.API_HOST,
+        port=settings.API_PORT,
+        reload=settings.DEBUG,
+        log_level=settings.LOG_LEVEL.lower(),
+        reload_excludes=["venv", ".pytest_cache", "__pycache__", "uploads", "ats_system.log"]
     ) 
