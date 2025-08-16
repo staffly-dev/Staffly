@@ -103,6 +103,10 @@ class Settings(BaseSettings):
     EVALUATIONS_FOLDER: str = Field(default="evaluations", description="Evaluations folder path")
     UPLOADS_BASE_URL: str = Field(default="", description="Base URL for uploads and CV files")
     
+    # File Upload Security
+    ALLOW_JOB_APPLICATION_UPLOADS: bool = Field(default=True, description="Allow file uploads for job applications")
+    ALLOW_GENERAL_FILE_UPLOADS: bool = Field(default=False, description="Allow general file uploads (disabled for security)")
+    
     # Quiz Configuration
     QUIZ_TIME_LIMIT: int = Field(default=300, description="Quiz time limit in seconds")
     QUIZ_PASS_THRESHOLD: int = Field(default=7, description="Minimum score to pass quiz")

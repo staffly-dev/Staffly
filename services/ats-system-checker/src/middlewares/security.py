@@ -854,7 +854,17 @@ class FileUploadSecurityMiddleware(BaseHTTPMiddleware):
     
     def __init__(self, app):
         super().__init__(app)
-        self.upload_endpoints = ["/api/jobs/", "/apply/", "/upload/", "/api/upload/"]
+        from src.config.settings import get_settings
+        self.settings = get_settings()
+        
+        # Remove /api/jobs/ from blocked endpoints since it's needed for job applications
+        self.upload_endpoints = ["/apply/", "/upload/", "/api/upload/"]
+        # Add specific job application endpoint that should be allowed
+        # Include both the original route pattern and the API gateway pattern
+        self.allowed_upload_endpoints = [
+            "/api/jobs/.*/apply",  # API gateway pattern
+            "/ats-checker/jobs/.*/apply"  # Original route pattern
+        ]
         self.blocked_extensions = {
             # Executable files
             '.exe', '.bat', '.cmd', '.com', '.pif', '.scr', '.vbs', '.js', '.jar', '.msi',
@@ -884,15 +894,38 @@ class FileUploadSecurityMiddleware(BaseHTTPMiddleware):
         Returns:
             Response: HTTP response
         """
-        # Check if this is a file upload endpoint
-        is_upload_endpoint = any(
-            endpoint in str(request.url.path) for endpoint in self.upload_endpoints
+        # Log the request path for debugging
+        request_path = str(request.url.path)
+        logger.debug(f"FileUploadSecurityMiddleware processing request to: {request_path}")
+        
+        # Check if this is an allowed upload endpoint (like job applications)
+        import re
+        is_allowed_upload = any(
+            re.match(pattern, request_path) for pattern in self.allowed_upload_endpoints
         )
         
-        # Block all file upload attempts at upload endpoints
+        logger.debug(f"Request path: {request_path}")
+        logger.debug(f"Allowed upload patterns: {self.allowed_upload_endpoints}")
+        logger.debug(f"Is allowed upload: {is_allowed_upload}")
+        
+        # If it's an allowed upload endpoint and job application uploads are enabled, let it through
+        if is_allowed_upload and self.settings.ALLOW_JOB_APPLICATION_UPLOADS:
+            logger.info(f"Allowing upload to allowed endpoint: {request_path}")
+            response = await call_next(request)
+            return response
+        
+        # Check if this is a blocked file upload endpoint
+        is_upload_endpoint = any(
+            endpoint in request_path for endpoint in self.upload_endpoints
+        )
+        
+        logger.debug(f"Blocked upload endpoints: {self.upload_endpoints}")
+        logger.debug(f"Is blocked upload endpoint: {is_upload_endpoint}")
+        
+        # Block all file upload attempts at blocked upload endpoints
         if is_upload_endpoint and request.method == "POST":
             client_ip = self._get_client_ip(request)
-            logger.warning(f"File upload blocked from {client_ip} to {request.url.path}")
+            logger.warning(f"File upload blocked from {client_ip} to {request_path}")
             
             return JSONResponse(
                 status_code=403,
@@ -921,7 +954,7 @@ class FileUploadSecurityMiddleware(BaseHTTPMiddleware):
             # For now, we'll allow multipart forms but log them for monitoring
             if has_file_headers:
                 client_ip = self._get_client_ip(request)
-                logger.warning(f"File upload headers detected from {client_ip} to {request.url.path}")
+                logger.warning(f"File upload headers detected from {client_ip} to {request_path}")
                 
                 return JSONResponse(
                     status_code=403,
@@ -936,8 +969,9 @@ class FileUploadSecurityMiddleware(BaseHTTPMiddleware):
             
             # Allow multipart forms that don't have file upload indicators
             # This allows regular Form() parameters to work
-            logger.debug(f"Allowing multipart form submission to {request.url.path}")
+            logger.debug(f"Allowing multipart form submission to {request_path}")
         
+        logger.debug(f"Request allowed to proceed to: {request_path}")
         response = await call_next(request)
         return response
     

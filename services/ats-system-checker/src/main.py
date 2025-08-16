@@ -170,7 +170,12 @@ if settings.DOCS_AUTH_ENABLED:
     app.add_middleware(DocsAuthenticationMiddleware)
 
 app.add_middleware(EnhancedSecurityMiddleware)
-app.add_middleware(FileUploadSecurityMiddleware)
+
+# Only add FileUploadSecurityMiddleware if file uploads are not completely disabled
+if not (settings.ALLOW_JOB_APPLICATION_UPLOADS and settings.ALLOW_GENERAL_FILE_UPLOADS):
+    app.add_middleware(FileUploadSecurityMiddleware)
+else:
+    logger.info("File upload security middleware disabled - all uploads allowed")
 
 # Add request logging middleware
 app.add_middleware(RequestLoggingMiddleware)
