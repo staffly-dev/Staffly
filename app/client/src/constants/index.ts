@@ -177,3 +177,18 @@ export const businessIntelligence = [
     ],
   },
 ];
+
+export const attStatusColors: Record<string, string> = {
+  "On Time": "bg-green-500/20 text-green-500",
+  absent: "bg-red-500/20 text-red-500",
+  leave: "bg-yellow-500/20 text-yellow-500",
+  holiday: "bg-blue-500/20 text-blue-500",
+  Late: "bg-orange-500/20 text-orange-500",
+};
+
+export const getUtcTime = (date: Date) => {
+  return `${date.getUTCHours()}:${date
+    .getUTCMinutes()
+    .toString()
+    .padStart(2, "0")}`;
+};

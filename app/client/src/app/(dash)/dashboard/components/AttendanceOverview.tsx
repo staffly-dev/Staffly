@@ -1,18 +1,15 @@
 "use client";
+
 import ErrorComponent from "@/components/ErrorComponent";
 import LoadingComponent from "@/components/LoadingComponent";
-import { Pagination } from "@/components/Pagination";
-import { SearchInput } from "@/components/searchInput";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAttendance } from "@/context/AttendanceContext";
 import { attStatusColors, getUtcTime } from "@/constants";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
-export default function Attendance() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+export function AttendanceOverview() {
   const {
     fetchAttendance,
     attendanceRecords,
@@ -20,14 +17,6 @@ export default function Attendance() {
     error,
     clearError,
   } = useAttendance();
-
-  const totalPages = Math.ceil(attendanceRecords.length / itemsPerPage);
-  const totalItems = attendanceRecords.length;
-
-  const currentData = attendanceRecords.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   useEffect(() => {
     fetchAttendance();
@@ -41,29 +30,19 @@ export default function Attendance() {
     return <ErrorComponent error={error} clearError={clearError} />;
   }
 
-  const data = currentData.map((att) => {
-    return {
-      ...att,
-      checkInTime: getUtcTime(new Date(att.checkInTime)),
-      checkOutTime: att.checkOutTime
-        ? getUtcTime(new Date(att.checkOutTime))
-        : null,
-    };
-  });
-
   return (
-    <Card className="bg-transparent border-hrms-gray/20 container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6 ">
-        <SearchInput />
+    <Card className="bg-transparent border-hrms-gray/20 container mx-auto">
+      <CardHeader className="flex flex-row justify-between items-center">
+        <CardTitle className="md:text-2xl">Attendance Overview</CardTitle>
         <Link
-          href="/attendance/checkin"
+          href="/attendance"
           className="rounded-md px-4 py-2 bg-primary text-white hover:bg-primary/90"
         >
-          Check In Employees
+          View All
         </Link>
-      </div>
-      <div className="min-h-[400px]">
-        <table className="min-w-full divide-y divide-hrms-gray/20 mb-4">
+      </CardHeader>
+      <CardContent className="overflow-x-auto">
+        <table className="border border-hrms-gray/20 rounded-md min-w-full divide-y divide-hrms-gray/20 mb-4">
           <thead>
             <tr className="*:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
               <th>Employee</th>
@@ -75,7 +54,7 @@ export default function Attendance() {
             </tr>
           </thead>
           <tbody className="divide-y divide-hrms-gray/20">
-            {data.map((att) => (
+            {attendanceRecords.slice(0, 5).map((att) => (
               <tr
                 key={att._id}
                 className="*:px-6 *:py-3 *:text-sm hover:bg-hrms-gray/20"
@@ -86,7 +65,9 @@ export default function Attendance() {
                 </td>
                 <td>{att.employeeId?.designation || "_Employee Deleted_"}</td>
                 <td className={cn(att.checkInTime ? "" : "text-center")}>
-                  {att.checkInTime ? att.checkInTime : "_"}
+                  {att.checkInTime
+                    ? getUtcTime(new Date(att.checkInTime))
+                    : "_"}
                 </td>
                 <td>{new Date(att.date).toLocaleDateString()}</td>
                 <td>{att.employeeId?.employeeType || "Employee Deleted"}</td>
@@ -103,15 +84,7 @@ export default function Attendance() {
             ))}
           </tbody>
         </table>
-      </div>
-      <Pagination
-        onItemsPerPageChange={setItemsPerPage}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        totalItems={totalItems}
-      />
+      </CardContent>
     </Card>
   );
 }
