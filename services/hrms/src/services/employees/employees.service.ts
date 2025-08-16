@@ -20,16 +20,6 @@ export const createEmployeeService = async (
     createdBy: userId
   });
 
-  const settings = new settingsModel({
-    userId: employee._id,
-    appearance: 'light',
-    language: 'en',
-    twoFactorAuth: false,
-    mobileNotifications: true,
-    desktopNotifications: true,
-    emailNotifications: true,
-  });
-  await settings.save();
   return employee;
 }
 
