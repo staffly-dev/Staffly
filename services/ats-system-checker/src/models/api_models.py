@@ -32,6 +32,9 @@ class JobPostingResponse(BaseModel):
     shareable_link: str = Field(..., description="Link for job application")
     created_at: datetime = Field(..., description="Creation timestamp")
     is_active: bool = Field(..., description="Whether job posting is active")
+    hr_email: Optional[str] = Field(None, description="HR contact email for this job")
+    hr_name: Optional[str] = Field(None, description="HR contact name")
+    created_by: Optional[str] = Field(None, description="User ID of the creator (from API Gateway)")
 
 class ApplicationRequest(BaseModel):
     """Request model for submitting a job application"""

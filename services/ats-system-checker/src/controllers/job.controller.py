@@ -56,6 +56,7 @@ class JobController:
         additional_details: Optional[str] = None,
         hr_email: Optional[str] = None,
         hr_name: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
         evaluation_threshold: int = 70,
         quiz_required: bool = True,
         quiz_pass_threshold: int = 7
@@ -98,6 +99,7 @@ class JobController:
                 additional_details=additional_details,
                 hr_email=hr_email,
                 hr_name=hr_name,
+                owner_user_id=owner_user_id,
                 evaluation_threshold=evaluation_threshold,
                 quiz_required=quiz_required,
                 quiz_pass_threshold=quiz_pass_threshold
@@ -116,7 +118,10 @@ class JobController:
                 required_skills=job_posting.required_skills,
                 shareable_link=shareable_link,
                 created_at=job_posting.created_at,
-                is_active=job_posting.is_active
+                is_active=job_posting.is_active,
+                hr_email=job_posting.hr_email,
+                hr_name=job_posting.hr_name,
+                created_by=job_posting.owner_user_id
             )
             
         except HTTPException:
@@ -163,7 +168,10 @@ class JobController:
                 required_skills=job_posting.required_skills,
                 shareable_link=shareable_link,
                 created_at=job_posting.created_at,
-                is_active=job_posting.is_active
+                is_active=job_posting.is_active,
+                hr_email=job_posting.hr_email,
+                hr_name=job_posting.hr_name,
+                created_by=job_posting.owner_user_id
             )
             
         except HTTPException:
@@ -172,20 +180,21 @@ class JobController:
             logger.error(f" Error retrieving job posting: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to retrieve job posting: {str(e)}")
     
-    async def get_all_job_postings(self, include_inactive: bool = False) -> List[JobPostingResponse]:
+    async def get_all_job_postings(self, include_inactive: bool = False, owner_user_id: Optional[str] = None) -> List[JobPostingResponse]:
         """
-        Get all job postings
+        Get job postings (scoped to owner)
         
         Args:
             include_inactive: Whether to include inactive job postings
+            owner_user_id: If provided, only include jobs created by this user
             
         Returns:
             List[JobPostingResponse]: List of job postings
         """
         try:
-            logger.info(f" Getting all job postings (include_inactive: {include_inactive})")
+            logger.info(f" Getting job postings (include_inactive: {include_inactive}, owner_user_id: {owner_user_id})")
             
-            job_postings = await self.database_service.get_all_job_postings(include_inactive)
+            job_postings = await self.database_service.get_all_job_postings(include_inactive, owner_user_id)
             
             response_data = []
             for job in job_postings:
@@ -196,7 +205,10 @@ class JobController:
                     required_skills=job.required_skills,
                     shareable_link=f"{settings.get_backend_url()}/apply/{job.job_id}",
                     created_at=job.created_at,
-                    is_active=job.is_active
+                    is_active=job.is_active,
+                    hr_email=job.hr_email,
+                    hr_name=job.hr_name,
+                    created_by=job.owner_user_id
                 )
                 response_data.append(job_response)
             
@@ -458,12 +470,13 @@ class JobController:
             logger.error(f" Error processing application: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to process application: {str(e)}")
     
-    async def delete_job_posting(self, job_id: str):
+    async def delete_job_posting(self, job_id: str, owner_user_id: Optional[str] = None):
         """
         Delete a job posting and all its associated applications
         
         Args:
             job_id: Job posting ID to delete
+            owner_user_id: The user attempting deletion; must match job owner
             
         Returns:
             APIResponse: Deletion confirmation
@@ -478,6 +491,10 @@ class JobController:
                     status_code=404,
                     detail="Job posting not found"
                 )
+            
+            # Authorization: only owner can delete
+            if owner_user_id and job_posting.owner_user_id and job_posting.owner_user_id != owner_user_id:
+                raise HTTPException(status_code=403, detail="You are not authorized to delete this job posting")
             
             # Delete job posting and associated applications
             success = await self.database_service.delete_job_posting(job_id)
