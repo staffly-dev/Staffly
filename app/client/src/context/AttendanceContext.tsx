@@ -125,7 +125,7 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoadingDashboard(true);
       setError(null);
-      const response = await axiosInstance.get("/dashboard");
+      const response = await axiosInstance.get("/hrms/dashboard");
       setDashboardData(response.data.dashboard);
     } catch (err: unknown) {
       const errorMessage =
@@ -141,7 +141,9 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoadingAttendance(true);
       setError(null);
-      const response = await axiosInstance.get("/attendance/getAllAttendance ");
+      const response = await axiosInstance.get(
+        "/hrms/attendance/getAllAttendance "
+      );
       setAttendanceRecords(response.data.attendance);
     } catch (err: unknown) {
       const errorMessage =
@@ -160,7 +162,7 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
       try {
         setIsLoadingAttendance(true);
         setError(null);
-        const response = await axiosInstance.get("/attendance/search ", {
+        const response = await axiosInstance.get("/hrms/attendance/search ", {
           params,
         });
         setAttendanceRecords(response.data.attendance);
@@ -181,7 +183,7 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
     async (id: string): Promise<AttendanceRecord | null> => {
       try {
         setError(null);
-        const response = await axiosInstance.get(`/attendance/${id}`);
+        const response = await axiosInstance.get(`/hrms/attendance/${id}`);
         return response.data.attendance[0] || null;
       } catch (err: unknown) {
         const errorMessage =
@@ -199,7 +201,10 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
     async (data: CheckInRequest): Promise<AttendanceRecord | null> => {
       try {
         setError(null);
-        const response = await axiosInstance.post("/attendance/checkin", data);
+        const response = await axiosInstance.post(
+          "/hrms/attendance/checkin",
+          data
+        );
         return response.data.attendance;
       } catch (err: unknown) {
         const errorMessage =
@@ -216,7 +221,7 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoadingSettings(true);
       setError(null);
-      const response = await axiosInstance.get(`/settings/${userId}`);
+      const response = await axiosInstance.get(`/hrms/settings/${userId}`);
       setUserSettings(response.data.settings);
     } catch (err: unknown) {
       const errorMessage =
@@ -232,7 +237,7 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
       try {
         setIsLoadingSettings(true);
         setError(null);
-        await axiosInstance.put(`/settings/${userId}`, data);
+        await axiosInstance.put(`/hrms/settings/${userId}`, data);
         // Update local state with new settings
         if (userSettings) {
           setUserSettings({

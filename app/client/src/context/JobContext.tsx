@@ -152,7 +152,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/jobs`);
+      const response = await axiosInstance.get(`/ats_checker/jobs`);
       setJobs(response.data);
       return response.data;
     } catch (err: unknown) {
@@ -169,7 +169,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/jobs/${id}`);
+      const response = await axiosInstance.get(`/ats_checker/jobs/${id}`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -186,7 +186,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.post(`/jobs`, jobData);
+        const response = await axiosInstance.post(`/ats_checker/jobs`, jobData);
         const newJob = response.data;
         setJobs((prev) => [...prev, newJob]);
         return newJob;
@@ -211,7 +211,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const response = await axiosInstance.post(
-          `/jobs/${jobId}/apply`,
+          `/ats_checker/jobs/${jobId}/apply`,
           application
         );
         return response.data;
@@ -233,7 +233,9 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.get(`/quiz/${quizSessionId}`);
+        const response = await axiosInstance.get(
+          `/ats_checker/quiz/${quizSessionId}`
+        );
         return response.data?.data;
       } catch (err: unknown) {
         const errorMessage =
@@ -251,7 +253,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/quiz/users`);
+      const response = await axiosInstance.get(`/ats_checker/quiz/users`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -267,7 +269,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/applications`);
+      const response = await axiosInstance.get(`/ats_checker/applications`);
       setCandidates(response.data.applications);
       setTotalApplications(response.data.total_applications);
       return response.data;
@@ -285,7 +287,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/statistics`);
+      const response = await axiosInstance.get(`/ats_checker/statistics`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -307,7 +309,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const response = await axiosInstance.post(
-          `/quiz/submit`,
+          `/ats_checker/quiz/submit`,
           {
             answers,
             quiz_session_id,
@@ -337,11 +339,14 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setDeleteLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.delete(`/applications/${id}`, {
-        data: {
-          candidate_id: id,
-        },
-      });
+      const response = await axiosInstance.delete(
+        `/ats_checker/applications/${id}`,
+        {
+          data: {
+            candidate_id: id,
+          },
+        }
+      );
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -357,7 +362,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setDeleteLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.delete(`/jobs/${id}`);
+      const response = await axiosInstance.delete(`/ats_checker/jobs/${id}`);
       setJobs((prev) => prev.filter((job) => job.job_id !== id));
       return response.data;
     } catch (err: unknown) {
