@@ -1,4 +1,5 @@
 "use client";
+import { CiCirclePlus } from "react-icons/ci";
 import { CustomTableContainer } from "./CustomTableContainer";
 
 type Project = {
@@ -71,35 +72,47 @@ const projectStatusColors: Record<string, string> = {
 
 export function Projects() {
   return (
-    <CustomTableContainer>
-      <thead className="sticky top-0 bg-background shadow-sm">
-        <tr className="*:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
-          <th>Sr.No</th>
-          <th>Project Name</th>
-          <th>Start Date</th>
-          <th>Finish Date</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-hrms-gray/20">
-        {mazinProjects.map((project) => (
-          <tr key={project.id} className="hover:bg-hrms-gray/20 *:px-6 *:py-3">
-            <td>{project.id}</td>
-            <td>{project.name}</td>
-            <td>{project.startDate}</td>
-            <td>{project.finishDate}</td>
-            <td>
-              <span
-                className={`capitalize rounded-md px-2 py-1 ${
-                  projectStatusColors[project.status]
-                }`}
-              >
-                {project.status}
-              </span>
-            </td>
+    <div className="relative">
+      <CustomTableContainer>
+        <thead className="sticky top-0 bg-background shadow-sm">
+          <tr className="*:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
+            <th>Sr.No</th>
+            <th>Project Name</th>
+            <th>Start Date</th>
+            <th>Finish Date</th>
+            <th>Status</th>
           </tr>
-        ))}
-      </tbody>
-    </CustomTableContainer>
+        </thead>
+        <tbody className="divide-y divide-hrms-gray/20">
+          {mazinProjects.map((project) => (
+            <tr
+              key={project.id}
+              className="hover:bg-hrms-gray/20 *:px-6 *:py-3"
+            >
+              <td>{project.id}</td>
+              <td>{project.name}</td>
+              <td>{project.startDate}</td>
+              <td>{project.finishDate}</td>
+              <td>
+                <span
+                  className={`capitalize rounded-md px-2 py-1 ${
+                    projectStatusColors[project.status]
+                  }`}
+                >
+                  {project.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </CustomTableContainer>
+      <div className="absolute bottom-0 right-0 flex flex-col items-center gap-2">
+        <h3 className="text-xl font-bold">Under Development</h3>
+        <p className="text-sm text-gray-500">
+          This feature is under development. Please check back later.
+        </p>
+        <CiCirclePlus className="w-10 h-10" />
+      </div>
+    </div>
   );
 }
