@@ -58,7 +58,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 
       try {
         const response = await axiosInstance.post<EmployeeResponse>(
-          "/employees/addEmployee",
+          "/hrms/employees/addEmployee",
           employeeData
         );
 
@@ -83,7 +83,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await axiosInstance.get<EmployeesResponse>(
-        "/employees/getAllEmployees"
+        "/hrms/employees/getAllEmployees"
       );
 
       const employeesList = response.data.employees;
@@ -104,7 +104,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await axiosInstance.get<EmployeeResponse>(
-        `/employees/getEmployee/${id}`
+        `/hrms/employees/getEmployee/${id}`
       );
 
       const employee = response.data.employee;
@@ -127,7 +127,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 
       try {
         const response = await axiosInstance.put<EmployeeResponse>(
-          `/employees/updateEmployee/${id}`,
+          `/hrms/employees/updateEmployee/${id}`,
           employeeData
         );
 
@@ -154,7 +154,7 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await axiosInstance.delete(
-        `/employees/deleteEmployee/${id}`
+        `/hrms/employees/deleteEmployee/${id}`
       );
 
       if (response.status === 200) {

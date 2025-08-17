@@ -26,9 +26,9 @@ export const config = {
     } as ServiceConfig,
 
     ats_checker: {
-      name: 'ats-system-checker',
+      name: 'ats_checker',
       url: Env.ATS_CHECKER_SERVICE_URL,
-      healthCheck: '/ats_checker/health',
+      healthCheck: '/ats-checker/health/simple',
       timeout: 5000
     } as ServiceConfig,
   },
@@ -66,33 +66,33 @@ export const config = {
       target: '/*'
     },
     {
-      path: '/api/v1/ats_checker/*',
+      path: '/api/v1/ats-checker/*',
       method: 'GET',
-      service: 'ats-system-checker',
+      service: 'ats_checker',
       target: '/*'
     },
     {
-      path: '/api/v1/ats_checker/*',
+      path: '/api/v1/ats-checker/*',
       method: 'POST',
-      service: 'ats-system-checker',
+      service: 'ats_checker',
       target: '/*'
     },
     {
-      path: '/api/v1/ats_checker/*',
+      path: '/api/v1/ats-checker/*',
       method: 'PUT',
-      service: 'ats-system-checker',
+      service: 'ats_checker',
       target: '/*'
     },
     {
-      path: '/api/v1/ats_checker/*',
+      path: '/api/v1/ats-checker/*',
       method: 'PATCH',
-      service: 'ats-system-checker',
+      service: 'ats_checker',
       target: '/*'
     },
     {
-      path: '/api/v1/ats_checker/*',
+      path: '/api/v1/ats-checker/*',
       method: 'DELETE',
-      service: 'ats-system-checker',
+      service: 'ats_checker',
       target: '/*'
     },
   ] as RouteConfig[],

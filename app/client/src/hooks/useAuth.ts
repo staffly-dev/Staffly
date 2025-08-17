@@ -50,18 +50,21 @@ export interface AuthResponse {
 // API functions
 const authAPI = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await axiosInstance.post("/auth/login", credentials);
+    const response = await axiosInstance.post("/hrms/auth/login", credentials);
     return response.data;
   },
 
   register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
     localStorage.setItem("registerEmail", credentials.email);
-    const response = await axiosInstance.post("/auth/register", credentials);
+    const response = await axiosInstance.post(
+      "/hrms/auth/register",
+      credentials
+    );
     return response.data;
   },
 
   verifyEmail: async (code: string): Promise<AuthResponse> => {
-    const response = await axiosInstance.post("/auth/verify-email", {
+    const response = await axiosInstance.post("/hrms/auth/verify-email", {
       code,
       email: localStorage.getItem("registerEmail"),
     });
@@ -69,37 +72,40 @@ const authAPI = {
   },
 
   logout: async (): Promise<void> => {
-    await axiosInstance.post("/auth/logout");
+    await axiosInstance.post("/hrms/auth/logout");
   },
 
   logoutAll: async (): Promise<void> => {
-    await axiosInstance.post("/auth/logout-all");
+    await axiosInstance.post("/hrms/auth/logout-all");
   },
 
   getCurrentUser: async (): Promise<UserData> => {
-    const response = await axiosInstance.get("/users/me");
+    const response = await axiosInstance.get("/hrms/users/me");
     return response.data;
   },
 
   resetPasswordRequest: async (email: string): Promise<AuthResponse> => {
     localStorage.setItem("resetPasswordEmail", email);
-    const response = await axiosInstance.post("/auth/request-resetPass", {
+    const response = await axiosInstance.post("/hrms/auth/request-resetPass", {
       email,
     });
     return response.data;
   },
 
   verifyResetPasswordCode: async (code: string): Promise<AuthResponse> => {
-    const response = await axiosInstance.post("/auth/verify-resetPass-code", {
-      code,
-      email: localStorage.getItem("resetPasswordEmail"),
-    });
+    const response = await axiosInstance.post(
+      "/hrms/auth/verify-resetPass-code",
+      {
+        code,
+        email: localStorage.getItem("resetPasswordEmail"),
+      }
+    );
     localStorage.setItem("resetPasswordToken", response.data.data.resetToken);
     return response.data;
   },
 
   resetPassword: async (newPassword: string): Promise<AuthResponse> => {
-    const response = await axiosInstance.post("/auth/reset-password", {
+    const response = await axiosInstance.post("/hrms/auth/reset-password", {
       newPassword,
       resetToken: localStorage.getItem("resetPasswordToken"),
     });

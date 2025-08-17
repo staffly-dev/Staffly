@@ -91,7 +91,7 @@ export function PayRollProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoadingPayrolls(true);
       setError(null);
-      const response = await axiosInstance.get("/payroll/getAllPayroll");
+      const response = await axiosInstance.get("/hrms/payroll/getAllPayroll");
       const payrolls = response.data.payroll;
       setPayrolls(payrolls);
       return {
@@ -118,7 +118,7 @@ export function PayRollProvider({ children }: { children: ReactNode }) {
         setIsLoadingPayrolls(true);
         setError(null);
         const response = await axiosInstance.post(
-          "/payroll/createPayroll",
+          "/hrms/payroll/createPayroll",
           data
         );
         const payroll = response.data.payroll;
@@ -144,7 +144,7 @@ export function PayRollProvider({ children }: { children: ReactNode }) {
       try {
         setIsLoadingPayrolls(true);
         setError(null);
-        const response = await axiosInstance.get("/payroll/search", {
+        const response = await axiosInstance.get("/hrms/payroll/search", {
           params,
         });
         const payrolls = response.data.payroll;
@@ -174,7 +174,7 @@ export function PayRollProvider({ children }: { children: ReactNode }) {
       try {
         setError(null);
         const response = await axiosInstance.put(
-          `/payroll/updatePayroll/${id}`,
+          `/hrms/payroll/updatePayroll/${id}`,
           data
         );
         return {
@@ -199,7 +199,7 @@ export function PayRollProvider({ children }: { children: ReactNode }) {
     try {
       setDeleteLoading(true);
       setError(null);
-      await axiosInstance.delete(`/payroll/deletePayroll/${id}`);
+      await axiosInstance.delete(`/hrms/payroll/deletePayroll/${id}`);
       setPayrolls((prev) => prev.filter((payroll) => payroll._id !== id));
       return "Payroll deleted successfully";
     } catch (err: unknown) {

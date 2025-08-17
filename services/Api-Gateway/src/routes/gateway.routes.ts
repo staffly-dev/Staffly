@@ -57,11 +57,11 @@ export function createGatewayRouter() {
 
   // Proxy Ats Checker endpoints
   router.all(
-    '/api/v1/ats_checker/*',
+    '/api/v1/ats-checker/*',
     asyncHandler(async (req, res, next) => {
       const serviceName = 'ats_checker';
       const subPath = req.params[0] || '';
-      const targetPath = 'ats_checker/' + subPath;
+      const targetPath = 'ats-checker/' + subPath;
       const service = config.services[serviceName as keyof typeof config.services];
       if (!service) {
         throw new NotFoundException(`Service '${serviceName}' is not available`);

@@ -44,9 +44,9 @@ app.get(
 );
 
 if (Env.NODE_ENV !== 'development') {
-  app.use(`/api-docs`, swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use(`/hrms/api-docs`, swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 } else {
-  app.use(`/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use(`/hrms/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
 
 // /auth
