@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
             gmail_user=settings.GMAIL_USER,
             gmail_password=settings.GMAIL_PASSWORD,
             database_service=app.state.database_service,
-            frontend_url=settings.FRONTEND_URL
+            frontend_url=settings.BACKEND_URL
         )
         app.state.evaluation_service = EvaluationService(
             ai_service_url=settings.AI_SERVICE_URL,
@@ -133,8 +133,8 @@ def _display_startup_info(settings):
         print("API Documentation: DISABLED (DOCS_AUTH_ENABLED=false)")
     
     # Display service URLs
-    if settings.FRONTEND_URL:
-        print(f"Frontend URL: {settings.FRONTEND_URL}")
+    if settings.BACKEND_URL:
+        print(f"Backend URL: {settings.BACKEND_URL}")
     
     if settings.AI_SERVICE_URL:
         print(f"AI Service URL: {settings.AI_SERVICE_URL}")
@@ -258,6 +258,27 @@ async def debug_database():
                 "cv_evaluations": evaluation_count
             },
             "status": "healthy" if health_status else "unhealthy"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "status": "error"
+        }
+
+# Add debug endpoint for environment configuration
+@app.get("/ats-checker/debug/env", tags=["debug"])
+async def debug_environment():
+    """Debug environment configuration and URL generation"""
+    try:
+        return {
+            "environment_info": settings.get_environment_info(),
+            "urls": {
+                "backend_url": settings.get_backend_url(),
+                "uploads_url": settings.get_uploads_url(),
+                "api_docs_url": settings.api_documentation_url,
+                "cors_origins": settings.get_cors_origins()
+            },
+            "status": "success"
         }
     except Exception as e:
         return {

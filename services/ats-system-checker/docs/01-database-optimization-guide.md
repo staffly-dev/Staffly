@@ -74,7 +74,7 @@ The API endpoints remain **fully compatible**:
 ### Get All Applications
 
 ```json
-GET /api/applications
+GET /ats-checker/applications
 {
   "total_applications": 2,
   "applications": [
@@ -96,7 +96,7 @@ GET /api/applications
 ### Schedule Interview
 
 ```json
-POST /api/applications/{application_id}/schedule-interview
+POST /ats-checker/applications/{application_id}/schedule-interview
 {
   "success": true,
   "message": "Interview scheduled successfully",

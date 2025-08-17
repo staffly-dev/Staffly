@@ -133,7 +133,7 @@ if quiz_session.associated_cv_filename and quiz_session.associated_cv_filename.s
 **Before**:
 
 ```
-POST /api/quiz/submit
+POST /ats-checker/quiz/submit
 {
   "answers": "...",
   "quiz_data": "...",
@@ -145,7 +145,7 @@ POST /api/quiz/submit
 **After**:
 
 ```
-POST /api/quiz/submit
+POST /ats-checker/quiz/submit
 {
   "answers": "...",
   "quiz_data": "...",

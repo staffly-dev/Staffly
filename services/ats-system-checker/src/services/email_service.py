@@ -34,7 +34,7 @@ class EmailService:
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 587
         self.database_service = database_service
-        self.frontend_url = frontend_url.rstrip('/')  # Remove trailing slash
+        self.backend_url = frontend_url.rstrip('/')  # Remove trailing slash
     
     async def send_email_async(
         self, 
@@ -531,8 +531,8 @@ Sent with motivation from our ATS System
         """
         subject = f"Congratulations! You're Accepted - Complete Your Quiz for {job_title}"
         
-        # Generate personalized quiz link using frontend URL
-        quiz_link = f"{self.frontend_url}/quiz/{quiz_session_id}"
+        # Generate personalized quiz link using backend URL
+        quiz_link = f"{self.backend_url}/ats-checker/quiz/{quiz_session_id}"
         
         # Use the full candidate_name if provided
         if candidate_name and candidate_name.strip():

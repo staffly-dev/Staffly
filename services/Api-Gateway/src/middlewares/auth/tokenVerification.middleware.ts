@@ -11,7 +11,7 @@ import { Env } from '../../config/env.config';
 export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Skip token verification for public routes (like health check, login, etc.)
-    if (req.path.startsWith('/api/v1/hrms/auth') || req.path === '/hrms/health' || req.path === '/') {
+    if (req.path === '/hrms/health' || req.path.startsWith('/api/v1/hrms/auth') || req.path.startsWith('/api/v1/hrms/api-docs')) {
       return next();
     }
 

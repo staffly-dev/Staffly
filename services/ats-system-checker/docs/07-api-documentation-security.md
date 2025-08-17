@@ -86,10 +86,10 @@ Using curl or other HTTP clients:
 
 ```bash
 # With authentication
-curl -u "admin:admin123" http://localhost:4000/docs
+curl -u "admin:admin123" http://localhost:4002/docs
 
 # With Authorization header
-curl -H "Authorization: Basic YWRtaW46YWRtaW4xMjM=" http://localhost:4000/docs
+curl -H "Authorization: Basic YWRtaW46YWRtaW4xMjM=" http://localhost:4002/docs
 ```
 
 ### API Testing
