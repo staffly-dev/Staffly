@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
             gmail_user=settings.GMAIL_USER,
             gmail_password=settings.GMAIL_PASSWORD,
             database_service=app.state.database_service,
-            frontend_url=settings.FRONTEND_URL
+            frontend_url=settings.BACKEND_URL
         )
         app.state.evaluation_service = EvaluationService(
             ai_service_url=settings.AI_SERVICE_URL,
@@ -83,6 +83,15 @@ async def lifespan(app: FastAPI):
         
         # Print startup success message
         print("FastAPI connected to mongoose db connected")
+        
+        # Log AI service configuration
+        if settings.AI_SERVICE_URL and settings.AI_SERVICE_URL.strip():
+            logger.info(f"AI Service configured: {settings.AI_SERVICE_URL}")
+            logger.info(f"AI Service enabled: {settings.AI_SERVICE_ENABLED}")
+            logger.info(f"AI Service fallback: {settings.AI_SERVICE_FALLBACK}")
+        else:
+            logger.warning("AI Service URL not configured - using fallback processing")
+            logger.info(f"AI Service fallback: {settings.AI_SERVICE_FALLBACK}")
         
         # Display startup information using environment-based configuration
         _display_startup_info(settings)
@@ -105,21 +114,27 @@ async def lifespan(app: FastAPI):
 def _display_startup_info(settings):
     """Display startup information using environment configuration"""
     # Use environment-based host display
-    display_host = "localhost" if settings.API_HOST == "0.0.0.0" else settings.API_HOST
+    display_host = "0.0.0.0" if settings.API_HOST == "0.0.0.0" else settings.API_HOST
+    
+    # Get port from environment or use default
+    port = os.getenv("PORT", settings.API_PORT)
     
     print(f"ATS System Backend Started Successfully")
     print(f"Environment: {settings.ENV.upper()}")
-    print(f"API Host: {settings.API_HOST}:{settings.API_PORT}")
-    print(f"API Documentation: http://{display_host}:{settings.API_PORT}/docs (Authentication Required)")
-    print(f"Alternative Docs: http://{display_host}:{settings.API_PORT}/redoc (Authentication Required)")
-    print(f"OpenAPI Schema: http://{display_host}:{settings.API_PORT}/openapi.json (Authentication Required)")
+    print(f"API Host: {display_host}:{port}")
     
+    # Use computed properties to get the correct base URLs
     if settings.DOCS_AUTH_ENABLED:
+        print(f"API Documentation: http://{display_host}:{port}/docs")
+        print(f"Alternative Docs: http://{display_host}:{port}/redoc")
+        print(f"OpenAPI Schema: http://{display_host}:{port}/openapi.json")
         print(f"Default credentials: {settings.DOCS_USERNAME}:{settings.DOCS_PASSWORD}")
+    else:
+        print("API Documentation: DISABLED (DOCS_AUTH_ENABLED=false)")
     
     # Display service URLs
-    if settings.FRONTEND_URL:
-        print(f" Frontend URL: {settings.FRONTEND_URL}")
+    if settings.BACKEND_URL:
+        print(f"Backend URL: {settings.BACKEND_URL}")
     
     if settings.AI_SERVICE_URL:
         print(f"AI Service URL: {settings.AI_SERVICE_URL}")
@@ -149,7 +164,7 @@ app = FastAPI(
     openapi_url="/openapi.json" if settings.DOCS_AUTH_ENABLED else None
 )
 
-# Add CORS middleware
+# Add CORS middleware with Railway-friendly configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.get_cors_origins(),
@@ -159,9 +174,17 @@ app.add_middleware(
 )
 
 # Add security middleware (order matters - most restrictive first)
+# Only add DocsAuthenticationMiddleware if authentication is enabled
+if settings.DOCS_AUTH_ENABLED:
+    app.add_middleware(DocsAuthenticationMiddleware)
+
 app.add_middleware(EnhancedSecurityMiddleware)
-app.add_middleware(FileUploadSecurityMiddleware)
-app.add_middleware(DocsAuthenticationMiddleware)
+
+# Only add FileUploadSecurityMiddleware if file uploads are not completely disabled
+if not (settings.ALLOW_JOB_APPLICATION_UPLOADS and settings.ALLOW_GENERAL_FILE_UPLOADS):
+    app.add_middleware(FileUploadSecurityMiddleware)
+else:
+    logger.info("File upload security middleware disabled - all uploads allowed")
 
 # Add request logging middleware
 app.add_middleware(RequestLoggingMiddleware)
@@ -179,7 +202,7 @@ app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_FOLDER), name="uploa
 app.mount("/evaluations", StaticFiles(directory=settings.EVALUATIONS_FOLDER), name="evaluations")
 
 # Root endpoint
-@app.get("", tags=["Root"])
+@app.get("/", tags=["Root"])
 async def root():
     """Root endpoint with service information"""
     return {
@@ -189,6 +212,13 @@ async def root():
         "environment": settings.ENV,
         "status": "running",
         "docs": f"/docs" if settings.DOCS_AUTH_ENABLED else "disabled",
+        "available_endpoints": {
+            "health": "/ats-checker/health/simple",
+            "jobs": "/ats-checker/jobs",
+            "s3_upload": "/ats-checker/s3/upload",
+            "s3_status": "/ats-checker/s3/status",
+            "documentation": "/docs" if settings.DOCS_AUTH_ENABLED else "disabled"
+        },
         "timestamp": datetime.now().isoformat()
     }
 
@@ -228,6 +258,27 @@ async def debug_database():
                 "cv_evaluations": evaluation_count
             },
             "status": "healthy" if health_status else "unhealthy"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "status": "error"
+        }
+
+# Add debug endpoint for environment configuration
+@app.get("/ats-checker/debug/env", tags=["debug"])
+async def debug_environment():
+    """Debug environment configuration and URL generation"""
+    try:
+        return {
+            "environment_info": settings.get_environment_info(),
+            "urls": {
+                "backend_url": settings.get_backend_url(),
+                "uploads_url": settings.get_uploads_url(),
+                "api_docs_url": settings.api_documentation_url,
+                "cors_origins": settings.get_cors_origins()
+            },
+            "status": "success"
         }
     except Exception as e:
         return {
@@ -309,7 +360,7 @@ if __name__ == "__main__":
     
     # Run the application
     uvicorn.run(
-        app,
+        "src.main:app",
         host=settings.API_HOST,
         port=settings.API_PORT,
         reload=settings.DEBUG,

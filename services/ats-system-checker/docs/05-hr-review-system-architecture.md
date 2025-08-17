@@ -42,7 +42,7 @@ Each application document contains exactly the fields you specified:
 
 ### 1. Get All Applications
 
-**Endpoint**: `GET /api/applications`
+**Endpoint**: `GET /ats-checker/applications`
 
 **Description**: Retrieves all applications for HR review
 
@@ -69,7 +69,7 @@ Each application document contains exactly the fields you specified:
 
 ### 2. Schedule Interview
 
-**Endpoint**: `POST /api/applications/{application_id}/schedule-interview`
+**Endpoint**: `POST /ats-checker/applications/{application_id}/schedule-interview`
 
 **Description**: Updates application status to "INTERVIEW_SCHEDULED"
 
@@ -121,7 +121,7 @@ const HRApplicationsList = () => {
 
   const fetchApplications = async () => {
     try {
-      const response = await fetch("/api/applications");
+      const response = await fetch("/ats-checker/applications");
       const data = await response.json();
       setApplications(data.applications);
     } catch (error) {
@@ -134,7 +134,7 @@ const HRApplicationsList = () => {
   const scheduleInterview = async (applicationId) => {
     try {
       const response = await fetch(
-        `/api/applications/${applicationId}/schedule-interview`,
+        `/ats-checker/applications/${applicationId}/schedule-interview`,
         {
           method: "POST",
         }
@@ -264,7 +264,7 @@ db.applications.find({
 
 ### 3. HR Review
 
-1. HR views applications via `/api/applications`
+1. HR views applications via `/ats-checker/applications`
 2. HR selects candidates for interview
 3. HR clicks "Schedule Interview" → Status updated to "INTERVIEW_SCHEDULED"
 

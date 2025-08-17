@@ -211,19 +211,19 @@ cv_filename = "https://your-bucket.s3.us-east-1.amazonaws.com/cv_uploads/2024010
 1. **Test S3 Status**:
 
    ```bash
-   curl http://localhost:4000/upload/status
+   curl http://localhost:4002/upload/status
    ```
 
 2. **Test File Upload**:
 
    ```bash
-   curl -X POST http://localhost:4000/upload \
+   curl -X POST http://localhost:4002/upload \
      -F "file=@test.pdf"
    ```
 
 3. **Test Application Submission**:
    ```bash
-   curl -X POST http://localhost:4000/api/jobs/{job_id}/apply \
+   curl -X POST http://localhost:4002/ats-checker/jobs/{job_id}/apply \
      -F "cv_file=@resume.pdf" \
      -F "candidate_email=test@example.com" \
      -F "candidate_name=Test User"

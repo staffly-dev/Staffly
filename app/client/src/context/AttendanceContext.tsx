@@ -33,7 +33,7 @@ interface EmployeeInfo {
 }
 
 // Types for Attendance
-interface AttendanceRecord {
+export interface AttendanceRecord {
   _id: string;
   employeeId: EmployeeInfo;
   date: string;

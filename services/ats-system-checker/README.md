@@ -52,22 +52,22 @@ Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 
 ### Job Management
 
-| Endpoint                   | Method | Description                |
-| -------------------------- | ------ | -------------------------- |
-| `/api/jobs`                | POST   | Create new job posting     |
-| `/api/jobs`                | GET    | List all job postings      |
-| `/api/jobs/{job_id}`       | GET    | Get job posting details    |
-| `/api/jobs/{job_id}`       | PUT    | Update job posting         |
-| `/api/jobs/{job_id}`       | DELETE | Delete job posting         |
-| `/api/jobs/{job_id}/apply` | POST   | Submit application for job |
+| Endpoint                           | Method | Description                |
+| ---------------------------------- | ------ | -------------------------- |
+| `/ats-checker/jobs`                | POST   | Create new job posting     |
+| `/ats-checker/jobs`                | GET    | List all job postings      |
+| `/ats-checker/jobs/{job_id}`       | GET    | Get job posting details    |
+| `/ats-checker/jobs/{job_id}`       | PUT    | Update job posting         |
+| `/ats-checker/jobs/{job_id}`       | DELETE | Delete job posting         |
+| `/ats-checker/jobs/{job_id}/apply` | POST   | Submit application for job |
 
 ### Application Management
 
-| Endpoint                                        | Method | Description             |
-| ----------------------------------------------- | ------ | ----------------------- |
-| `/api/applications`                             | GET    | List all applications   |
-| `/api/applications/{app_id}`                    | GET    | Get application details |
-| `/api/applications/{app_id}/schedule-interview` | POST   | Schedule interview      |
+| Endpoint                                                | Method | Description             |
+| ------------------------------------------------------- | ------ | ----------------------- |
+| `/ats-checker/applications`                             | GET    | List all applications   |
+| `/ats-checker/applications/{app_id}`                    | GET    | Get application details |
+| `/ats-checker/applications/{app_id}/schedule-interview` | POST   | Schedule interview      |
 
 ### AWS S3 File Operations
 
@@ -81,22 +81,22 @@ Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 
 ### Quiz System
 
-| Endpoint                 | Method | Description            |
-| ------------------------ | ------ | ---------------------- |
-| `/api/quiz/{session_id}` | GET    | Get quiz questions     |
-| `/api/quiz/submit`       | POST   | Submit quiz answers    |
-| `/api/quiz/users`        | GET    | List quiz participants |
+| Endpoint                         | Method | Description            |
+| -------------------------------- | ------ | ---------------------- |
+| `/ats-checker/quiz/{session_id}` | GET    | Get quiz questions     |
+| `/ats-checker/quiz/submit`       | POST   | Submit quiz answers    |
+| `/ats-checker/quiz/users`        | GET    | List quiz participants |
 
 ### System & Analytics
 
-| Endpoint                       | Method | Description                 |
-| ------------------------------ | ------ | --------------------------- |
-| `/health`                      | GET    | System health check         |
-| `/api/statistics/applications` | GET    | Application statistics      |
-| `/api/statistics/jobs`         | GET    | Job posting statistics      |
-| `/api/statistics/quiz`         | GET    | Quiz performance statistics |
+| Endpoint                               | Method | Description                 |
+| -------------------------------------- | ------ | --------------------------- |
+| `/health`                              | GET    | System health check         |
+| `/ats-checker/statistics/applications` | GET    | Application statistics      |
+| `/ats-checker/statistics/jobs`         | GET    | Job posting statistics      |
+| `/ats-checker/statistics/quiz`         | GET    | Quiz performance statistics |
 
-Interactive API docs: [http://localhost:4000/docs](http://localhost:4000/docs)
+Interactive API docs: [http://localhost:4002/docs](http://localhost:4002/docs)
 
 ## 🔐 API Documentation Authentication
 
@@ -147,7 +147,7 @@ Create a `.env` file in the `services/ats-system-checker/` directory with:
 ```bash
 # Server Configuration
 API_HOST=0.0.0.0
-API_PORT=4000
+API_PORT=4002
 FRONTEND_URL=http://localhost:3000
 
 # Database Configuration
@@ -201,9 +201,9 @@ python -m src.main
 
 ### 5. Access the API
 
-- **API Documentation**: http://localhost:4000/docs (Authentication Required)
-- **Alternative Docs**: http://localhost:4000/redoc (Authentication Required)
-- **Health Check**: http://localhost:4000/health
+- **API Documentation**: http://localhost:4002/docs (Authentication Required)
+- **Alternative Docs**: http://localhost:4002/redoc (Authentication Required)
+- **Health Check**: http://localhost:4002/health
 
 **Note**: API documentation requires authentication. Default credentials are `admin:admin123`. Change these in production!
 
@@ -218,14 +218,14 @@ python test_s3_integration.py
 ### Test File Upload
 
 ```bash
-curl -X POST http://localhost:4000/ats-checker/upload \
+curl -X POST http://localhost:4002/ats-checker/upload \
   -F "file=@test.pdf"
 ```
 
 ### Test Application Submission
 
 ```bash
-curl -X POST http://localhost:4000/api/jobs/{job_id}/apply \
+curl -X POST http://localhost:4002/ats-checker/jobs/{job_id}/apply \
   -F "cv_file=@resume.pdf" \
   -F "candidate_email=test@example.com" \
   -F "candidate_name=Test User"
@@ -280,7 +280,7 @@ src/
 - **[S3 Setup Guide](./S3_SETUP.md)** - Complete AWS S3 configuration
 - **[Environment Template](./env.example)** - Sample environment variables
 - **[Test Script](./test_s3_integration.py)** - S3 integration testing
-- **[API Documentation](http://localhost:4000/docs)** - Interactive API docs
+- **[API Documentation](http://localhost:4002/docs)** - Interactive API docs
 
 ## 🤝 Contributing
 

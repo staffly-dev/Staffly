@@ -30,7 +30,8 @@ class Settings(BaseSettings):
     # Application Configuration
     ENV: str = Field(default="development", description="Environment (development/production)")
     DEBUG: bool = Field(default=True, description="Debug mode")
-    FRONTEND_URL: str = Field(default="", description="Frontend base URL for links")
+    BACKEND_URL: str = Field(default="", description="Backend base URL for links")
+    PRODUCTION_URL: str = Field(default="https://ats-system-checker-backend-production.up.railway.app", description="Production base URL for links")
     MAX_FILE_SIZE: int = Field(default=16777216, description="Maximum file size in bytes (16MB)")
     ALLOWED_EXTENSIONS: str = Field(default="pdf,docx", description="Allowed file extensions")
     
@@ -103,6 +104,10 @@ class Settings(BaseSettings):
     EVALUATIONS_FOLDER: str = Field(default="evaluations", description="Evaluations folder path")
     UPLOADS_BASE_URL: str = Field(default="", description="Base URL for uploads and CV files")
     
+    # File Upload Security
+    ALLOW_JOB_APPLICATION_UPLOADS: bool = Field(default=True, description="Allow file uploads for job applications")
+    ALLOW_GENERAL_FILE_UPLOADS: bool = Field(default=False, description="Allow general file uploads (disabled for security)")
+    
     # Quiz Configuration
     QUIZ_TIME_LIMIT: int = Field(default=300, description="Quiz time limit in seconds")
     QUIZ_PASS_THRESHOLD: int = Field(default=7, description="Minimum score to pass quiz")
@@ -110,6 +115,11 @@ class Settings(BaseSettings):
     # API Configuration
     API_HOST: str = Field(default="0.0.0.0", description="API host")
     API_PORT: int = Field(default=4000, description="API port")
+    
+    # API Documentation URLs
+    API_DOCUMENTATION: str = Field(default="", description="API documentation base URL")
+    ALTERNATIVE_DOCS: str = Field(default="", description="Alternative documentation base URL")
+    OPENAPI_SCHEMA: str = Field(default="", description="OpenAPI schema base URL")
     
     # Additional Ports & Hosts
     PORT: int = Field(default=4005, description="Port")
@@ -154,25 +164,35 @@ class Settings(BaseSettings):
         default="",
         description="Base URL for the AI microservice")
     
+    # AI Service Configuration
+    AI_SERVICE_ENABLED: bool = Field(default=True, description="Enable AI service integration")
+    AI_SERVICE_FALLBACK: bool = Field(default=True, description="Enable fallback processing when AI service is unavailable")
+    
     class Config:
         env_file = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
         env_file_encoding = "utf-8"
         case_sensitive = True
         extra = "ignore"  # Ignore extra environment variables
     
-    @validator('FRONTEND_URL', 'MONGODB_URL', 'UPLOADS_BASE_URL', 'AI_SERVICE_URL', pre=True)
+    @validator('BACKEND_URL', 'MONGODB_URL', 'UPLOADS_BASE_URL', 'AI_SERVICE_URL', 'API_DOCUMENTATION', 'ALTERNATIVE_DOCS', 'OPENAPI_SCHEMA', pre=True)
     def validate_urls(cls, v):
         """Validate and set default URLs based on environment"""
         if not v:
             if os.getenv('ENV') == 'development':
-                if 'FRONTEND_URL' in cls.__fields__:
-                    return "http://localhost:3000"
+                if 'BACKEND_URL' in cls.__fields__:
+                    return "http://localhost:4000"
                 elif 'MONGODB_URL' in cls.__fields__:
                     return "mongodb://localhost:27017"
                 elif 'UPLOADS_BASE_URL' in cls.__fields__:
                     return "http://localhost:4000"
                 elif 'AI_SERVICE_URL' in cls.__fields__:
                     return "http://localhost:5000"
+                elif 'API_DOCUMENTATION' in cls.__fields__:
+                    return "http://localhost:4000"
+                elif 'ALTERNATIVE_DOCS' in cls.__fields__:
+                    return "http://localhost:4000"
+                elif 'OPENAPI_SCHEMA' in cls.__fields__:
+                    return "http://localhost:4000"
             else:
                 # Production defaults - these should be set in .env
                 return ""
@@ -198,7 +218,35 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         """Check if running in production mode"""
-        return self.ENV.lower() == "production"
+        # Check explicit environment setting
+        if self.ENV.lower() == "production":
+            return True
+        
+        # Check if running on Railway (production)
+        if "railway" in os.getenv("HOSTNAME", "").lower():
+            return True
+        
+        # Check if running on Heroku
+        if os.getenv("DYNO"):
+            return True
+        
+        # Check if running on AWS
+        if os.getenv("AWS_EXECUTION_ENV"):
+            return True
+        
+        # Check if running on Google Cloud
+        if os.getenv("GOOGLE_CLOUD_PROJECT"):
+            return True
+        
+        # Check if running on Azure
+        if os.getenv("WEBSITE_SITE_NAME"):
+            return True
+        
+        # Check if DEBUG is explicitly set to False
+        if self.DEBUG is False:
+            return True
+        
+        return False
     
     @property
     def s3_bucket_url(self) -> str:
@@ -209,6 +257,24 @@ class Settings(BaseSettings):
             return f"https://{self.AWS_S3_BUCKET}.s3.{self.AWS_REGION}.amazonaws.com"
         else:
             return ""
+    
+    @property
+    def api_documentation_url(self) -> str:
+        """Get API documentation URL based on current host and port"""
+        host = "localhost" if self.API_HOST == "0.0.0.0" else self.API_HOST
+        return f"http://{host}:{self.API_PORT}"
+    
+    @property
+    def alternative_docs_url(self) -> str:
+        """Get alternative documentation URL based on current host and port"""
+        host = "localhost" if self.API_HOST == "0.0.0.0" else self.API_HOST
+        return f"http://{host}:{self.API_PORT}"
+    
+    @property
+    def openapi_schema_url(self) -> str:
+        """Get OpenAPI schema URL based on current host and port"""
+        host = "localhost" if self.API_HOST == "0.0.0.0" else self.API_HOST
+        return f"http://{host}:{self.API_PORT}"
     
     def get_cors_origins(self) -> list:
         """Get CORS allowed origins from environment variables"""
@@ -223,10 +289,6 @@ class Settings(BaseSettings):
             origins.append(self.CORS_ORIGIN.rstrip("/"))
         
         # Add frontend URL if not already included
-        if self.FRONTEND_URL and self.FRONTEND_URL not in origins:
-            origins.append(self.FRONTEND_URL.rstrip("/"))
-        
-        # Add frontend origin if not already included
         if self.FRONTEND_ORIGIN and self.FRONTEND_ORIGIN not in origins:
             origins.append(self.FRONTEND_ORIGIN.rstrip("/"))
         
@@ -248,25 +310,35 @@ class Settings(BaseSettings):
         
         return origins
     
-    def get_frontend_url(self) -> str:
-        """Get frontend URL from environment variables"""
-        if self.FRONTEND_URL:
-            return self.FRONTEND_URL
-        elif self.is_development:
-            return "http://localhost:3000"
+    def get_backend_url(self) -> str:
+        """Get backend URL from environment variables"""
+        if self.BACKEND_URL and self.BACKEND_URL.strip():
+            # Clean the BACKEND_URL to remove any trailing commas or malformed values
+            clean_url = self.BACKEND_URL.strip().rstrip(',').rstrip('/')
+            if clean_url and not clean_url.endswith(','):
+                return clean_url
+        
+        # Environment-specific fallbacks
+        if self.is_development:
+            return "http://localhost:4002"
         else:
-            # In production, FRONTEND_URL should be set in .env
-            return self.FRONTEND_URL or "http://localhost:3000"
+            # Production fallback - use PRODUCTION_URL if set, otherwise default
+            return self.PRODUCTION_URL or "https://ats-system-checker-backend-production.up.railway.app"
     
     def get_uploads_url(self) -> str:
         """Get uploads URL from environment variables"""
-        if self.UPLOADS_BASE_URL:
-            return self.UPLOADS_BASE_URL
-        elif self.is_development:
-            return "http://localhost:4000"
+        if self.UPLOADS_BASE_URL and self.UPLOADS_BASE_URL.strip():
+            # Clean the UPLOADS_BASE_URL to remove any trailing commas or malformed values
+            clean_url = self.UPLOADS_BASE_URL.strip().rstrip(',').rstrip('/')
+            if clean_url and not clean_url.endswith(','):
+                return clean_url
+        
+        # Environment-specific fallbacks
+        if self.is_development:
+            return "http://localhost:4002"
         else:
-            # In production, UPLOADS_BASE_URL should be set in .env
-            return self.UPLOADS_BASE_URL or "http://localhost:4000"
+            # Production fallback - use PRODUCTION_URL if set, otherwise default
+            return self.PRODUCTION_URL or "https://ats-system-checker-backend-production.up.railway.app"
     
     @property
     def security_headers_enabled(self) -> bool:
@@ -312,6 +384,26 @@ class Settings(BaseSettings):
         if not self.DDOS_BLACKLIST:
             return set()
         return set(ip.strip() for ip in self.DDOS_BLACKLIST.split(","))
+
+    def get_environment_info(self) -> dict:
+        """Get detailed environment information for debugging"""
+        return {
+            "ENV": self.ENV,
+            "DEBUG": self.DEBUG,
+            "is_development": self.is_development,
+            "is_production": self.is_production,
+            "BACKEND_URL": self.BACKEND_URL,
+            "PRODUCTION_URL": self.PRODUCTION_URL,
+            "UPLOADS_BASE_URL": self.UPLOADS_BASE_URL,
+            "HOSTNAME": os.getenv("HOSTNAME", "unknown"),
+            "RAILWAY_ENVIRONMENT": os.getenv("RAILWAY_ENVIRONMENT", "not_set"),
+            "HEROKU_APP_NAME": os.getenv("HEROKU_APP_NAME", "not_set"),
+            "AWS_EXECUTION_ENV": os.getenv("AWS_EXECUTION_ENV", "not_set"),
+            "GOOGLE_CLOUD_PROJECT": os.getenv("GOOGLE_CLOUD_PROJECT", "not_set"),
+            "WEBSITE_SITE_NAME": os.getenv("WEBSITE_SITE_NAME", "not_set"),
+            "computed_frontend_url": self.get_backend_url(),
+            "computed_uploads_url": self.get_uploads_url()
+        }
 
 
 @lru_cache()
