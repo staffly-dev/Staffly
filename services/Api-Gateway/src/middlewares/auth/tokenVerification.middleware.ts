@@ -15,12 +15,11 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
       req.path === '/' ||
       req.path === '/services' ||
       req.path === '/services/status' ||
-      req.path === '/hrms/health' ||
+      req.path.startsWith('/api/v1/hrms/health') ||
       req.path.startsWith('/api/v1/hrms/auth') ||
       req.path.startsWith('/api/v1/hrms/api-docs') ||
-      req.path.startsWith('/api/v1/ats_checker') ||
-      req.path.startsWith('/api/v1/ats_checker/health/simple') ||
-      req.path.startsWith('/api/v1/ats_checker/docs')
+      req.path.startsWith('/api/v1/ats-checker/health/simple') ||
+      req.path.startsWith('/api/v1/ats-checker/docs')
     ) {
       return next();
     }
