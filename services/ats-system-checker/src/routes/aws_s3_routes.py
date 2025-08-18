@@ -25,14 +25,16 @@ async def upload_file(
     
     Returns a JSON response with:
     - **success**: Upload success status
-    - **file_url**: Direct URL to access the uploaded file
+    - **file_url**: Clean backend URL to stream the file (preferred)
+    - **presigned_url**: Time-limited URL to access the uploaded file
+    - **s3_object_url**: Direct S3 object URL (may not be publicly accessible)
     - **s3_key**: S3 object key for future reference
     - **original_filename**: Original filename
     - **file_size**: File size in bytes
     - **content_type**: MIME type of the file
     - **uploaded_at**: Upload timestamp
     
-    The uploaded file will be publicly accessible via the returned URL.
+    Note: Objects are private by default. Use the returned presigned URL or generate one later via the presign endpoint.
     """
     result = await controller.upload_file(file)
     return JSONResponse(status_code=200, content=result)
@@ -73,7 +75,7 @@ async def debug_s3_service(
     return JSONResponse(status_code=200, content=debug_info)
 
 
-@router.delete("/s3/{s3_key}", summary="Delete File from S3")
+@router.delete("/s3/{s3_key:path}", summary="Delete File from S3")
 async def delete_file(
     s3_key: str,
     controller = Depends(get_aws_s3_controller)
@@ -81,7 +83,7 @@ async def delete_file(
     """
     Delete a file from S3 bucket.
     
-    - **s3_key**: S3 object key of the file to delete
+    - **s3_key**: S3 object key of the file to delete. Accepts keys with folder prefixes; if a bare filename is provided, the service will attempt to resolve it.
     
     Returns confirmation of deletion.
     """
@@ -89,17 +91,29 @@ async def delete_file(
     return JSONResponse(status_code=200, content=result)
 
 
-@router.get("/s3/url/{s3_key}", summary="Get File URL from S3")
-async def get_file_url(
+
+@router.get("/s3/presign/{s3_key:path}", summary="Generate Presigned URL for S3 Object")
+async def get_presigned_url(
+    s3_key: str,
+    expires_in: int = 3600,
+    controller = Depends(get_aws_s3_controller)
+):
+    """
+    Generate a presigned URL for a private S3 object.
+    
+    - **s3_key**: S3 object key (accepts keys with slashes)
+    - **expires_in**: Expiration time in seconds (default: 3600)
+    """
+    result = await controller.get_presigned_url(s3_key, expires_in)
+    return JSONResponse(status_code=200, content=result)
+
+
+@router.get("/s3/file/{s3_key:path}", summary="Stream S3 file via backend")
+async def stream_file(
     s3_key: str,
     controller = Depends(get_aws_s3_controller)
 ):
     """
-    Get the public URL for a file in S3.
-    
-    - **s3_key**: S3 object key of the file
-    
-    Returns the public URL if the file exists.
+    Stream a file through the backend without exposing AWS query params.
     """
-    result = await controller.get_file_url(s3_key)
-    return JSONResponse(status_code=200, content=result) 
+    return await controller.download_file(s3_key)

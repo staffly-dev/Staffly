@@ -5,6 +5,7 @@ Handles file upload operations to AWS S3
 
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
 
 from src.services.s3_service import S3Service
 from src.utils.logging_config import get_logger
@@ -92,14 +93,18 @@ class AWS_S3Controller:
         """
         try:
             logger.info(f"Attempting to delete file from S3: {s3_key}")
-            
-            success = await self.s3_service.delete_file(s3_key)
+
+            # Normalize key: add folder prefix if only filename provided
+            normalized_key = s3_key if "/" in s3_key else f"cv_uploads/{s3_key}"
+            logger.info(f"Normalized S3 key for deletion: {normalized_key}")
+
+            success = await self.s3_service.delete_file(normalized_key)
             
             if success:
                 return {
                     "success": True,
-                    "message": f"File {s3_key} deleted successfully",
-                    "deleted_at": "2024-01-01T00:00:00Z"  # You can add actual timestamp
+                    "message": f"File {normalized_key} deleted successfully",
+                    "deleted_at": __import__("datetime").datetime.utcnow().isoformat() + "Z"
                 }
             else:
                 raise HTTPException(
@@ -116,38 +121,48 @@ class AWS_S3Controller:
                 detail=f"Error deleting file: {str(e)}"
             )
     
-    async def get_file_url(self, s3_key: str) -> dict:
+
+    async def get_presigned_url(self, s3_key: str, expires_in: int = 3600) -> dict:
         """
-        Get the public URL for a file in S3
-        
-        Args:
-            s3_key: S3 object key of the file
-            
-        Returns:
-            dict: File URL information
+        Get a presigned URL for a private S3 object
         """
         try:
-            logger.info(f"Getting URL for file: {s3_key}")
-            
-            file_url = await self.s3_service.get_file_url(s3_key)
-            
-            if file_url:
-                return {
-                    "success": True,
-                    "file_url": file_url,
-                    "s3_key": s3_key
-                }
-            else:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"File not found: {s3_key}"
-                )
+            logger.info(f"Generating presigned URL for: {s3_key}")
+            normalized_key = s3_key if "/" in s3_key else f"cv_uploads/{s3_key}"
+            url = await self.s3_service.generate_presigned_url(normalized_key, expires_in)
+            if not url:
+                raise HTTPException(status_code=404, detail=f"File not found or presign failed: {normalized_key}")
+            return {"success": True, "presigned_url": url, "s3_key": normalized_key, "expires_in": expires_in}
                 
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Error getting file URL: {e}")
+            logger.error(f"Error generating presigned URL: {e}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Error getting file URL: {str(e)}"
+                detail=f"Error generating presigned URL: {str(e)}"
             ) 
+
+    async def download_file(self, s3_key: str):
+        """Stream a file from S3 via the backend to hide AWS details."""
+        try:
+            normalized_key = s3_key if "/" in s3_key else f"cv_uploads/{s3_key}"
+            result = await self.s3_service.get_file_bytes(normalized_key)
+            if not result:
+                raise HTTPException(status_code=404, detail="File not found")
+
+            data, content_type, content_length, original_filename = result
+
+            return StreamingResponse(
+                iter([data]),
+                media_type=content_type,
+                headers={
+                    "Content-Length": str(content_length),
+                    "Content-Disposition": f"inline; filename=\"{original_filename}\""
+                }
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error streaming file: {e}")
+            raise HTTPException(status_code=500, detail="Failed to stream file")

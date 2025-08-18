@@ -202,7 +202,6 @@ class S3Service:
                     Key=s3_key,
                     Body=file_content,
                     ContentType=file.content_type,
-                    ACL='public-read',  # Make file publicly accessible
                     Metadata={
                         'original_filename': file.filename,
                         'uploaded_at': datetime.now().isoformat(),
@@ -227,16 +226,34 @@ class S3Service:
                     detail=f"S3 upload verification failed: {str(verify_error)}"
                 )
             
-            # Generate public URL
-            file_url = f"{settings.s3_bucket_url}/{s3_key}"
+            # Build URLs
+            # - Backend URL (preferred, hides AWS details)
+            backend_base_url = settings.get_backend_url()
+            file_url = f"{backend_base_url}/ats-checker/s3/file/{s3_key}"
+            # - Raw S3 object URL (for internal/debugging)
+            s3_object_url = f"{settings.s3_bucket_url}/{s3_key}"
+
+            # Generate a presigned URL to access the private object
+            presigned_url = None
+            try:
+                presigned_url = self.s3_client.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': self.bucket_name, 'Key': s3_key},
+                    ExpiresIn=3600
+                )
+                logger.info("Generated presigned URL for uploaded object")
+            except Exception as e:
+                logger.warning(f"Failed to generate presigned URL: {e}")
             
             logger.info(f"Successfully uploaded {file.filename} to S3: {s3_key}")
-            logger.info(f"S3 file URL: {file_url}")
-            logger.info(f"S3 bucket URL from settings: {settings.s3_bucket_url}")
+            logger.info(f"Backend file URL: {file_url}")
+            logger.info(f"S3 object URL: {s3_object_url}")
             
             return {
                 "success": True,
                 "file_url": file_url,
+                "presigned_url": presigned_url,
+                "s3_object_url": s3_object_url,
                 "s3_key": s3_key,
                 "original_filename": file.filename,
                 "file_size": len(file_content),
@@ -278,35 +295,29 @@ class S3Service:
             logger.error(f"Failed to delete file from S3: {e}")
             return False
     
-    async def get_file_url(self, s3_key: str) -> Optional[str]:
+    
+
+    async def generate_presigned_url(self, s3_key: str, expires_in: int = 3600) -> Optional[str]:
         """
-        Get public URL for a file in S3
+        Generate a presigned URL for a private S3 object
         
         Args:
             s3_key: S3 object key
-            
+            expires_in: Expiration time in seconds
+        
         Returns:
-            Optional[str]: Public URL if file exists, None otherwise
+            Optional[str]: Presigned URL if generation succeeds, None otherwise
         """
         try:
             if not self.s3_client:
                 return None
-            
-            # Check if file exists
-            self.s3_client.head_object(Bucket=self.bucket_name, Key=s3_key)
-            
-            # Return public URL
-            return f"{settings.s3_bucket_url}/{s3_key}"
-            
-        except ClientError as e:
-            if e.response['Error']['Code'] == '404':
-                logger.warning(f"File not found in S3: {s3_key}")
-                return None
-            else:
-                logger.error(f"Error checking file in S3: {e}")
-                return None
+            return self.s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': self.bucket_name, 'Key': s3_key},
+                ExpiresIn=expires_in
+            )
         except Exception as e:
-            logger.error(f"Failed to get file URL: {e}")
+            logger.error(f"Failed to generate presigned URL: {e}")
             return None
     
     def is_configured(self) -> bool:
@@ -335,3 +346,32 @@ class S3Service:
             logger.info("S3 service is properly configured")
         
         return has_credentials and client_ready 
+
+    async def get_file_bytes(self, s3_key: str) -> Optional[tuple]:
+        """
+        Fetch an object from S3 and return its bytes and metadata.
+        Returns a tuple: (data: bytes, content_type: str, content_length: int, original_filename: str)
+        """
+        try:
+            if not self.s3_client:
+                logger.error("S3 client not initialized")
+                return None
+
+            logger.info(f"Fetching object bytes from S3: {s3_key}")
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=s3_key)
+            body = response.get('Body')
+            data = body.read() if body else b''
+            content_type = response.get('ContentType', 'application/octet-stream')
+            content_length = response.get('ContentLength', len(data))
+            original_filename = response.get('Metadata', {}).get('original_filename', s3_key.split('/')[-1])
+
+            return data, content_type, content_length, original_filename
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'NoSuchKey':
+                logger.warning(f"S3 object not found: {s3_key}")
+                return None
+            logger.error(f"ClientError fetching S3 object: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error fetching S3 object: {e}")
+            return None

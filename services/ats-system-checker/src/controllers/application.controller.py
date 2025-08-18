@@ -78,82 +78,63 @@ class ApplicationController:
     
     def _extract_s3_key(self, cv_filename: str) -> str:
         """
-        Extract S3 key or local filename from CV filename/URL
+        Extract S3 key from CV filename/URL
         
         Args:
             cv_filename: CV filename or URL
             
         Returns:
-            str: S3 key or local filename
+            str: S3 key (e.g., "file/cv_uploads/20250818_081330_3bf84580.pdf")
         """
         if not cv_filename:
             return ""
         
-        # If it's a full URL, extract just the filename
+        # If it's a full URL, extract the s3 key part
         if cv_filename.startswith('http'):
-            # Extract filename from URL path
-            if '/uploads/' in cv_filename:
-                return cv_filename.split('/uploads/')[-1]
+            # Extract s3 key from different URL patterns
+            if '/s3/file/' in cv_filename:
+                # Format: http://localhost:4002/ats-checker/s3/file/cv_uploads/filename.pdf
+                # Extract everything after /s3/file/
+                return cv_filename.split('/s3/file/')[-1]
             elif '/s3/' in cv_filename:
-                return cv_filename.split('/s3/')[-1]
+                # Format: http://localhost:4002/ats-checker/s3/file/cv_uploads/filename.pdf
+                # Extract everything after /s3/
+                s3_part = cv_filename.split('/s3/')[-1]
+                # If it doesn't start with 'file/', add it
+                if not s3_part.startswith('file/'):
+                    return f"file/{s3_part}"
+                return s3_part
+            elif '/uploads/' in cv_filename:
+                # Format: http://localhost:4002/uploads/filename.pdf -> file/cv_uploads/filename.pdf
+                filename = cv_filename.split('/uploads/')[-1]
+                return f"file/cv_uploads/{filename}"
             else:
-                # For other URL formats, try to get the last part after the last slash
-                return cv_filename.split('/')[-1]
+                # For other URL formats, assume it's just the filename and add the path
+                filename = cv_filename.split('/')[-1]
+                return f"file/cv_uploads/{filename}"
         
-        # If it's just a filename, return as is
-        return cv_filename
+        # If it's just a filename, add the S3 path structure
+        return f"file/cv_uploads/{cv_filename}"
 
     def _fix_cv_filename_url(self, cv_filename: str) -> str:
         """
-        Fix CV filename URL to ensure proper file access
+        Fix CV filename URL to use the s3 endpoint format
         
         Args:
             cv_filename: Original CV filename or URL
             
         Returns:
-            str: Corrected CV filename URL
+            str: Corrected CV filename URL in format: http://localhost:4002/ats-checker/s3/file/{s3_key}
         """
         if not cv_filename:
             return ""
         
-        # If it's already a full URL, return as is (including S3 URLs)
-        if cv_filename.startswith('http'):
-            # If it's a localhost URL, replace with production URL
-            if 'localhost:' in cv_filename:
-                return cv_filename.replace('http://localhost:4000', settings.get_uploads_url())
-            # If it's already a production URL or S3 URL, return as is
-            return cv_filename
+        # Extract the s3_key from the filename/URL
+        s3_key = self._extract_s3_key(cv_filename)
         
-        # If it's just a filename, construct the full URL
-        # Check if the file exists locally first
-        # Try multiple possible paths for the uploads directory
-        uploads_paths = [
-            os.path.join(os.path.dirname(__file__), "..", "..", settings.UPLOAD_FOLDER),  # Local development
-            os.path.join("/app", settings.UPLOAD_FOLDER),  # Docker container path
-            os.path.join(os.getcwd(), settings.UPLOAD_FOLDER),  # Current working directory
-            settings.UPLOAD_FOLDER,  # Relative path
-        ]
-        
-        file_found = False
-        for uploads_dir in uploads_paths:
-            local_file_path = os.path.join(uploads_dir, cv_filename)
-            if os.path.exists(local_file_path):
-                logger.info(f"File exists locally: {local_file_path}")
-                file_found = True
-                break
-        
-        if file_found:
-            # File exists locally, serve from uploads endpoint
-            return f"{settings.UPLOADS_BASE_URL}/uploads/{cv_filename}"
-        else:
-            # File doesn't exist locally, might be in S3
-            # Try to construct S3 URL if S3 is configured
-            if hasattr(settings, 'AWS_S3_BUCKET') and settings.AWS_S3_BUCKET:
-                return f"{settings.s3_bucket_url}/{cv_filename}"
-            else:
-                # Fallback to uploads endpoint
-                logger.warning(f"File not found locally in any of these paths: {uploads_paths}, but will try to serve from uploads endpoint")
-                return f"{settings.UPLOADS_BASE_URL}/uploads/{cv_filename}"
+        # Always return the URL in the s3 endpoint format
+        base_url = settings.get_backend_url()
+        return f"{base_url}/ats-checker/s3/file/{s3_key}"
     
     async def get_application_by_id(self, application_id: str) -> SingleApplicationResponse:
         """

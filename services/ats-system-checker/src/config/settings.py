@@ -114,7 +114,7 @@ class Settings(BaseSettings):
     
     # API Configuration
     API_HOST: str = Field(default="0.0.0.0", description="API host")
-    API_PORT: int = Field(default=4000, description="API port")
+    API_PORT: int = Field(default=4002, description="API port")
     
     # API Documentation URLs
     API_DOCUMENTATION: str = Field(default="", description="API documentation base URL")
@@ -122,10 +122,10 @@ class Settings(BaseSettings):
     OPENAPI_SCHEMA: str = Field(default="", description="OpenAPI schema base URL")
     
     # Additional Ports & Hosts
-    PORT: int = Field(default=4005, description="Port")
-    API_GATEWAY_PORT: int = Field(default=4005, description="API Gateway port")
-    SERVER_PORT: int = Field(default=4004, description="Server port")
-    ATS_SYSTEM_PORT: int = Field(default=4000, description="ATS System port")
+    PORT: int = Field(default=4002, description="Port")
+    API_GATEWAY_PORT: int = Field(default=4000, description="API Gateway port")
+    SERVER_PORT: int = Field(default=4002, description="Server port")
+    ATS_SYSTEM_PORT: int = Field(default=4002, description="ATS System port")
     AI_SERVICE_PORT: int = Field(default=5000, description="AI Service port")
     FRONTEND_PORT: int = Field(default=3000, description="Frontend port")
     
@@ -180,19 +180,20 @@ class Settings(BaseSettings):
         if not v:
             if os.getenv('ENV') == 'development':
                 if 'BACKEND_URL' in cls.__fields__:
-                    return "http://localhost:4000"
+                    return "http://localhost:4002"
                 elif 'MONGODB_URL' in cls.__fields__:
                     return "mongodb://localhost:27017"
                 elif 'UPLOADS_BASE_URL' in cls.__fields__:
-                    return "http://localhost:4000"
+                    return "http://localhost:4002"
                 elif 'AI_SERVICE_URL' in cls.__fields__:
-                    return "http://localhost:5000"
+                    # Prefer IPv4 loopback to avoid IPv6 localhost issues on some systems
+                    return "http://127.0.0.1:5000"
                 elif 'API_DOCUMENTATION' in cls.__fields__:
-                    return "http://localhost:4000"
+                    return "http://localhost:4002"
                 elif 'ALTERNATIVE_DOCS' in cls.__fields__:
-                    return "http://localhost:4000"
+                    return "http://localhost:4002"
                 elif 'OPENAPI_SCHEMA' in cls.__fields__:
-                    return "http://localhost:4000"
+                    return "http://localhost:4002"
             else:
                 # Production defaults - these should be set in .env
                 return ""
@@ -297,12 +298,12 @@ class Settings(BaseSettings):
             dev_origins = [
                 "http://localhost:3000",
                 "http://127.0.0.1:3000",
+                "http://localhost:4002",
+                "http://127.0.0.1:4002",
                 "http://localhost:4000",
                 "http://127.0.0.1:4000",
-                "http://localhost:4004",
-                "http://127.0.0.1:4004",
-                "http://localhost:4005",
-                "http://127.0.0.1:4005"
+                "http://localhost:4001",
+                "http://127.0.0.1:4001"
             ]
             for origin in dev_origins:
                 if origin not in origins:

@@ -200,9 +200,11 @@ class EvaluationService:
 
             if self.ai_service_url and self.ai_service_url.strip():
                 try:
+                    # Resolve AI URL; prefer 127.0.0.1 to avoid IPv6/localhost issues
+                    ai_url_base = self.ai_service_url.replace("localhost", "127.0.0.1")
                     async with httpx.AsyncClient() as client:
                         response = await client.post(
-                            f"{self.ai_service_url}/evaluate",
+                            f"{ai_url_base}/evaluate",
                             json={
                                 "cv_text": cv_text,
                                 "job_description": job_posting.description,
@@ -351,12 +353,31 @@ class EvaluationService:
         """
         import re
         
-        # Heuristic fallback: score based on keyword coverage from job description
-        job_desc = job_posting.description or ""
+        # Heuristic fallback: score based on keyword coverage from required skills + job description
+        job_desc = (job_posting.description or "")
         raw_tokens = re.split(r"[,\n\r;]+", job_desc)
-        skills = [t.strip().lower() for t in raw_tokens if t and len(t.strip()) > 1]
-        skills = [re.sub(r"[^a-z0-9+#\.\- ]", "", s) for s in skills]
-        skills = [s for s in skills if s]
+        desc_skills = [t.strip().lower() for t in raw_tokens if t and len(t.strip()) > 1]
+        desc_skills = [re.sub(r"[^a-z0-9+#\.\- ]", "", s) for s in desc_skills]
+        desc_skills = [s for s in desc_skills if s]
+
+        # Include explicit required skills from the job posting model
+        required_skills_list = []
+        try:
+            if getattr(job_posting, "required_skills", None):
+                required_skills_list = [str(s).strip().lower() for s in job_posting.required_skills if str(s).strip()]
+        except Exception:
+            required_skills_list = []
+
+        # Combine and de-duplicate while preserving order
+        combined: list[str] = []
+        seen = set()
+        for s in required_skills_list + desc_skills:
+            if not s or s in seen:
+                continue
+            seen.add(s)
+            combined.append(s)
+
+        skills = combined
         
         cv_lower = (cv_text or "").lower()
         matched = [s for s in skills if s and s in cv_lower]
@@ -365,7 +386,8 @@ class EvaluationService:
         
         decision = "ACCEPTED" if score >= job_posting.evaluation_threshold else "REJECTED"
         evaluation_text = (
-            f"Fallback evaluation: matched {len(matched)} of {len(skills)} job keywords. "
+            f"Heuristic evaluation using required skills + description keywords: "
+            f"matched {len(matched)} of {len(skills)} ['" + ", ".join(matched[:10]) + ("..." if len(matched) > 10 else "") + "']. "
             f"Score: {score}/{job_posting.evaluation_threshold} required."
         )
         
