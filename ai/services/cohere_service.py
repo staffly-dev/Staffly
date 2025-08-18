@@ -65,16 +65,31 @@ class CohereService:
         
         try:
             logger.info("Sending CV evaluation request to Cohere API...")
-            response = self.client.chat(
-                model='command-r-plus',
-                message=evaluation_prompt,
-                max_tokens=2500,
-                temperature=0.0,
-                k=0,
-                p=1.0
-            )
-            logger.info(" Successfully received response from Cohere API")
-            return response.text.strip()
+            
+            # Add timeout handling using concurrent.futures
+            import concurrent.futures
+            
+            def make_cohere_call():
+                return self.client.chat(
+                    model='command-r-plus',
+                    message=evaluation_prompt,
+                    max_tokens=2500,
+                    temperature=0.0,
+                    k=0,
+                    p=1.0
+                )
+            
+            # Use ThreadPoolExecutor with timeout
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(make_cohere_call)
+                try:
+                    response = future.result(timeout=30)  # 30-second timeout
+                    logger.info(" Successfully received response from Cohere API")
+                    return response.text.strip()
+                except concurrent.futures.TimeoutError:
+                    logger.error(" Cohere API call timed out after 30 seconds")
+                    return None
+                
         except cohere.CohereAPIError as e:
             logger.error(f" Cohere API error: {e}")
             return None
