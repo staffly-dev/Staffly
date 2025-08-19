@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Candidate } from "@/context/JobContext";
+import { handleCVLink } from "@/lib/utils";
 import Link from "next/link";
 import { FaFilePdf } from "react-icons/fa";
 import { IoMdMailOpen } from "react-icons/io";
@@ -76,7 +77,11 @@ export function CandidateInfoModal({
                 <Label className="text-sm">Resume Link</Label>
                 <p>
                   <Link
-                    href={candidate?.cv_filename}
+                    href={
+                      candidate?.cv_filename
+                        ? handleCVLink(candidate?.cv_filename)
+                        : ""
+                    }
                     target="_blank"
                     className="hover:text-primary flex items-center gap-1"
                   >

@@ -5,6 +5,10 @@ class TokenStore {
   private accessToken: string | null = null;
   private refreshPromise: Promise<string> | null = null;
   private initialized: boolean = false;
+  private refreshFailureCount: number = 0;
+  private lastRefreshFailureTime: number = 0;
+  private readonly MAX_REFRESH_FAILURES = 3;
+  private readonly FAILURE_RESET_TIMEOUT = 60 * 1000; // 1 minute
 
   private initializeIfNeeded(): void {
     if (!this.initialized && typeof window !== "undefined") {
@@ -19,6 +23,8 @@ class TokenStore {
     if (typeof window !== "undefined") {
       localStorage.setItem("accessToken", token);
     }
+    // Reset failure count on successful token set
+    this.resetRefreshFailures();
   }
 
   getAccessToken(): string | null {
@@ -51,6 +57,8 @@ class TokenStore {
     if (typeof window !== "undefined") {
       localStorage.setItem("refreshToken", token);
     }
+    // Reset failure count on successful refresh token set
+    this.resetRefreshFailures();
   }
 
   // Check if access token is expired (if it's a JWT)
@@ -106,6 +114,47 @@ class TokenStore {
 
   clearRefreshPromise(): void {
     this.refreshPromise = null;
+  }
+
+  // Track refresh failures and prevent infinite loops
+  recordRefreshFailure(): void {
+    const now = Date.now();
+
+    // Reset failure count if enough time has passed
+    if (now - this.lastRefreshFailureTime > this.FAILURE_RESET_TIMEOUT) {
+      this.refreshFailureCount = 0;
+    }
+
+    this.refreshFailureCount++;
+    this.lastRefreshFailureTime = now;
+
+    console.warn(
+      `Token refresh failed. Attempt ${this.refreshFailureCount}/${this.MAX_REFRESH_FAILURES}`
+    );
+  }
+
+  // Check if we should stop attempting refresh
+  shouldStopRefreshAttempts(): boolean {
+    return this.refreshFailureCount >= this.MAX_REFRESH_FAILURES;
+  }
+
+  // Reset failure count (called on successful operations)
+  resetRefreshFailures(): void {
+    this.refreshFailureCount = 0;
+    this.lastRefreshFailureTime = 0;
+  }
+
+  // Get current failure count for debugging
+  getRefreshFailureCount(): number {
+    return this.refreshFailureCount;
+  }
+
+  // Clear all tokens and reset state
+  clearAll(): void {
+    this.clearAccessToken();
+    this.clearRefreshToken();
+    this.clearRefreshPromise();
+    this.resetRefreshFailures();
   }
 }
 

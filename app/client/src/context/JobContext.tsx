@@ -21,7 +21,16 @@ export interface Job {
 }
 
 export interface CreateJobData {
-  [key: string]: string | number | boolean | File;
+  title: string;
+  description: string;
+  required_skills: string;
+  hr_email?: string;
+  additional_details?: string;
+  hr_name?: string;
+  evaluation_threshold?: number;
+  quiz_required?: boolean;
+  quiz_pass_threshold?: number;
+  is_active?: boolean;
 }
 
 export interface JobApplicationData {
@@ -113,6 +122,10 @@ export interface AdminStatistics {
   };
 }
 
+export interface S3Params {
+  key: string;
+}
+
 interface JobContextType {
   candidates: Candidate[];
   total_applications: number;
@@ -135,6 +148,7 @@ interface JobContextType {
   getAdminStatistics: () => Promise<AdminStatistics>;
   deleteApplication: (id: string) => Promise<unknown>;
   deleteJob: (id: string) => Promise<unknown>;
+  getS3Params: (key: string) => Promise<S3Params>;
 }
 
 const JobContext = createContext<JobContextType | undefined>(undefined);
@@ -152,7 +166,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/ats_checker/jobs`);
+      const response = await axiosInstance.get(`/ats-checker/jobs`);
       setJobs(response.data);
       return response.data;
     } catch (err: unknown) {
@@ -169,7 +183,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/ats_checker/jobs/${id}`);
+      const response = await axiosInstance.get(`/ats-checker/jobs/${id}`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -186,7 +200,15 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.post(`/ats_checker/jobs`, jobData);
+        const response = await axiosInstance.post(
+          `/ats-checker/jobs`,
+          jobData,
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        );
         const newJob = response.data;
         setJobs((prev) => [...prev, newJob]);
         return newJob;
@@ -195,6 +217,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
           (err as unknown as { response: { data: { message: string } } })
             .response?.data.message || "Failed to create job";
         setError(errorMessage);
+        throw err; // Re-throw the error so the component can handle it
       } finally {
         setLoading(false);
       }
@@ -211,7 +234,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const response = await axiosInstance.post(
-          `/ats_checker/jobs/${jobId}/apply`,
+          `/ats-checker/jobs/${jobId}/apply`,
           application
         );
         return response.data;
@@ -220,6 +243,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
           (err as unknown as { response: { data: { message: string } } })
             .response?.data.message || "Failed to apply for job";
         setError(errorMessage);
+        throw err;
       } finally {
         setLoading(false);
       }
@@ -234,7 +258,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const response = await axiosInstance.get(
-          `/ats_checker/quiz/${quizSessionId}`
+          `/ats-checker/quiz/${quizSessionId}`
         );
         return response.data?.data;
       } catch (err: unknown) {
@@ -253,7 +277,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/ats_checker/quiz/users`);
+      const response = await axiosInstance.get(`/ats-checker/quiz/users`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -269,7 +293,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/ats_checker/applications`);
+      const response = await axiosInstance.get(`/ats-checker/applications`);
       setCandidates(response.data.applications);
       setTotalApplications(response.data.total_applications);
       return response.data;
@@ -287,7 +311,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/ats_checker/statistics`);
+      const response = await axiosInstance.get(`/ats-checker/statistics`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -309,7 +333,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const response = await axiosInstance.post(
-          `/ats_checker/quiz/submit`,
+          `/ats-checker/quiz/submit`,
           {
             answers,
             quiz_session_id,
@@ -335,18 +359,39 @@ export function JobProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const getS3Params = useCallback(async (key: string): Promise<S3Params> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.get(`/ats-checker/s3/file/${key}`);
+      return response.data;
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as unknown as { response: { data: { message: string } } }).response
+          ?.data.message || "Failed to get S3 params";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const deleteApplication = useCallback(async (id: string): Promise<void> => {
     setDeleteLoading(true);
     setError(null);
     try {
       const response = await axiosInstance.delete(
-        `/ats_checker/applications/${id}`,
+        `/ats-checker/applications/${id}`,
         {
           data: {
             candidate_id: id,
           },
         }
       );
+      setCandidates((prev) =>
+        prev.filter((candidate) => candidate.application_id !== id)
+      );
+      setTotalApplications((prev) => prev - 1);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -362,7 +407,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     setDeleteLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.delete(`/ats_checker/jobs/${id}`);
+      const response = await axiosInstance.delete(`/ats-checker/jobs/${id}`);
       setJobs((prev) => prev.filter((job) => job.job_id !== id));
       return response.data;
     } catch (err: unknown) {
@@ -394,6 +439,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
     getAdminStatistics,
     deleteApplication,
     deleteJob,
+    getS3Params,
   };
 
   return <JobContext.Provider value={value}>{children}</JobContext.Provider>;

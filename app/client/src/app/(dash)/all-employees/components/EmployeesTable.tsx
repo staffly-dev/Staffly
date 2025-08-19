@@ -182,6 +182,14 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
                 </td>
               </tr>
             ))}
+            {!currentEmployees ||
+              (currentEmployees.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="text-center pt-4 text-yellow-500">
+                    No employees found
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>

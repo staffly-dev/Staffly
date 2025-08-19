@@ -100,3 +100,35 @@ export function stringToDate(date: string) {
   const [day, month, year] = date.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
+
+// Route detection utilities
+export const PUBLIC_ROUTES = [
+  "/login",
+  "/register",
+  "/sign-up",
+  "/reset",
+  "/code",
+  "/verify",
+  "/forgot-password",
+  "/reset-password",
+  "/congrats",
+  "/apply",
+  "/quiz",
+  "/docs",
+  "/company",
+  "/legal",
+  "/product",
+] as const;
+
+export const isPublicRoute = (path: string): boolean => {
+  return PUBLIC_ROUTES.some((route) => path.startsWith(route));
+};
+
+export const isProtectedRoute = (path: string): boolean => {
+  return !isPublicRoute(path);
+};
+
+export const handleCVLink = (link: string) => {
+  const key = link.split("/").pop();
+  return `https://ats-system-checker-backend-production.up.railway.app/ats-checker/s3/file/${key}`;
+};

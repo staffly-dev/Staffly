@@ -1,3 +1,5 @@
+import Footer from "@/components/navigation/footer";
+import Header from "@/components/navigation/header";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,5 +13,11 @@ export default function ApplyLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className="min-h-screen">{children}</div>;
+  return (
+    <div>
+      <Header />
+      <main className="mx-auto w-full relative">{children}</main>
+      <Footer />
+    </div>
+  );
 }

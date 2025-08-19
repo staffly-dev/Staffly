@@ -13,6 +13,7 @@ import { FaEye, FaFilePdf, FaTrash } from "react-icons/fa";
 import { CandidateInfoModal } from "./CandidateInfoModel";
 import { toast } from "sonner";
 import { FaSpinner } from "react-icons/fa6";
+import { handleCVLink } from "@/lib/utils";
 
 export default function CandidatesPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -114,7 +115,7 @@ function CandidatesTable({
     null
   );
   const [jobTitle, setJobTitle] = useState<string | undefined>(undefined);
-  const { deleteApplication, deleteLoading, getCandidates } = useJob();
+  const { deleteApplication, deleteLoading } = useJob();
   // const allSelected =
   //   candidates.length > 0 && selectedIds.length === candidates.length;
   // const someSelected =
@@ -140,7 +141,6 @@ function CandidatesTable({
         onClick: () => {
           deleteApplication(id);
           toast.success("Candidate deleted successfully");
-          getCandidates();
         },
       },
       cancel: {
@@ -190,7 +190,7 @@ function CandidatesTable({
             </td>
             <td className="capitalize">
               <Link
-                href={cand.cv_filename}
+                href={handleCVLink(cand.cv_filename)}
                 className="flex items-center gap-2 hover:text-primary"
                 target="_blank"
               >
@@ -242,6 +242,14 @@ function CandidatesTable({
             </td>
           </tr>
         ))}
+        {!candidates ||
+          (candidates.length === 0 && (
+            <tr>
+              <td colSpan={5} className="text-center pt-4 text-yellow-500">
+                No candidates yet
+              </td>
+            </tr>
+          ))}
       </tbody>
       <CandidateInfoModal
         open={open}
