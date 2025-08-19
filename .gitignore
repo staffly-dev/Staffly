@@ -19,7 +19,7 @@ pnpm-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 *.sublime-workspace
-
+./contents
 # Frontend (evo2-frontend - Next.js)
 
 # Backend (evo2-backend - Node.js)

@@ -48,3 +48,5 @@ yarn-error.log*
 # temporary folders
 tasks/
 temp/
+
+./contents
