@@ -735,6 +735,7 @@ class DatabaseService:
         additional_details: Optional[str] = None,
         hr_email: Optional[str] = None,
         hr_name: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
         evaluation_threshold: int = 70,
         quiz_required: bool = True,
         quiz_pass_threshold: int = 7
@@ -770,6 +771,7 @@ class DatabaseService:
                 description_hash=description_hash,
                 required_skills=required_skills,
                 additional_details=additional_details,
+                owner_user_id=owner_user_id,
                 hr_email=hr_email,
                 hr_name=hr_name,
                 evaluation_threshold=evaluation_threshold,
@@ -802,23 +804,35 @@ class DatabaseService:
             logger.error(f" Failed to get job posting: {e}")
             return None
     
-    async def get_all_job_postings(self, include_inactive: bool = False) -> List[JobPosting]:
+    async def get_all_job_postings(self, include_inactive: bool = False, owner_user_id: Optional[str] = None) -> List[JobPosting]:
         """
-        Get all job postings
+        Get job postings, optionally filtered by owner
         
         Args:
             include_inactive: Whether to include inactive job postings
+            owner_user_id: If provided, only return jobs created by this user
             
         Returns:
             List[JobPosting]: List of all job postings
         """
         try:
             if include_inactive:
-                # Get all job postings regardless of status
-                job_postings = await JobPosting.find_all().to_list()
+                if owner_user_id:
+                    job_postings = await JobPosting.find(
+                        JobPosting.owner_user_id == owner_user_id
+                    ).to_list()
+                else:
+                    job_postings = await JobPosting.find_all().to_list()
             else:
-                # Get only active job postings
-                job_postings = await JobPosting.find(JobPosting.is_active == True).to_list()
+                if owner_user_id:
+                    job_postings = await JobPosting.find(
+                        JobPosting.is_active == True,
+                        JobPosting.owner_user_id == owner_user_id
+                    ).to_list()
+                else:
+                    job_postings = await JobPosting.find(
+                        JobPosting.is_active == True
+                    ).to_list()
             
             logger.info(f" Retrieved {len(job_postings)} job postings")
             return job_postings

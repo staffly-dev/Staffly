@@ -4,7 +4,7 @@ Job posting management endpoints
 """
 
 from typing import Optional
-from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, Query
+from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, Query, Header
 from fastapi.responses import JSONResponse
 
 from src.controllers import JobController
@@ -17,6 +17,7 @@ router = APIRouter(tags=["jobs"])
 @router.get("/jobs", response_model=list[JobPostingResponse], summary="Get All Job Postings")
 async def get_all_job_postings(
     include_inactive: bool = Query(False, description="Whether to include inactive job postings"),
+    x_user_id: Optional[str] = Header(default=None, alias="X-User-Id"),
     controller: JobController = Depends(get_job_controller)  # type: ignore
 ):
     """
@@ -26,7 +27,7 @@ async def get_all_job_postings(
     
     Returns a list of all job postings with their details and shareable links.
     """
-    return await controller.get_all_job_postings(include_inactive=include_inactive)
+    return await controller.get_all_job_postings(include_inactive=include_inactive, owner_user_id=x_user_id)
 
 
 @router.post("/jobs", response_model=JobPostingResponse, summary="Create Job Posting")
@@ -40,6 +41,8 @@ async def create_job_posting(
     evaluation_threshold: int = Form(70, description="Minimum CV score for acceptance (0-100)", ge=0, le=100),
     quiz_required: bool = Form(True, description="Whether quiz is required"),
     quiz_pass_threshold: int = Form(7, description="Minimum quiz score to pass (0-10)", ge=0, le=10),
+    x_user_id: Optional[str] = Header(default=None, alias="X-User-Id"),
+    x_user_email: Optional[str] = Header(default=None, alias="X-User-Email"),
     controller: JobController = Depends(get_job_controller)  # type: ignore
 ):
     """
@@ -57,13 +60,17 @@ async def create_job_posting(
     
     Returns the created job posting with a shareable application link.
     """
+    # Prefer HR email from gateway header if provided
+    effective_hr_email = hr_email or x_user_email
+
     return await controller.create_job_posting(
         title=title,
         description=description,
         required_skills=required_skills,
         additional_details=additional_details,
-        hr_email=hr_email,
+        hr_email=effective_hr_email,
         hr_name=hr_name,
+        owner_user_id=x_user_id,
         evaluation_threshold=evaluation_threshold,
         quiz_required=quiz_required,
         quiz_pass_threshold=quiz_pass_threshold
@@ -122,6 +129,7 @@ async def submit_application(
 @router.delete("/jobs/{job_id}", summary="Delete Job Posting")
 async def delete_job_posting(
     job_id: str,
+    x_user_id: Optional[str] = Header(default=None, alias="X-User-Id"),
     controller: JobController = Depends(get_job_controller)  # type: ignore
 ):
     """
@@ -132,4 +140,4 @@ async def delete_job_posting(
     This will permanently delete the job posting and all associated data.
     Use with caution as this action cannot be undone.
     """
-    return await controller.delete_job_posting(job_id) 
+    return await controller.delete_job_posting(job_id, owner_user_id=x_user_id)

@@ -221,11 +221,14 @@ async def evaluate_cv(request: EvaluateRequest):
         
         # Perform evaluation via Cohere when configured, with graceful fallback
         try:
+            logger.info("Starting Cohere evaluation...")
             evaluation_text = cohere_service.evaluate_cv(
                 cv_text=request.cv_text,
                 job_description=request.job_description
             )
+            
             if not evaluation_text:
+                logger.warning("Cohere evaluation returned empty result, falling back to heuristic")
                 raise RuntimeError("Empty evaluation from AI")
 
             # Parse decision and score from Cohere's response
@@ -255,6 +258,8 @@ async def evaluate_cv(request: EvaluateRequest):
                 )
             except Exception as log_err:
                 logger.error(f"Logging error (AI evaluation): {log_err}")
+            
+            logger.info(f"Cohere evaluation completed: {decision}, score: {score}")
             return evaluation
         except Exception as e:
             logger.error(f"CV evaluation error: {e}")

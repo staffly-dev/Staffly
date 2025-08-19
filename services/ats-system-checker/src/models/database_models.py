@@ -135,6 +135,9 @@ class JobPosting(Document):
     job_id: Indexed(str) = Field(..., description="Unique job identifier for links")
     description_hash: Indexed(str) = Field(..., description="Hash of job description")
     
+    # Ownership
+    owner_user_id: Optional[str] = Field(None, description="User ID of the HR/creator (from API Gateway)")
+    
     # Application settings
     evaluation_threshold: int = Field(default=70, ge=0, le=100, description="Minimum score for acceptance")
     quiz_required: bool = Field(default=True, description="Whether quiz is required for accepted candidates")
@@ -171,6 +174,7 @@ class JobPosting(Document):
             IndexModel([("title", ASCENDING)]),
             IndexModel([("description_hash", ASCENDING)]),
             IndexModel([("is_active", ASCENDING)]),
+            IndexModel([("owner_user_id", ASCENDING)]),
             IndexModel([("created_at", DESCENDING)]),
         ]
 

@@ -515,7 +515,7 @@ class EnhancedSecurityMiddleware(BaseHTTPMiddleware):
             # Skip body inspection for our API namespace to avoid consuming the stream
             # which can interfere with downstream parsing (e.g., Form() in FastAPI routes)
             path = str(request.url.path)
-            if path.startswith("/ats-checker/"):
+            if path.startswith("/ats-checker/") or path.startswith("/api/"):
                 return None
             
             # Get content type
@@ -679,7 +679,8 @@ class EnhancedSecurityMiddleware(BaseHTTPMiddleware):
         
         # Skip CSRF validation for API endpoints (they use other auth methods)
         path = str(request.url.path)
-        if path.startswith("/health/") or path.startswith("/debug/") or path.startswith("/ats-checker/"):
+        if (path.startswith("/health/") or path.startswith("/debug/") or 
+            path.startswith("/ats-checker/") or path.startswith("/api/")):
             logger.debug(f"Skipping CSRF validation for API endpoint: {path}")
             return None
         
