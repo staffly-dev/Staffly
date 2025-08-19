@@ -7,7 +7,6 @@ import { LogoWithTitle } from "@/components/global/logo";
 
 const companyLinks = [
   { href: "/about", label: "About" },
-  { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
   { href: "/community", label: "Community" },
   { href: "/faq", label: "FAQ" },
@@ -19,13 +18,6 @@ const productLinks = [
   { href: "/features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
   { href: "/solution", label: "Solution" },
-];
-
-const docsLinks = [
-  { href: "/docs/introduction", label: "Introduction" },
-  { href: "/docs/installation", label: "Installation" },
-  { href: "/docs/utils", label: "Utils" },
-  { href: "/docs/principles", label: "Principles" },
 ];
 
 const legalLinks = [
@@ -43,10 +35,6 @@ const footerLinks = [
   {
     name: "Product",
     links: productLinks,
-  },
-  {
-    name: "Docs",
-    links: docsLinks,
   },
 ];
 
