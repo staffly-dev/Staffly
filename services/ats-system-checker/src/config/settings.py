@@ -139,7 +139,7 @@ class Settings(BaseSettings):
     ATS_SYSTEM_URL: str = Field(default="", description="ATS System URL")
     API_BASE_URL: str = Field(default="", description="API base URL")
     API_AUTH_URL: str = Field(default="", description="API auth URL")
-    API_GATEWAY_BASE_URL: str = Field(default="http://localhost:4000", description="API Gateway base URL")
+    API_GATEWAY_BASE_URL: str = Field(default="", description="API Gateway base URL")
     
     # Redis Configuration
     UPSTASH_REDIS_REST_URL: str = Field(default="", description="Upstash Redis REST URL")
@@ -175,7 +175,7 @@ class Settings(BaseSettings):
         case_sensitive = True
         extra = "ignore"  # Ignore extra environment variables
     
-    @validator('BACKEND_URL', 'MONGODB_URL', 'UPLOADS_BASE_URL', 'AI_SERVICE_URL', 'API_DOCUMENTATION', 'ALTERNATIVE_DOCS', 'OPENAPI_SCHEMA', pre=True)
+    @validator('BACKEND_URL', 'MONGODB_URL', 'UPLOADS_BASE_URL', 'AI_SERVICE_URL', 'API_DOCUMENTATION', 'ALTERNATIVE_DOCS', 'OPENAPI_SCHEMA', 'API_GATEWAY_BASE_URL', pre=True)
     def validate_urls(cls, v):
         """Validate and set default URLs based on environment"""
         if not v:
@@ -195,6 +195,8 @@ class Settings(BaseSettings):
                     return "http://localhost:4002"
                 elif 'OPENAPI_SCHEMA' in cls.__fields__:
                     return "http://localhost:4002"
+                elif 'API_GATEWAY_BASE_URL' in cls.__fields__:
+                    return "http://localhost:4000"
             else:
                 # Production defaults - these should be set in .env
                 return ""
