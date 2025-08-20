@@ -107,26 +107,20 @@ async def create_job_posting(
     Returns the created job posting with a shareable application link.
     """
     try:
-        # Prefer token from form; fall back to Authorization header
+        # Get token from form-data (required)
         token_candidate = access_token
-        if not token_candidate and authorization:
-            if authorization.lower().startswith("bearer "):
-                token_candidate = authorization.split(" ", 1)[1]
-            else:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Authorization header format")
         if not token_candidate:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing access token")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="access_token is required in form-data")
 
         # Normalize possible formatting issues from clients
         token_candidate = token_candidate.strip().strip('"').strip("'")
         if token_candidate.lower().startswith("bearer "):
             token_candidate = token_candidate.split(" ", 1)[1].strip()
 
-        # Validate the access token and derive effective user id
-        user_info = jwt_utils.extract_user_info(token_candidate)
-        effective_user_id = user_id or x_user_id
+        # Get effective user id from form-data (required)
+        effective_user_id = user_id
         if not effective_user_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="user_id is required (body or X-User-Id header)")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="user_id is required in form-data")
 
         # Validate user_id format
         if len(effective_user_id) != 24 or any(c not in '0123456789abcdef' for c in effective_user_id.lower()):
