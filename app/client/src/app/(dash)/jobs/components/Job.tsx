@@ -40,6 +40,9 @@ function Job({ job }: { job: JobType }) {
       position: "top-center",
     });
   };
+
+  const shareLink = `${process.env.NEXT_PUBLIC_APP_URL}/apply/${job.job_id}`;
+
   return (
     <Card
       // ref={setNodeRef}
@@ -96,7 +99,7 @@ function Job({ job }: { job: JobType }) {
       <div className="flex items-center justify-between">
         <div
           onClick={() => {
-            navigator.clipboard.writeText(job.shareable_link);
+            navigator.clipboard.writeText(shareLink);
             toast.success("Share link copied to clipboard");
           }}
           className="flex gap-1 items-center text-sm bg-hrms-gray/10 rounded-md px-3 py-2 cursor-pointer w-fit"

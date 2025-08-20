@@ -214,6 +214,14 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
             </td>
           </tr>
         ))}
+        {!payrolls ||
+          (payrolls.length === 0 && (
+            <tr>
+              <td colSpan={5} className="text-center pt-4 text-yellow-500">
+                No payrolls yet
+              </td>
+            </tr>
+          ))}
       </tbody>
       <EditPayrollModal
         open={openEditPayrollModal}

@@ -88,6 +88,10 @@ export function ApplyForm({
         description: error?.message || "An error occurred",
         position: "top-center",
         duration: 4000,
+        action: {
+          label: "Close",
+          onClick: () => {},
+        },
       });
     }
   };

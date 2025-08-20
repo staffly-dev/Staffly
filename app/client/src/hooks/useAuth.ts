@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import axiosInstance from "@/lib/axiosInstance";
 import { tokenStore } from "@/lib/token";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 // Types
 export interface User {
@@ -122,29 +122,80 @@ export const authKeys = {
 // Custom hook for authentication
 export function useAuth() {
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
+  const hasAttemptedRefresh = useRef(false);
+
+  // Check if current route is public
+  const isPublicRoute = (path: string): boolean => {
+    const publicRoutes = [
+      "/login",
+      "/register",
+      "/sign-up",
+      "/reset",
+      "/code",
+      "/verify",
+      "/forgot-password",
+      "/reset-password",
+      "/congrats",
+      "/apply",
+      "/quiz",
+    ];
+    return publicRoutes.some((route) => path.startsWith(route));
+  };
 
   // Effect to handle automatic token refresh on page load
   useEffect(() => {
     const handleTokenRefresh = async () => {
+      // Skip token refresh on public routes
+      if (isPublicRoute(pathname)) {
+        console.log("Skipping token refresh on public route:", pathname);
+        return;
+      }
+
+      // Only attempt refresh once per session to prevent infinite loops
+      if (hasAttemptedRefresh.current) {
+        console.log("Token refresh already attempted in this session");
+        return;
+      }
+
+      // Check if we should stop attempting refresh
+      if (tokenStore.shouldStopRefreshAttempts()) {
+        console.warn(
+          "Stopping token refresh attempts due to repeated failures"
+        );
+        return;
+      }
+
       // If we don't have an access token but have a refresh token, try to refresh
       if (!tokenStore.isAuthenticated() && tokenStore.hasRefreshToken()) {
+        hasAttemptedRefresh.current = true;
+        console.log("Attempting automatic token refresh...");
+
         try {
           // This will trigger the axios interceptor to refresh the token
           await authAPI.getCurrentUser();
-        } catch {
+          console.log("Automatic token refresh successful");
+        } catch (error) {
+          console.error("Automatic token refresh failed:", error);
+
           // If refresh fails, clear tokens and redirect to login
           tokenStore.clearAccessToken();
           tokenStore.clearRefreshToken();
-          router.push("/login");
+
+          // Only redirect if we're not already on a public route
+          if (!isPublicRoute(pathname)) {
+            console.warn("Redirecting to login due to failed token refresh");
+            router.push("/login");
+          }
         }
       }
     };
 
     handleTokenRefresh();
-  }, [router]);
+  }, [router, pathname]);
 
-  // Get current user query
+  // Get current user query - only enable on protected routes
   const {
     data,
     isFetching: isLoadingUser,
@@ -152,9 +203,9 @@ export function useAuth() {
   } = useQuery({
     queryKey: authKeys.user,
     queryFn: authAPI.getCurrentUser,
-    enabled: tokenStore.isAuthenticated(),
+    enabled: tokenStore.isAuthenticated() && !isPublicRoute(pathname),
     retry: false,
-    // staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Login mutation
@@ -165,6 +216,9 @@ export function useAuth() {
       tokenStore.setAccessToken(data.data.accessToken);
       // Store the refresh token using token store
       tokenStore.setRefreshToken(data.data.refreshToken);
+
+      // Reset the refresh attempt flag since we're now authenticated
+      hasAttemptedRefresh.current = false;
 
       // Update the user data in React Query cache
       queryClient.setQueryData(authKeys.user, data.data.user);
@@ -200,10 +254,11 @@ export function useAuth() {
   const logoutMutation = useMutation({
     mutationFn: authAPI.logout,
     onSuccess: () => {
-      // Clear the access token from memory
-      tokenStore.clearAccessToken();
-      // Clear the refresh token from localStorage
-      tokenStore.clearRefreshToken();
+      // Clear all tokens and reset state
+      tokenStore.clearAll();
+
+      // Reset the refresh attempt flag
+      hasAttemptedRefresh.current = false;
 
       // Clear all queries from React Query cache
       queryClient.clear();
@@ -213,8 +268,11 @@ export function useAuth() {
     },
     onError: () => {
       // Even if logout fails on server, clear local state
-      tokenStore.clearAccessToken();
-      tokenStore.clearRefreshToken();
+      tokenStore.clearAll();
+
+      // Reset the refresh attempt flag
+      hasAttemptedRefresh.current = false;
+
       queryClient.clear();
       router.push("/login");
       toast.error("Logged out (with errors)");
@@ -225,10 +283,11 @@ export function useAuth() {
   const logoutAllMutation = useMutation({
     mutationFn: authAPI.logoutAll,
     onSuccess: () => {
-      // Clear the access token from memory
-      tokenStore.clearAccessToken();
-      // Clear the refresh token from localStorage
-      tokenStore.clearRefreshToken();
+      // Clear all tokens and reset state
+      tokenStore.clearAll();
+
+      // Reset the refresh attempt flag
+      hasAttemptedRefresh.current = false;
 
       // Clear all queries from React Query cache
       queryClient.clear();
@@ -238,8 +297,11 @@ export function useAuth() {
     },
     onError: () => {
       // Even if logout fails on server, clear local state
-      tokenStore.clearAccessToken();
-      tokenStore.clearRefreshToken();
+      tokenStore.clearAll();
+
+      // Reset the refresh attempt flag
+      hasAttemptedRefresh.current = false;
+
       queryClient.clear();
       router.push("/login");
       toast.error("Logged out from all devices (with errors)");
@@ -317,6 +379,30 @@ export function useAuth() {
   // Check if user is authenticated
   const isAuthenticated = tokenStore.isAuthenticated() && !!data;
 
+  // Function to manually reset refresh attempt flag
+  const resetRefreshAttempt = () => {
+    hasAttemptedRefresh.current = false;
+  };
+
+  // Function to manually clear all authentication state
+  const clearAuthState = () => {
+    tokenStore.clearAll();
+    hasAttemptedRefresh.current = false;
+    queryClient.clear();
+  };
+
+  // Function to get debug information
+  const getDebugInfo = () => {
+    return {
+      isAuthenticated: tokenStore.isAuthenticated(),
+      hasRefreshToken: tokenStore.hasRefreshToken(),
+      refreshFailureCount: tokenStore.getRefreshFailureCount(),
+      hasAttemptedRefresh: hasAttemptedRefresh.current,
+      currentPath: pathname,
+      isPublicRoute: isPublicRoute(pathname),
+    };
+  };
+
   return {
     // Data
     user: data,
@@ -352,5 +438,10 @@ export function useAuth() {
     verifyResetPasswordCodeError: verifyResetPasswordCodeMutation.error,
     resetPasswordError: resetPasswordMutation.error,
     verifyEmailError: verifyEmailMutation.error,
+
+    // Utility functions
+    resetRefreshAttempt,
+    clearAuthState,
+    getDebugInfo,
   };
 }

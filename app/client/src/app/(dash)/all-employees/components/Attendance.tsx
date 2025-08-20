@@ -65,6 +65,14 @@ export function Attendance() {
             </td>
           </tr>
         ))}
+        {!data ||
+          (data.length === 0 && (
+            <tr>
+              <td colSpan={4} className="text-center pt-4 text-yellow-500">
+                No attendance records found for this employee
+              </td>
+            </tr>
+          ))}
       </tbody>
     </CustomTableContainer>
   );

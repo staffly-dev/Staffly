@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/card";
 import { ApplyForm } from "./ApplyForm";
 import { Button } from "@/components/ui/button";
+import LoadingComponent from "@/components/LoadingComponent";
+import ErrorComponent from "@/components/ErrorComponent";
 
 const ApplyPage = () => {
   const { id } = useParams();
@@ -30,22 +32,17 @@ const ApplyPage = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <div className="text-red-500 text-lg font-bold">Error: {error}</div>
-        <Button variant="outline" onClick={() => clearError()}>
-          Clear Error
-        </Button>
-      </div>
+      <ErrorComponent
+        error={error}
+        clearError={clearError}
+        className="min-h-[300px]"
+      />
     );
   }
   if (loading || !job) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 dark:border-white border-gray-900 "></div>
-      </div>
-    );
+    return <LoadingComponent />;
   }
-  if (applied) {
+  if (applied && !loading && !error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-green-500 text-lg font-bold">
@@ -60,6 +57,9 @@ const ApplyPage = () => {
 
   return (
     <div className="flex flex-col gap-8 max-w-2xl mx-auto py-8">
+      <h1 className="md:text-2xl text-lg font-bold text-center">
+        Apply to Job
+      </h1>
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-2xl flex items-center gap-2 justify-between capitalize">

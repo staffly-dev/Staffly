@@ -59,30 +59,63 @@ export function AddJobModal({ open, onOpenChange }: AddJobModalProps) {
 
   const onFormSubmit = async (data: AddJobFormData) => {
     try {
-      const jobData = new FormData();
-      jobData.append("description", data.description);
-      jobData.append("title", data.title);
-      jobData.append("required_skills", data.required_skills);
-      jobData.append("hr_email", data.hr_email);
-      jobData.append("additional_details", data.additional_details);
-      jobData.append("hr_name", data.hr_name);
-      jobData.append(
-        "evaluation_threshold",
-        data.evaluation_threshold.toString()
-      );
-      jobData.append("quiz_required", data.quiz_required.toString());
-      jobData.append(
-        "quiz_pass_threshold",
-        data.quiz_pass_threshold.toString()
-      );
-      jobData.append("is_active", data.is_active.toString());
-      const newJob = await createJob(jobData as unknown as CreateJobData);
+      // Validate required fields first
+      if (!data.title?.trim()) {
+        toast.error("Title is required");
+        return;
+      }
+      if (!data.description?.trim()) {
+        toast.error("Description is required");
+        return;
+      }
+      if (!data.required_skills?.trim()) {
+        toast.error("Required skills are required");
+        return;
+      }
+
+      // Try sending as plain object instead of FormData
+      const jobDataObject: {
+        title: string;
+        description: string;
+        required_skills: string;
+        evaluation_threshold: number;
+        quiz_required: boolean;
+        quiz_pass_threshold: number;
+        is_active: boolean;
+        hr_email?: string;
+        additional_details?: string;
+        hr_name?: string;
+      } = {
+        title: data.title.trim(),
+        description: data.description.trim(),
+        required_skills: data.required_skills.trim(),
+        evaluation_threshold: data.evaluation_threshold || 70,
+        quiz_required: data.quiz_required || false,
+        quiz_pass_threshold: data.quiz_pass_threshold || 7,
+        is_active: data.is_active || true,
+      };
+
+      // Only add optional fields if they have values
+      if (data.hr_email && data.hr_email.trim()) {
+        jobDataObject.hr_email = data.hr_email.trim();
+      }
+      if (data.additional_details && data.additional_details.trim()) {
+        jobDataObject.additional_details = data.additional_details.trim();
+      }
+      if (data.hr_name && data.hr_name.trim()) {
+        jobDataObject.hr_name = data.hr_name.trim();
+      }
+
+      console.log("Job data object:", jobDataObject);
+
+      const newJob = await createJob(jobDataObject as CreateJobData);
       toast.success("Job added successfully", {
         description: `${newJob.title} has been added successfully`,
       });
       onOpenChange(false);
       reset();
     } catch (error) {
+      console.error("Error creating job:", error);
       toast.error("Failed to add job", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
