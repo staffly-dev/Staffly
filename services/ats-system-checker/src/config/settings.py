@@ -139,6 +139,7 @@ class Settings(BaseSettings):
     ATS_SYSTEM_URL: str = Field(default="", description="ATS System URL")
     API_BASE_URL: str = Field(default="", description="API base URL")
     API_AUTH_URL: str = Field(default="", description="API auth URL")
+    API_GATEWAY_BASE_URL: str = Field(default="http://localhost:4000", description="API Gateway base URL")
     
     # Redis Configuration
     UPSTASH_REDIS_REST_URL: str = Field(default="", description="Upstash Redis REST URL")

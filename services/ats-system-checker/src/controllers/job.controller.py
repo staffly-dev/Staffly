@@ -12,7 +12,7 @@ import uuid
 
 from src.utils.logging_config import get_logger
 from src.utils.responses import success_response
-from src.models.api_models import JobPostingResponse, ApplicationsListResponse, ApplicationListResponse
+from src.models.api_models import JobPostingResponse, ApplicationsListResponse, ApplicationListResponse, JobPostingsListResponse
 from src.services.database_service import DatabaseService
 from src.services.evaluation_service import EvaluationService
 from src.services.s3_service import S3Service
@@ -57,6 +57,7 @@ class JobController:
         hr_email: Optional[str] = None,
         hr_name: Optional[str] = None,
         owner_user_id: Optional[str] = None,
+        owner_username: Optional[str] = None,
         evaluation_threshold: int = 70,
         quiz_required: bool = True,
         quiz_pass_threshold: int = 7
@@ -100,6 +101,7 @@ class JobController:
                 hr_email=hr_email,
                 hr_name=hr_name,
                 owner_user_id=owner_user_id,
+                owner_username=owner_username,
                 evaluation_threshold=evaluation_threshold,
                 quiz_required=quiz_required,
                 quiz_pass_threshold=quiz_pass_threshold
@@ -121,7 +123,8 @@ class JobController:
                 is_active=job_posting.is_active,
                 hr_email=job_posting.hr_email,
                 hr_name=job_posting.hr_name,
-                created_by=job_posting.owner_user_id
+                created_by=job_posting.owner_user_id,
+                owner_username=job_posting.owner_username
             )
             
         except HTTPException:
@@ -180,7 +183,7 @@ class JobController:
             logger.error(f" Error retrieving job posting: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to retrieve job posting: {str(e)}")
     
-    async def get_all_job_postings(self, include_inactive: bool = False, owner_user_id: Optional[str] = None) -> List[JobPostingResponse]:
+    async def get_all_job_postings(self, include_inactive: bool = False, owner_user_id: Optional[str] = None) -> JobPostingsListResponse:
         """
         Get job postings (scoped to owner)
         
@@ -208,12 +211,14 @@ class JobController:
                     is_active=job.is_active,
                     hr_email=job.hr_email,
                     hr_name=job.hr_name,
-                    created_by=job.owner_user_id
+                    created_by=job.owner_user_id,
+                    owner_username=job.owner_username
                 )
                 response_data.append(job_response)
             
-            logger.info(f" Successfully retrieved {len(response_data)} job postings")
-            return response_data
+            total = len(response_data)
+            logger.info(f" Successfully retrieved {total} job postings")
+            return JobPostingsListResponse(total_jobs=total, jobs=response_data)
             
         except Exception as e:
             logger.error(f" Failed to get job postings: {e}")

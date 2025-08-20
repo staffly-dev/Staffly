@@ -385,6 +385,125 @@ class DatabaseService:
             logger.error(f" Failed to get quiz statistics: {e}")
             return {}
     
+    async def get_user_evaluation_statistics(self, user_id: str, created_by: str) -> Dict[str, Any]:
+        """
+        Get evaluation statistics for a specific user
+        
+        Args:
+            user_id: User ID from API Gateway
+            created_by: User who created the records
+            
+        Returns:
+            Dict[str, Any]: User-specific evaluation statistics
+        """
+        try:
+            # Get evaluations created by this user
+            total_evaluations = await CVEvaluation.find(
+                CVEvaluation.created_by == created_by
+            ).count()
+            
+            total_accepted = await CVEvaluation.find(
+                CVEvaluation.created_by == created_by,
+                CVEvaluation.decision == EvaluationDecision.ACCEPTED
+            ).count()
+            
+            total_rejected = await CVEvaluation.find(
+                CVEvaluation.created_by == created_by,
+                CVEvaluation.decision == EvaluationDecision.REJECTED
+            ).count()
+            
+            # Calculate acceptance rate
+            acceptance_rate = (total_accepted / total_evaluations * 100) if total_evaluations > 0 else 0
+            
+            # Get average score for this user
+            pipeline = [
+                {"$match": {"created_by": created_by}},
+                {"$group": {"_id": None, "avg_score": {"$avg": "$score"}}}
+            ]
+            avg_result = await CVEvaluation.aggregate(pipeline).to_list(1)
+            average_score = avg_result[0]["avg_score"] if avg_result else 0
+            
+            # Get daily counts for this user (last 30 days)
+            thirty_days_ago = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            recent_evaluations = await CVEvaluation.find(
+                CVEvaluation.created_by == created_by,
+                CVEvaluation.created_at >= thirty_days_ago
+            ).to_list()
+            
+            daily_counts = {}
+            for evaluation in recent_evaluations:
+                date_str = evaluation.created_at.strftime("%Y%m%d")
+                daily_counts[date_str] = daily_counts.get(date_str, 0) + 1
+            
+            # Get last activity timestamp
+            last_evaluation = await CVEvaluation.find(
+                CVEvaluation.created_by == created_by
+            ).sort(CVEvaluation.created_at, -1).first()
+            
+            last_activity = last_evaluation.created_at.isoformat() if last_evaluation else None
+            
+            return {
+                "total_evaluations": total_evaluations,
+                "total_accepted": total_accepted,
+                "total_rejected": total_rejected,
+                "acceptance_rate": round(acceptance_rate, 2),
+                "average_score": round(average_score, 2),
+                "daily_counts": daily_counts,
+                "last_activity": last_activity
+            }
+            
+        except Exception as e:
+            logger.error(f" Failed to get user evaluation statistics: {e}")
+            return {}
+    
+    async def get_user_quiz_statistics(self, user_id: str, created_by: str) -> Dict[str, Any]:
+        """
+        Get quiz statistics for a specific user
+        
+        Args:
+            user_id: User ID from API Gateway
+            created_by: User who created the records
+            
+        Returns:
+            Dict[str, Any]: User-specific quiz statistics
+        """
+        try:
+            # Get quizzes created by this user
+            total_quizzes_generated = await QuizSession.find(
+                QuizSession.created_by == created_by
+            ).count()
+            
+            total_quizzes_completed = await QuizResult.find(
+                QuizResult.created_by == created_by
+            ).count()
+            
+            total_quizzes_passed = await QuizResult.find(
+                QuizResult.created_by == created_by,
+                QuizResult.status == "PASSED"
+            ).count()
+            
+            pass_rate = (total_quizzes_passed / total_quizzes_completed * 100) if total_quizzes_completed > 0 else 0
+            
+            # Get average quiz score for this user
+            pipeline = [
+                {"$match": {"created_by": created_by}},
+                {"$group": {"_id": None, "avg_score": {"$avg": "$score"}}}
+            ]
+            avg_result = await QuizResult.aggregate(pipeline).to_list(1)
+            average_quiz_score = avg_result[0]["avg_score"] if avg_result else 0
+            
+            return {
+                "total_quizzes_generated": total_quizzes_generated,
+                "total_quizzes_completed": total_quizzes_completed,
+                "total_quizzes_passed": total_quizzes_passed,
+                "quiz_pass_rate": round(pass_rate, 2),
+                "average_quiz_score": round(average_quiz_score, 2)
+            }
+            
+        except Exception as e:
+            logger.error(f" Failed to get user quiz statistics: {e}")
+            return {}
+    
     async def update_daily_metrics(
         self,
         evaluations_count: int = 0,
@@ -736,6 +855,7 @@ class DatabaseService:
         hr_email: Optional[str] = None,
         hr_name: Optional[str] = None,
         owner_user_id: Optional[str] = None,
+        owner_username: Optional[str] = None,
         evaluation_threshold: int = 70,
         quiz_required: bool = True,
         quiz_pass_threshold: int = 7
@@ -772,6 +892,7 @@ class DatabaseService:
                 required_skills=required_skills,
                 additional_details=additional_details,
                 owner_user_id=owner_user_id,
+                owner_username=owner_username,
                 hr_email=hr_email,
                 hr_name=hr_name,
                 evaluation_threshold=evaluation_threshold,
