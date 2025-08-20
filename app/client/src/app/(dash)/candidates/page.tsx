@@ -37,7 +37,7 @@ export default function CandidatesPage() {
 
   useEffect(() => {
     setCandidates(
-      candidateData.slice(
+      candidateData?.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
       )
@@ -73,7 +73,7 @@ export default function CandidatesPage() {
         totalPages={Math.ceil(candidateData.length / itemsPerPage)}
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
-        totalItems={candidateData.length}
+        totalItems={candidateData?.length}
         onItemsPerPageChange={setItemsPerPage}
       />
     </Card>
