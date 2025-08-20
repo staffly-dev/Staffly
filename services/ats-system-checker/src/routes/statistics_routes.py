@@ -3,6 +3,7 @@ Statistics Routes for ATS System
 System analytics and metrics endpoints
 """
 
+from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from src.controllers import StatisticsController
@@ -15,7 +16,7 @@ router = APIRouter(tags=["statistics"])
 
 @router.get("/statistics", response_model=StatisticsResponse, summary="Get System Statistics")
 async def get_statistics(
-    controller: StatisticsController = Depends(get_statistics_controller)
+    controller = Depends(get_statistics_controller)
 ):
     """
     Get comprehensive system statistics and analytics.
@@ -31,18 +32,20 @@ async def get_statistics(
     return await controller.get_statistics()
 
 
-@router.post("/user-statistics", response_model=UserStatisticsResponse, summary="Get User-Specific Statistics")
+@router.get("/user-statistics", response_model=UserStatisticsResponse, summary="Get User-Specific Statistics")
 async def get_user_statistics(
-    request: UserStatisticsRequest,
-    controller: StatisticsController = Depends(get_statistics_controller)
+    x_user_id: Optional[str] = Header(default=None, alias="X-User-Id"),
+    x_created_by: Optional[str] = Header(default=None, alias="X-Created-By"),
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+    controller = Depends(get_statistics_controller)
 ):
     """
-    Get comprehensive system statistics for a specific user.
+    Get comprehensive system statistics for a specific user (JWT protected).
     
-    This endpoint requires:
-    - user_id: User ID from API Gateway
-    - created_by: User who created the records
-    - access_token: Valid access token from API Gateway
+    Authentication:
+    - Authorization: Bearer <access_token>
+    - X-User-Id: user id from API Gateway (required)
+    - X-Created-By: creator id (optional; must match user id if provided)
     
     Returns:
     - User-specific application statistics
@@ -52,15 +55,37 @@ async def get_user_statistics(
     - Last activity timestamp
     """
     try:
-        # Validate user_id format
-        if len(request.user_id) != 24 or any(c not in '0123456789abcdef' for c in request.user_id.lower()):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user_id format")
+        # Validate token presence and authenticity
+        if not authorization or not authorization.lower().startswith("bearer "):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid Authorization header")
+        access_token = authorization.split(" ", 1)[1]
         
+        # Normalize and decode token to read userId
+        access_token = access_token.strip().strip('"').strip("'")
+        if access_token.lower().startswith("bearer "):
+            access_token = access_token.split(" ", 1)[1].strip()
+        token_info = jwt_utils.decode_token(access_token)
+
+        # Require API Gateway provided user id
+        if not x_user_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-User-Id header is required")
+
+        # Validate user_id format (24-hex ObjectId style)
+        if len(x_user_id) != 24 or any(c not in '0123456789abcdef' for c in x_user_id.lower()):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user_id format")
+
         # Verify user exists in API Gateway database and token is valid
-        await verify_user_exists_and_token_valid(request.user_id, request.access_token)
+        await verify_user_exists_and_token_valid(x_user_id, access_token)
+
+        # Optional created_by must match user_id if provided
+        if x_created_by and x_created_by != x_user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="created_by must match user_id")
+
+        # Use x_user_id as created_by if not provided
+        created_by = x_created_by or x_user_id
         
         # Get user-specific statistics
-        return await controller.get_user_statistics(request.user_id, request.created_by)
+        return await controller.get_user_statistics(x_user_id, created_by)
         
     except HTTPException:
         # Re-raise HTTP exceptions
