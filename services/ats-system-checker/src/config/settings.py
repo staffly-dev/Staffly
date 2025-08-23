@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     # Application Configuration
     ENV: str = Field(default="development", description="Environment (development/production)")
     DEBUG: bool = Field(default=True, description="Debug mode")
+    AUTO_RELOAD: bool = Field(default=True, description="Enable auto-reload on file changes (development only)")
     BACKEND_URL: str = Field(default="", description="Backend base URL for links")
     PRODUCTION_URL: str = Field(default="https://ats-system-checker-backend-production.up.railway.app", description="Production base URL for links")
     MAX_FILE_SIZE: int = Field(default=16777216, description="Maximum file size in bytes (16MB)")

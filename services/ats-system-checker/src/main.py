@@ -367,7 +367,7 @@ if __name__ == "__main__":
         "src.main:app",
         host=settings.API_HOST,
         port=settings.API_PORT,
-        reload=settings.DEBUG,
+        reload=settings.DEBUG and settings.AUTO_RELOAD,  # Only reload if both DEBUG and AUTO_RELOAD are enabled
         log_level=settings.LOG_LEVEL.lower(),
         reload_excludes=["venv", ".pytest_cache", "__pycache__", "uploads", "ats_system.log"]
     ) 
