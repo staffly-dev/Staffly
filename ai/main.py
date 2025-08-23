@@ -43,6 +43,9 @@ def get_env_config():
         'ENV': os.getenv('ENV', 'development'),
         'AI_HOST': os.getenv('AI_HOST', '0.0.0.0'),
         'AI_PORT': int(os.getenv('AI_PORT', '5000')),
+        'AI_TIMEOUT': int(os.getenv('AI_TIMEOUT', '60')),  # AI service timeout in seconds
+        'AI_MAX_RETRIES': int(os.getenv('AI_MAX_RETRIES', '3')),  # Maximum retry attempts
+        'AI_AUTO_RELOAD': os.getenv('AI_AUTO_RELOAD', 'true').lower() == 'true',  # Enable/disable auto-reload
     }
 
 config = get_env_config()
@@ -60,7 +63,11 @@ async def lifespan(app: FastAPI):
     if not api_key:
         logger.warning("COHERE_API_KEY not set - AI features will be limited")
     
-    cohere_service = CohereService(api_key)
+    cohere_service = CohereService(
+        api_key=api_key,
+        timeout=config['AI_TIMEOUT'],
+        max_retries=config['AI_MAX_RETRIES']
+    )
     document_service = DocumentProcessingService()
     
     logger.info("AI Service started successfully")
@@ -148,18 +155,57 @@ async def root():
     }
 
 
-# Health check endpoint
+# Health Check endpoint
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": "ATS AI Service",
-        "version": "2.0.0",
-        "environment": config['ENV'],
-        "timestamp": datetime.now().isoformat(),
-        "ai_service_available": cohere_service is not None and cohere_service.api_key is not None
-    }
+    """
+    Health check endpoint to monitor service status
+    
+    Returns:
+        Dict: Service health information
+    """
+    try:
+        health_status = {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "service": "ATS AI Service",
+            "version": "2.0.0",
+            "environment": config['ENV'],
+            "ai_service": {
+                "cohere_configured": bool(cohere_service and cohere_service.api_key),
+                "timeout_seconds": config['AI_TIMEOUT'],
+                "max_retries": config['AI_MAX_RETRIES'],
+                "model": "command-r-plus"  # Current model being used
+            },
+            "document_service": bool(document_service),
+            "cors_enabled": bool(config['CORS_ALLOW_ORIGINS']),
+            "docs_auth_enabled": config['DOCS_AUTH_ENABLED']
+        }
+        
+        # Check if services are actually working
+        if cohere_service and cohere_service.api_key:
+            try:
+                # Quick test of Cohere client
+                if cohere_service.client:
+                    health_status["ai_service"]["client_status"] = "ready"
+                else:
+                    health_status["ai_service"]["client_status"] = "not_initialized"
+            except Exception as e:
+                health_status["ai_service"]["client_status"] = f"error: {str(e)}"
+                health_status["status"] = "degraded"
+        else:
+            health_status["ai_service"]["client_status"] = "not_configured"
+            health_status["status"] = "degraded"
+        
+        return health_status
+        
+    except Exception as e:
+        logger.error(f"Health check error: {e}")
+        return {
+            "status": "unhealthy",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }
 
 # CV Evaluation endpoint
 @app.post("/evaluate", tags=["CV Evaluation"])
@@ -261,46 +307,60 @@ async def evaluate_cv(request: EvaluateRequest):
             
             logger.info(f"Cohere evaluation completed: {decision}, score: {score}")
             return evaluation
+        except RuntimeError as e:
+            if "Empty evaluation from AI" in str(e):
+                logger.warning("AI service returned empty result, using heuristic fallback")
+            else:
+                logger.error(f"Runtime error during AI evaluation: {e}")
+            # Fallback to heuristic evaluation
         except Exception as e:
             logger.error(f"CV evaluation error: {e}")
-            # Fallback heuristic evaluation
-            import re
-            cv_text = request.cv_text or ""
-            job_desc = request.job_description or ""
-            raw_tokens = re.split(r"[,\n\r;]+", job_desc)
-            skills = [t.strip().lower() for t in raw_tokens if t and len(t.strip()) > 1]
-            skills = [re.sub(r"[^a-z0-9+#\.\- ]", "", s) for s in skills]
-            skills = [s for s in skills if s]
-            cv_lower = cv_text.lower()
-            matched = [s for s in skills if s and s in cv_lower]
-            coverage = (len(matched) / max(1, len(skills))) if skills else 0
-            score = int(round(coverage * 100))
-            reasoning = (
-                f"Heuristic evaluation based on job requirements. Matched {len(matched)} of {len(skills)} "
-                f"skills/keywords from the job description."
+            # Check if it's a timeout-related error
+            if "timeout" in str(e).lower() or "timed out" in str(e).lower():
+                logger.warning("AI evaluation timed out, using heuristic fallback")
+            else:
+                logger.error(f"Unexpected error during AI evaluation: {e}")
+            # Fallback to heuristic evaluation
+        
+        # Fallback heuristic evaluation (reached when AI fails)
+        logger.info("Using heuristic fallback evaluation due to AI service issues")
+        import re
+        cv_text = request.cv_text or ""
+        job_desc = request.job_description or ""
+        raw_tokens = re.split(r"[,\n\r;]+", job_desc)
+        skills = [t.strip().lower() for t in raw_tokens if t and len(t.strip()) > 1]
+        skills = [re.sub(r"[^a-z0-9+#\.\- ]", "", s) for s in skills]
+        skills = [s for s in skills if s]
+        cv_lower = cv_text.lower()
+        matched = [s for s in skills if s and s in cv_lower]
+        coverage = (len(matched) / max(1, len(skills))) if skills else 0
+        score = int(round(coverage * 100))
+        reasoning = (
+            f"Heuristic evaluation based on job requirements. Matched {len(matched)} of {len(skills)} "
+            f"skills/keywords from the job description. (AI service was unavailable)"
+        )
+        evaluation = {
+            "decision": "ACCEPTED" if score >= 70 else "REJECTED",
+            "score": score,
+            "reasoning": reasoning,
+            "extracted_skills": matched[:20],
+            "experience_years": None,
+            "match_percentage": float(score),
+            "strengths": [],
+            "weaknesses": []
+        }
+        try:
+            save_evaluation_log(
+                filename=request.filename or "unknown",
+                job_description=request.job_description,
+                cv_text=request.cv_text,
+                evaluation_result=reasoning,
+                decision=evaluation["decision"],
+                score=int(score)
             )
-            evaluation = {
-                "decision": "ACCEPTED" if score >= 70 else "REJECTED",
-                "score": score,
-                "reasoning": reasoning,
-                "extracted_skills": matched[:20],
-                "experience_years": None,
-                "match_percentage": float(score),
-                "strengths": [],
-                "weaknesses": []
-            }
-            try:
-                save_evaluation_log(
-                    filename=request.filename or "unknown",
-                    job_description=request.job_description,
-                    cv_text=request.cv_text,
-                    evaluation_result=reasoning,
-                    decision=evaluation["decision"],
-                    score=int(score)
-                )
-            except Exception as log_err:
-                logger.error(f"Logging error (fallback evaluation): {log_err}")
-            return evaluation
+        except Exception as log_err:
+            logger.error(f"Logging error (fallback evaluation): {log_err}")
+        return evaluation
         
     except Exception as e:
         logger.error(f"CV evaluation error: {e}")
@@ -527,6 +587,6 @@ if __name__ == "__main__":
         "main:app",
         host=config['AI_HOST'],
         port=config['AI_PORT'],
-        reload=config['ENV'] == 'development',
+        reload=config['ENV'] == 'development' and config.get('AI_AUTO_RELOAD', True),  # Can be disabled with AI_AUTO_RELOAD=false
         log_level="info"
     ) 
