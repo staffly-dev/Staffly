@@ -21,11 +21,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen" suppressHydrationWarning>
-        <EmployeeProvider>
-          <JobProvider>
-            <AttendanceProvider>
-              <PayRollProvider>
-                <QueryProvider>
+        <QueryProvider>
+          <EmployeeProvider>
+            <JobProvider>
+              <AttendanceProvider>
+                <PayRollProvider>
                   <Toaster richColors />
                   <ThemeProvider
                     attribute="class"
@@ -35,11 +35,11 @@ export default function RootLayout({
                   >
                     {children}
                   </ThemeProvider>
-                </QueryProvider>
-              </PayRollProvider>
-            </AttendanceProvider>
-          </JobProvider>
-        </EmployeeProvider>
+                </PayRollProvider>
+              </AttendanceProvider>
+            </JobProvider>
+          </EmployeeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

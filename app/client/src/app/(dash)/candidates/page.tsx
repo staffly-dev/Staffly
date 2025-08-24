@@ -4,7 +4,6 @@ import { Card, CardHeader } from "@/components/ui/card";
 import React, { useEffect, useState } from "react";
 import { CustomTableContainer } from "../all-employees/components/CustomTableContainer";
 import { Pagination } from "@/components/Pagination";
-// import { Checkbox } from "@/components/ui/checkbox";
 import { Candidate, Job, useJob } from "@/context/JobContext";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
@@ -70,7 +69,7 @@ export default function CandidatesPage() {
       <CandidatesTable candidates={candidates} jobs={jobs} />
       <Pagination
         currentPage={currentPage}
-        totalPages={Math.ceil(candidateData.length / itemsPerPage)}
+        totalPages={Math.ceil(candidateData?.length / itemsPerPage)}
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
         totalItems={candidateData?.length}
@@ -109,29 +108,12 @@ function CandidatesTable({
   candidates: Candidate[];
   jobs: Job[];
 }) {
-  // const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null
   );
   const [jobTitle, setJobTitle] = useState<string | undefined>(undefined);
   const { deleteApplication, deleteLoading } = useJob();
-  // const allSelected =
-  //   candidates.length > 0 && selectedIds.length === candidates.length;
-  // const someSelected =
-  //   selectedIds.length > 0 && selectedIds.length < candidates.length;
-
-  // const toggleAll = (checked: boolean) => {
-  //   setSelectedIds(
-  //     checked ? candidates.map((cand) => cand.application_id) : []
-  //   );
-  // };
-
-  // const toggleOne = (id: string, checked: boolean) => {
-  //   setSelectedIds((prev) =>
-  //     checked ? [...prev, id] : prev.filter((selectedId) => selectedId !== id)
-  //   );
-  // };
 
   const handleDelete = (id: string) => {
     toast.warning("Are you sure you want to delete this candidate?", {
@@ -154,13 +136,6 @@ function CandidatesTable({
     <CustomTableContainer>
       <thead className="sticky top-0 bg-background shadow-sm">
         <tr className="*:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
-          {/* <th>
-            <Checkbox
-              className="border-hrms-gray"
-              checked={someSelected ? "indeterminate" : allSelected}
-              onCheckedChange={toggleAll}
-            />
-          </th> */}
           <th>Candidate Name</th>
           <th>Applied For</th>
           <th>Resume Link</th>
@@ -170,20 +145,11 @@ function CandidatesTable({
         </tr>
       </thead>
       <tbody className="divide-y divide-hrms-gray/20">
-        {candidates.map((cand) => (
+        {candidates?.map((cand) => (
           <tr
             key={cand.application_id}
             className="hover:bg-hrms-gray/20 *:text-sm *:px-6 *:py-3 "
           >
-            {/* <td>
-              <Checkbox
-                className="border-hrms-gray"
-                checked={selectedIds.includes(cand.application_id)}
-                onCheckedChange={(checked) =>
-                  toggleOne(cand.application_id, Boolean(checked))
-                }
-              />
-            </td> */}
             <td className="capitalize">{cand.candidate_name}</td>
             <td className="capitalize">
               {jobs.find((job) => job.job_id === cand.job_id)?.title}
@@ -243,7 +209,7 @@ function CandidatesTable({
           </tr>
         ))}
         {!candidates ||
-          (candidates.length === 0 && (
+          (candidates?.length === 0 && (
             <tr>
               <td colSpan={5} className="text-center pt-4 text-yellow-500">
                 No candidates yet

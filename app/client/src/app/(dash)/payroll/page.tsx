@@ -8,12 +8,12 @@ import React, { useEffect, useState } from "react";
 import { CustomTableContainer } from "../all-employees/components/CustomTableContainer";
 import { CiCirclePlus, CiExport } from "react-icons/ci";
 import { toast } from "sonner";
-import Link from "next/link";
 import { Payroll, usePayRoll } from "@/context/PayRollContext";
 import ErrorComponent from "@/components/ErrorComponent";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EditPayrollModal } from "./EditPayrollModel";
+import { NewPayrollModal } from "./NewPayrollModal";
 
 const colors = {
   completed: "bg-green-500/20 text-green-500",
@@ -24,6 +24,7 @@ export default function PayrollPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [payrollsData, setPayrollsData] = useState<Payroll[]>([]);
+  const [openNewPayrollModal, setOpenNewPayrollModal] = useState(false);
   const { payrolls, fetchPayrolls, isLoadingPayrolls, error, clearError } =
     usePayRoll();
 
@@ -53,12 +54,10 @@ export default function PayrollPage() {
       <div className="flex justify-between items-center mb-6">
         <SearchInput />
         <div className="flex gap-6">
-          <Link href="/payroll/new-payroll">
-            <Button>
-              <CiCirclePlus style={{ width: "20px", height: "20px" }} />
-              Add New Payroll
-            </Button>
-          </Link>
+          <Button onClick={() => setOpenNewPayrollModal(true)}>
+            <CiCirclePlus style={{ width: "20px", height: "20px" }} />
+            Add New Payroll
+          </Button>
           <div className="flex gap-4">
             <Button
               onClick={() => {
@@ -83,11 +82,15 @@ export default function PayrollPage() {
       <PayrollTable payrolls={payrolls} />
       <Pagination
         currentPage={currentPage}
-        totalPages={Math.ceil(payrollsData.length / itemsPerPage)}
+        totalPages={Math.ceil(payrollsData?.length / itemsPerPage)}
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
-        totalItems={payrollsData.length}
+        totalItems={payrollsData?.length}
         onItemsPerPageChange={setItemsPerPage}
+      />
+      <NewPayrollModal
+        open={openNewPayrollModal}
+        onOpenChange={setOpenNewPayrollModal}
       />
     </Card>
   );
@@ -129,7 +132,7 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
         </tr>
       </thead>
       <tbody className="divide-y divide-hrms-gray/20">
-        {payrolls.map((payroll) => (
+        {payrolls?.map((payroll) => (
           <tr
             key={payroll._id}
             className="hover:bg-hrms-gray/20 *:px-6 *:py-3 *:capitalize"

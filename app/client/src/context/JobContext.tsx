@@ -8,6 +8,8 @@ import React, {
   ReactNode,
 } from "react";
 import axiosInstance from "@/lib/axiosInstance";
+import axios from "axios";
+import { useAuth } from "@/hooks/useAuth";
 
 // Job type definition
 export interface Job {
@@ -18,6 +20,12 @@ export interface Job {
   required_skills: string[];
   is_active: boolean;
   shareable_link: string;
+  created_by: string;
+}
+
+export interface JobResponse {
+  jobs: Job[];
+  total_jobs: number;
 }
 
 export interface CreateJobData {
@@ -31,6 +39,8 @@ export interface CreateJobData {
   quiz_required?: boolean;
   quiz_pass_threshold?: number;
   is_active?: boolean;
+  user_id: string;
+  access_token: string;
 }
 
 export interface JobApplicationData {
@@ -64,12 +74,6 @@ export interface QuizData {
   candidate_email: string;
   status: string;
 }
-
-// export interface QuizResponse {
-//   success: boolean;
-//   message: string;
-//   data: QuizData;
-// }
 
 interface QuizUser {
   quiz_session_id: string;
@@ -133,7 +137,7 @@ interface JobContextType {
   loading: boolean;
   error: string | null;
   deleteLoading: boolean;
-  getAllJobs: () => Promise<Job[]>;
+  getAllJobs: () => Promise<JobResponse>;
   getJobById: (id: string) => Promise<Job>;
   createJob: (jobData: CreateJobData) => Promise<Job>;
   applyForJob: (
@@ -153,6 +157,8 @@ interface JobContextType {
 
 const JobContext = createContext<JobContextType | undefined>(undefined);
 
+const ATS_URL = process.env.NEXT_PUBLIC_ATS_ERL;
+
 export function JobProvider({ children }: { children: ReactNode }) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -161,14 +167,24 @@ export function JobProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [total_applications, setTotalApplications] = useState(0);
   const clearError = useCallback(() => setError(null), []);
+  const { user } = useAuth();
+  const userId = user?.user?.id;
 
-  const getAllJobs = useCallback(async (): Promise<Job[]> => {
+  const getAllJobs = useCallback(async (): Promise<JobResponse> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/ats-checker/jobs`);
-      setJobs(response.data);
-      return response.data;
+      const response = await axiosInstance.get(`/ats-checker/jobs`, {
+        headers: {
+          "X-User-Id": userId,
+        },
+      });
+      setJobs(
+        response.data.jobs.filter(
+          (job: Job) => job.created_by === userId
+        ) as Job[]
+      );
+      return response.data.jobs;
     } catch (err: unknown) {
       const errorMessage =
         (err as unknown as { response: { data: { message: string } } }).response
@@ -177,13 +193,13 @@ export function JobProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   const getJobById = useCallback(async (id: string): Promise<Job> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axiosInstance.get(`/ats-checker/jobs/${id}`);
+      const response = await axios.get(`${ATS_URL}/ats-checker/jobs/${id}`);
       return response.data;
     } catch (err: unknown) {
       const errorMessage =
@@ -210,6 +226,8 @@ export function JobProvider({ children }: { children: ReactNode }) {
           }
         );
         const newJob = response.data;
+        // console.log("New job:", newJob);
+        console.log("responseData:", response.data);
         setJobs((prev) => [...prev, newJob]);
         return newJob;
       } catch (err: unknown) {
@@ -217,7 +235,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
           (err as unknown as { response: { data: { message: string } } })
             .response?.data.message || "Failed to create job";
         setError(errorMessage);
-        throw err; // Re-throw the error so the component can handle it
+        // throw err; // Re-throw the error so the component can handle it
       } finally {
         setLoading(false);
       }

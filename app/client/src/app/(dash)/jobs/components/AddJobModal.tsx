@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const addJobSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -56,23 +57,11 @@ export function AddJobModal({ open, onOpenChange }: AddJobModalProps) {
       is_active: true,
     },
   });
+  const { user } = useAuth();
+  const userId = user?.user?.id;
 
   const onFormSubmit = async (data: AddJobFormData) => {
     try {
-      // Validate required fields first
-      if (!data.title?.trim()) {
-        toast.error("Title is required");
-        return;
-      }
-      if (!data.description?.trim()) {
-        toast.error("Description is required");
-        return;
-      }
-      if (!data.required_skills?.trim()) {
-        toast.error("Required skills are required");
-        return;
-      }
-
       // Try sending as plain object instead of FormData
       const jobDataObject: {
         title: string;
@@ -106,11 +95,15 @@ export function AddJobModal({ open, onOpenChange }: AddJobModalProps) {
         jobDataObject.hr_name = data.hr_name.trim();
       }
 
-      console.log("Job data object:", jobDataObject);
-
-      const newJob = await createJob(jobDataObject as CreateJobData);
+      const newJob = await createJob({
+        ...jobDataObject,
+        user_id: userId,
+        access_token: localStorage.getItem("access_token"),
+      } as CreateJobData);
       toast.success("Job added successfully", {
-        description: `${newJob.title} has been added successfully`,
+        description: `${
+          newJob?.title || "New Job"
+        } has been added successfully`,
       });
       onOpenChange(false);
       reset();
