@@ -14,7 +14,11 @@ export function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
+            refetchOnWindowFocus: false,
+            refetchOnMount: false,
+            refetchOnReconnect: false,
             staleTime: 5 * 60 * 1000, // 5 minutes
+            gcTime: 30 * 60 * 1000, // 30 minutes
             retry: (failureCount, error: Error) => {
               // Don't retry on 401/403 errors
               // eslint-disable-next-line @typescript-eslint/no-explicit-any

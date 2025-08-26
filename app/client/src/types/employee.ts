@@ -1,6 +1,6 @@
 export interface Employee {
-  _id?: string;
-  profilePicture?: string | null;
+  _id: string;
+  profilePicture: string | null;
   firstName: string;
   lastName: string;
   mobileNumber: string;

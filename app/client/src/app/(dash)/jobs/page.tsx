@@ -1,26 +1,22 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/searchInput";
 import { CiCirclePlus } from "react-icons/ci";
 import { AddJobModal } from "./components/AddJobModal";
-import { useJob } from "@/context/JobContext";
+import { useJobs } from "@/hooks/useJobs";
 import Job from "./components/Job";
 import LoadingComponent from "@/components/LoadingComponent";
 import ErrorComponent from "@/components/ErrorComponent";
 
 export default function Page() {
-  const { jobs, loading, error, getAllJobs, clearError } = useJob();
+  const { data: jobs = [], isLoading: loading, error } = useJobs();
   const [isAddJobOpen, setIsAddJobOpen] = useState(false);
 
-  useEffect(() => {
-    getAllJobs();
-  }, [getAllJobs]);
-
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return <ErrorComponent error="Failed to load jobs" />;
   }
 
   return (

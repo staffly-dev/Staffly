@@ -1,7 +1,7 @@
 "use client";
-import { Job, useJob } from "@/context/JobContext";
+import { Job, useJob } from "@/hooks/useJobs";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardHeader,
@@ -17,31 +17,25 @@ import ErrorComponent from "@/components/ErrorComponent";
 
 const ApplyPage = () => {
   const { id } = useParams();
-  const { getJobById, error, loading, clearError } = useJob();
+  const { data: job, isLoading: loading, error } = useJob(id as string);
   const router = useRouter();
-  const [job, setJob] = useState<Job | null>(null);
   const [open, setOpen] = useState(false);
   const [applied, setApplied] = useState(false);
-  useEffect(() => {
-    const getJob = async () => {
-      const jobData = await getJobById(id as string);
-      setJob(jobData);
-    };
-    getJob();
-  }, [getJobById, id]);
 
   if (error) {
     return (
       <ErrorComponent
-        error={error}
-        clearError={clearError}
+        error="Failed to load job"
+        clearError={() => {}}
         className="min-h-[300px]"
       />
     );
   }
+
   if (loading || !job) {
     return <LoadingComponent />;
   }
+
   if (applied && !loading && !error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">

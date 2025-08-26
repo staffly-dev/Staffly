@@ -1,10 +1,16 @@
 "use client";
 import { SearchInput } from "@/components/searchInput";
 import { Card, CardHeader } from "@/components/ui/card";
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { CustomTableContainer } from "../all-employees/components/CustomTableContainer";
 import { Pagination } from "@/components/Pagination";
-import { Candidate, Job, useJob } from "@/context/JobContext";
+import {
+  Candidate,
+  Job,
+  useJobs,
+  useCandidates,
+  useDeleteApplication,
+} from "@/hooks/useJobs";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -17,43 +23,33 @@ import { handleCVLink } from "@/lib/utils";
 export default function CandidatesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const {
-    getCandidates,
-    getAllJobs,
-    jobs,
-    total_applications,
-    candidates: candidateData,
-    loading,
-    error,
-    clearError,
-  } = useJob();
+  const { data: jobs = [] } = useJobs();
+  const { data: candidateResponse, isLoading, error } = useCandidates();
+  const candidateData = useMemo(() => {
+    return candidateResponse?.applications ?? [];
+  }, [candidateResponse?.applications]);
+  const total_applications = candidateResponse?.total_applications || 0;
 
-  useEffect(() => {
-    getAllJobs();
-    getCandidates();
-  }, [getCandidates, getAllJobs]);
+  // Use useMemo instead of useEffect to prevent infinite loops
+  const candidates = useMemo(() => {
+    if (!candidateData || candidateData.length === 0) return [];
 
-  useEffect(() => {
-    setCandidates(
-      candidateData?.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-      )
-    );
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    return candidateData.slice(startIndex, endIndex);
   }, [candidateData, currentPage, itemsPerPage]);
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingComponent />;
   }
 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <div className="text-red-500 text-lg font-bold">Error: {error}</div>
-        <Button variant="outline" onClick={() => clearError()}>
-          Clear Error
-        </Button>
+        <div className="text-red-500 text-lg font-bold">
+          Failed to load candidates
+        </div>
       </div>
     );
   }
@@ -113,7 +109,8 @@ function CandidatesTable({
     null
   );
   const [jobTitle, setJobTitle] = useState<string | undefined>(undefined);
-  const { deleteApplication, deleteLoading } = useJob();
+  const { mutate: deleteApplication, isPending: deleteLoading } =
+    useDeleteApplication();
 
   const handleDelete = (id: string) => {
     toast.warning("Are you sure you want to delete this candidate?", {
@@ -121,8 +118,14 @@ function CandidatesTable({
       action: {
         label: "Delete",
         onClick: () => {
-          deleteApplication(id);
-          toast.success("Candidate deleted successfully");
+          deleteApplication(id, {
+            onSuccess: () => {
+              toast.success("Candidate deleted successfully");
+            },
+            onError: () => {
+              toast.error("Failed to delete candidate");
+            },
+          });
         },
       },
       cancel: {
@@ -131,6 +134,20 @@ function CandidatesTable({
       },
     });
   };
+
+  if (!Array.isArray(candidates) || candidates.length === 0) {
+    return (
+      <CustomTableContainer>
+        <tbody>
+          <tr>
+            <td colSpan={6} className="text-center pt-4 text-yellow-500">
+              No candidates yet
+            </td>
+          </tr>
+        </tbody>
+      </CustomTableContainer>
+    );
+  }
 
   return (
     <CustomTableContainer>
@@ -145,7 +162,7 @@ function CandidatesTable({
         </tr>
       </thead>
       <tbody className="divide-y divide-hrms-gray/20">
-        {candidates?.map((cand) => (
+        {candidates.map((cand) => (
           <tr
             key={cand.application_id}
             className="hover:bg-hrms-gray/20 *:text-sm *:px-6 *:py-3 "
@@ -208,14 +225,6 @@ function CandidatesTable({
             </td>
           </tr>
         ))}
-        {!candidates ||
-          (candidates?.length === 0 && (
-            <tr>
-              <td colSpan={5} className="text-center pt-4 text-yellow-500">
-                No candidates yet
-              </td>
-            </tr>
-          ))}
       </tbody>
       <CandidateInfoModal
         open={open}

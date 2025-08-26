@@ -4,16 +4,17 @@ import { Pagination } from "@/components/Pagination";
 import { SearchInput } from "@/components/searchInput";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { CustomTableContainer } from "../all-employees/components/CustomTableContainer";
 import { CiCirclePlus, CiExport } from "react-icons/ci";
 import { toast } from "sonner";
-import { Payroll, usePayRoll } from "@/context/PayRollContext";
+import { Payroll, usePayrolls, useDeletePayroll } from "@/hooks/usePayroll";
 import ErrorComponent from "@/components/ErrorComponent";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EditPayrollModal } from "./EditPayrollModel";
 import { NewPayrollModal } from "./NewPayrollModal";
+import { useEmployees } from "@/hooks/useEmployees";
 
 const colors = {
   completed: "bg-green-500/20 text-green-500",
@@ -23,26 +24,41 @@ const colors = {
 export default function PayrollPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [payrollsData, setPayrollsData] = useState<Payroll[]>([]);
   const [openNewPayrollModal, setOpenNewPayrollModal] = useState(false);
-  const { payrolls, fetchPayrolls, isLoadingPayrolls, error, clearError } =
-    usePayRoll();
+  const { data, isLoading: isLoadingPayrolls, error } = usePayrolls();
+  const { data: employees } = useEmployees();
 
-  useEffect(() => {
-    fetchPayrolls();
-  }, [fetchPayrolls]);
+  // Use useMemo to prevent unnecessary recalculations
+  const payrolls = useMemo(() => {
+    if (!data || !employees) return [];
+    return data.map((payroll) => {
+      const employee = employees.find(
+        (employee) => employee._id === payroll.employeeId
+      );
+      return { ...payroll, employee };
+    });
+  }, [data, employees]);
 
-  useEffect(() => {
-    setPayrollsData(
-      payrolls.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-      )
-    );
-  }, [currentPage, itemsPerPage, payrolls]);
+  // Calculate paginated data
+  const totalItems = payrolls.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedPayrolls = payrolls.slice(startIndex, endIndex);
+
+  // Reset to first page when items per page changes
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return (
+      <ErrorComponent
+        error="Failed to load payroll data"
+        clearError={() => {}}
+      />
+    );
   }
 
   if (isLoadingPayrolls) {
@@ -79,14 +95,14 @@ export default function PayrollPage() {
           </div>
         </div>
       </div>
-      <PayrollTable payrolls={payrolls} />
+      <PayrollTable payrolls={paginatedPayrolls} />
       <Pagination
         currentPage={currentPage}
-        totalPages={Math.ceil(payrollsData?.length / itemsPerPage)}
+        totalPages={totalPages}
         onPageChange={setCurrentPage}
         itemsPerPage={itemsPerPage}
-        totalItems={payrollsData?.length}
-        onItemsPerPageChange={setItemsPerPage}
+        totalItems={totalItems}
+        onItemsPerPageChange={handleItemsPerPageChange}
       />
       <NewPayrollModal
         open={openNewPayrollModal}
@@ -97,7 +113,8 @@ export default function PayrollPage() {
 }
 
 function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
-  const { deletePayroll, deleteLoading } = usePayRoll();
+  const { mutate: deletePayroll, isPending: deleteLoading } =
+    useDeletePayroll();
   const [openEditPayrollModal, setOpenEditPayrollModal] = useState(false);
   const [selectedPayroll, setSelectedPayroll] = useState<Payroll | null>(null);
 
@@ -107,8 +124,13 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
       action: {
         label: "Delete",
         onClick: () => {
-          deletePayroll(id).then((res) => {
-            toast.success(res);
+          deletePayroll(id, {
+            onSuccess: () => {
+              toast.success("Payroll deleted successfully");
+            },
+            onError: () => {
+              toast.error("Failed to delete payroll");
+            },
           });
         },
       },
@@ -118,6 +140,20 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
       },
     });
   };
+
+  if (!Array.isArray(payrolls) || payrolls.length === 0) {
+    return (
+      <CustomTableContainer>
+        <tbody>
+          <tr>
+            <td colSpan={6} className="text-center pt-4 text-yellow-500">
+              No payrolls yet
+            </td>
+          </tr>
+        </tbody>
+      </CustomTableContainer>
+    );
+  }
 
   return (
     <CustomTableContainer>
@@ -132,7 +168,7 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
         </tr>
       </thead>
       <tbody className="divide-y divide-hrms-gray/20">
-        {payrolls?.map((payroll) => (
+        {payrolls.map((payroll) => (
           <tr
             key={payroll._id}
             className="hover:bg-hrms-gray/20 *:px-6 *:py-3 *:capitalize"
@@ -142,21 +178,19 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
                 <Avatar className="h-8 w-8">
                   <AvatarImage
                     className="object-cover"
-                    src={payroll.employeeId.profilePicture || ""}
+                    src={payroll.employee.profilePicture || ""}
                     alt={
-                      payroll.employeeId.firstName +
+                      payroll.employee.firstName +
                       " " +
-                      payroll.employeeId.lastName
+                      payroll.employee.lastName
                     }
                   />
                   <AvatarFallback>
-                    {payroll.employeeId?.firstName.charAt(0) +
-                      payroll.employeeId?.lastName.charAt(0)}
+                    {payroll.employee?.firstName.charAt(0) +
+                      payroll.employee?.lastName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                {payroll.employeeId.firstName +
-                  " " +
-                  payroll.employeeId.lastName}
+                {payroll.employee.firstName + " " + payroll.employee.lastName}
               </div>
             </td>
             <td>{payroll.ctc}</td>
@@ -217,14 +251,6 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
             </td>
           </tr>
         ))}
-        {!payrolls ||
-          (payrolls.length === 0 && (
-            <tr>
-              <td colSpan={5} className="text-center pt-4 text-yellow-500">
-                No payrolls yet
-              </td>
-            </tr>
-          ))}
       </tbody>
       <EditPayrollModal
         open={openEditPayrollModal}

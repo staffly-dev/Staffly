@@ -56,7 +56,7 @@ function PersonalInformation({ personalInfo }: { personalInfo: Employee }) {
     <TabsContent value="0" className="">
       <div className="grid grid-cols-2 gap-4 py-4">
         {Object.keys(personalInfo)
-          .slice(2, 12)
+          .slice(3, 14)
           .map((key) => (
             <div
               key={key}

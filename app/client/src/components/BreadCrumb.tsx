@@ -7,7 +7,7 @@ import {
   BreadcrumbLink,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { useEmployee } from "@/context/EmployeeContext";
+import { useEmployee } from "@/hooks/useEmployees";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
@@ -79,19 +79,12 @@ export function Breadcrumbs({ name }: { name?: string }) {
     segments.length >= 2 &&
     !segments.includes("add-new-employee");
   const props = useParams();
+  const employeeId = props.employeeId as string;
   const {
-    getEmployeeById,
-    singleEmployee,
-    singleError,
-    clearError,
-    singleLoading,
-  } = useEmployee();
-
-  useEffect(() => {
-    if (editEmployee) {
-      getEmployeeById(props.employeeId as string);
-    }
-  }, [props.employeeId, editEmployee, getEmployeeById, pathname]);
+    data: singleEmployee,
+    error: singleError,
+    isLoading: singleLoading,
+  } = useEmployee(employeeId);
 
   let title =
     getSubTitle(unhandledTitle, name)?.title ||
@@ -118,10 +111,7 @@ export function Breadcrumbs({ name }: { name?: string }) {
   if (singleError) {
     return (
       <div className="flex items-center text-sm gap-2 text-red-500 p-2">
-        <p>{singleError}</p>
-        <Button variant="outline" size="sm" onClick={clearError}>
-          Clear Error
-        </Button>
+        <p>Failed to load employee data</p>
       </div>
     );
   }

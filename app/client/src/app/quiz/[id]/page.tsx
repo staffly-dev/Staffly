@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import { useJob } from "@/context/JobContext";
-import type { QuizData } from "@/context/JobContext";
+import { useQuizBySessionId, useSubmitQuiz } from "@/hooks/useJobs";
+import type { QuizData } from "@/hooks/useJobs";
 import {
   Card,
   CardContent,
@@ -13,29 +13,24 @@ import {
 } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-// import QuestionCard from "./QuestionCard";
 import GetStartedAtTime from "./GetStartedAtTime";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import ErrorComponent from "@/components/ErrorComponent";
+import LoadingComponent from "@/components/LoadingComponent";
 
 const QuizPage = () => {
   const { id } = useParams();
   const router = useRouter();
-  const { getQuizBySessionId, loading, error, submitQuiz, clearError } =
-    useJob();
-  const [quiz, setQuiz] = useState<QuizData | null>(null);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const {
+    data: quiz,
+    isLoading: loading,
+    error,
+  } = useQuizBySessionId(id as string);
+  const { mutate: submitQuiz, isPending: isSubmitting } = useSubmitQuiz();
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    if (!id) return;
-    getQuizBySessionId(id as string)
-      .then(setQuiz)
-      .catch((err) => setFetchError(err.message));
-  }, [id, getQuizBySessionId]);
 
   const handleAnswerChange = (questionIndex: number, answer: string) => {
     setAnswers((prev) => ({
@@ -45,8 +40,10 @@ const QuizPage = () => {
   };
 
   const handleSubmit = async () => {
+    if (!quiz || !id) return;
+
     // Check if all questions are answered
-    if (quiz && Object.keys(answers).length < quiz.questions.length) {
+    if (Object.keys(answers).length < quiz.questions.length) {
       alert("Please answer all questions before submitting.");
       return;
     }
@@ -54,52 +51,53 @@ const QuizPage = () => {
     const answersString = Object.values(answers).map((answer) =>
       Number(answer)
     );
-    const formData = new FormData();
-    formData.append("answers", JSON.stringify(answersString));
-    formData.append("email", quiz.candidate_email);
-    formData.append("quiz_session_id", id as string);
-    const result = await submitQuiz({
-      answers: formData.get("answers") as string,
-      email: formData.get("email") as string,
-      quiz_session_id: formData.get("quiz_session_id") as string,
-    });
-    if (result?.success) {
-      setSubmitted(true);
-      toast.success("Quiz submitted successfully", {
-        description: "You will be notified of the result through email",
-        action: {
-          label: "Close",
-          onClick: () => {
-            router.push("/");
-          },
+
+    submitQuiz(
+      {
+        answers: JSON.stringify(answersString),
+        email: quiz.candidate_email,
+        quiz_session_id: id,
+      },
+      {
+        onSuccess: (result) => {
+          if (result?.success) {
+            setSubmitted(true);
+            toast.success("Quiz submitted successfully", {
+              description: "You will be notified of the result through email",
+              action: {
+                label: "Close",
+                onClick: () => {
+                  router.push("/");
+                },
+              },
+              duration: 4000,
+              position: "top-center",
+            });
+          } else {
+            toast.error("Quiz submission failed", {
+              duration: 4000,
+              position: "top-center",
+            });
+          }
         },
-        duration: 4000,
-        position: "top-center",
-      });
-    } else {
-      toast.error("Quiz submission failed", {
-        duration: 4000,
-        position: "top-center",
-      });
-    }
+        onError: (error) => {
+          toast.error("Quiz submission failed", {
+            duration: 4000,
+            position: "top-center",
+          });
+          console.error("Submit error:", error);
+        },
+      }
+    );
   };
 
-  if (loading)
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 dark:border-white border-gray-900 "></div>
-      </div>
-    );
-  if (error || fetchError)
-    return (
-      <ErrorComponent
-        error={error}
-        fetchError={fetchError}
-        clearError={clearError}
-      />
-    );
+  if (loading) {
+    return <LoadingComponent />;
+  }
 
-  if (!quiz) return <div></div>;
+  if (error || !quiz) {
+    return <ErrorComponent error="Failed to load quiz" clearError={() => {}} />;
+  }
 
   if (quiz.status === "COMPLETED" || submitted) {
     return (
@@ -180,9 +178,12 @@ const QuizPage = () => {
           <Button
             className="w-full"
             onClick={handleSubmit}
-            disabled={Object.keys(answers).length < quiz.questions.length}
+            disabled={
+              Object.keys(answers).length < quiz.questions.length ||
+              isSubmitting
+            }
           >
-            Submit
+            {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
         </CardFooter>
       </Card>

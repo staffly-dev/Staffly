@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Job as JobType, useJob } from "@/context/JobContext";
+import { Job as JobType, useDeleteJob } from "@/hooks/useJobs";
 import { IoBriefcaseOutline } from "react-icons/io5";
 import { cn } from "@/lib/utils";
 import { FaLink, FaSpinner, FaTrash } from "react-icons/fa6";
@@ -10,17 +10,27 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 function Job({ job }: { job: JobType }) {
-  const { deleteJob, deleteLoading } = useJob();
+  const { mutate: deleteJob, isPending: deleteLoading } = useDeleteJob();
   const [id, setId] = useState<string | null>(null);
+
   const handleDelete = (id: string) => {
     setId(id);
     toast.warning("Are you sure you want to delete this job?", {
       action: {
         label: "Delete",
         onClick: () => {
-          deleteJob(id);
-          toast.success("Job deleted successfully", {
-            position: "top-center",
+          deleteJob(id, {
+            onSuccess: () => {
+              toast.success("Job deleted successfully", {
+                position: "top-center",
+              });
+            },
+            onError: (error) => {
+              toast.error("Failed to delete job", {
+                position: "top-center",
+              });
+              console.log("Delete error:", error);
+            },
           });
         },
       },

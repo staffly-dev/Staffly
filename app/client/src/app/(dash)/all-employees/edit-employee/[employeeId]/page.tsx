@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { LockIcon, BriefcaseIcon, FileTextIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
-// import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +20,6 @@ import {
   NewEmployeeFormData,
 } from "@/lib/validations/newEmployee";
 import { IoPersonCircleOutline } from "react-icons/io5";
-import { useEmployee } from "@/context/EmployeeContext";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { UpdateEmployeeData } from "@/types/employee";
@@ -36,22 +34,20 @@ import {
   offices,
   states,
 } from "@/constants";
+import { useEmployee, useUpdateEmployee } from "@/hooks/useEmployees";
 
 const labelStyle = "text-sm font-normal block mb-1";
 
 export default function MultiStepForm() {
   const { employeeId } = useParams<{ employeeId: string }>();
   const router = useRouter();
-  const { updateEmployee, singleEmployee, singleLoading, error, clearError } =
-    useEmployee();
+  const {
+    data: singleEmployee,
+    isLoading,
+    error,
+  } = useEmployee(employeeId as string);
+  const { mutate: updateEmployee, isPending: isUpdating } = useUpdateEmployee();
   const [step, setStep] = useState(0);
-  // const [image, setImage] = useState<{
-  //   image: File | null;
-  //   preview: string | null;
-  // }>({
-  //   image: null,
-  //   preview: null,
-  // });
 
   const {
     register,
@@ -60,7 +56,7 @@ export default function MultiStepForm() {
     setValue,
     trigger,
     watch,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isDirty },
   } = useForm<NewEmployeeFormData>({
     resolver: zodResolver(newEmployeeSchema),
   });
@@ -83,14 +79,6 @@ export default function MultiStepForm() {
     }
   }, [singleEmployee, reset]);
 
-  // const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = event.target.files?.[0];
-  //   if (file) {
-  //     const photoUrl = URL.createObjectURL(file);
-  //     setImage({ image: file, preview: photoUrl });
-  //   }
-  // };
-
   const onSubmit = async (data: NewEmployeeFormData) => {
     if (!isDirty) {
       toast.error("No changes to save", {
@@ -99,26 +87,31 @@ export default function MultiStepForm() {
       });
       return;
     }
-    try {
-      const employee = await updateEmployee(
-        employeeId,
-        data as UpdateEmployeeData
-      );
-      toast.success("Employee updated successfully");
-      router.push(`/all-employees/${employee._id}`);
-    } catch (error) {
-      console.log(error);
+
+    if (!employeeId) {
+      toast.error("Employee ID not found");
+      return;
     }
+
+    updateEmployee(
+      {
+        employeeId,
+        employeeData: data as UpdateEmployeeData,
+      },
+      {
+        onSuccess: (updatedEmployee) => {
+          toast.success("Employee updated successfully");
+          router.push(`/all-employees/${updatedEmployee._id}`);
+        },
+        onError: (error) => {
+          toast.error("Failed to update employee");
+          console.error("Update error:", error);
+        },
+      }
+    );
   };
 
   type fieldNames = keyof NewEmployeeFormData;
-
-  // const [files, setFiles] = useState<{ [key: string]: File | null }>({
-  //   appointmentLetter: null,
-  //   salarySlips: null,
-  //   relivingLetter: null,
-  //   experienceLetter: null,
-  // });
 
   // Get fields to validate for a specific step
   const getFieldsToValidate = (stepNumber: number): fieldNames[] => {
@@ -140,21 +133,14 @@ export default function MultiStepForm() {
       case 1: // Professional
         return [
           "userName",
-          "workEmail",
+          "emailAddress",
           "department",
-          "joiningDate",
+          "joiningAt",
           "officeLocation",
           "designation",
           "workingDays",
           "employeeType",
         ] as fieldNames[];
-      // case 2: // Documents
-      //   return [
-      //     "appointmentLetter",
-      //     "salarySlips",
-      //     "relivingLetter",
-      //     "experienceLetter",
-      //   ] as fieldNames[];
       case 3: // Account Access
         return ["linkdeinLink", "githubLink", "slackUserName"] as fieldNames[];
       default:
@@ -196,39 +182,21 @@ export default function MultiStepForm() {
     }
   };
 
-  // const handleFileChange = (
-  //   event: React.ChangeEvent<HTMLInputElement>,
-  //   type: fieldNames
-  // ) => {
-  //   const file = event.target.files?.[0] || null;
-  //   if (file) {
-  //     setFiles((prevFiles) => ({ ...prevFiles, [type]: file }));
-  //     setValue(type, file);
-  //   }
-  // };
-
-  // const handleDrop = (
-  //   event: React.DragEvent<HTMLLabelElement>,
-  //   type: fieldNames
-  // ) => {
-  //   event.preventDefault();
-  //   const file = event.dataTransfer.files?.[0] || null;
-  //   if (file) {
-  //     setFiles((prevFiles) => ({ ...prevFiles, [type]: file }));
-  //     setValue(type, file);
-  //   }
-  // };
-
-  // const handleDragOver = (event: React.DragEvent<HTMLLabelElement>) => {
-  //   event.preventDefault();
-  // };
-
-  if (singleLoading) {
+  if (isLoading) {
     return <LoadingComponent className="h-[400px]" />;
   }
 
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return (
+      <ErrorComponent
+        error="Failed to load employee data"
+        clearError={() => {}}
+      />
+    );
+  }
+
+  if (!singleEmployee) {
+    return <ErrorComponent error="Employee not found" clearError={() => {}} />;
   }
 
   return (
@@ -264,37 +232,6 @@ export default function MultiStepForm() {
           {/*  step 0: Personal Information */}
           <TabsContent value="0">
             <div className="grid grid-cols-2 gap-4 p-4">
-              {/* <div className="col-span-2 w-fit">
-                <label htmlFor="image-upload" className="cursor-pointer w-24">
-                  <Card className="w-24 h-24 flex items-center justify-center cursor-pointer border-2 rounded-lg">
-                    {image.preview ? (
-                      <Image
-                        src={image.preview}
-                        width={100}
-                        height={100}
-                        alt="Uploaded"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <Upload className="text-hrms-gray/30 w-6 h-6" />
-                    )}
-                  </Card>
-                </label>
-                <input
-                  type="file"
-                  id="photo"
-                  className="hidden"
-                  accept="image/*"
-                  {...register("profilePicture")}
-                  onChange={handleImageChange}
-                />
-                {errors.profilePicture && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.profilePicture.message as string}
-                  </p>
-                )}
-</div> */}
-
               <div className="">
                 <Label className={labelStyle}>Profile Image Link</Label>
                 <Input
@@ -614,62 +551,13 @@ export default function MultiStepForm() {
           </TabsContent>
 
           {/*  step 2: Upload Documents */}
-          {/* <TabsContent value="2">
+          <TabsContent value="2">
             <div className="grid grid-cols-2 gap-4 p-4">
-              {[
-                { label: "Appointment Letter", type: "appointmentLetter" },
-                { label: "Salary Slips", type: "salarySlips" },
-                { label: "Reliving Letter", type: "relivingLetter" },
-                { label: "Experience Letter", type: "experienceLetter" },
-              ].map(({ label, type }) => (
-                <div key={type}>
-                  <p className="mb-2 font-semibold">Upload {label}</p>
-                  <label
-                    htmlFor={type}
-                    className="cursor-pointer block"
-                    onDrop={(event) => handleDrop(event, type as fieldNames)}
-                    onDragOver={handleDragOver}
-                  >
-                    <Card className="h-32 flex flex-col items-center justify-center border-dashed border-2 rounded-lg p-4 text-center">
-                      {files[type] ? (
-                        <p className="text-sm text-gray-500">
-                          {files[type]?.name}
-                        </p>
-                      ) : (
-                        <>
-                          <Upload className="text-hrms-gray/30 w-8 h-8 mb-2" />
-                          <p className="text-sm">
-                            Drag & Drop or{" "}
-                            <span className="text-blue-500 underline">
-                              choose file
-                            </span>{" "}
-                            to upload
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Supported formats: JPEG, PDF
-                          </p>
-                        </>
-                      )}
-                    </Card>
-                  </label>
-                  <input
-                    type="file"
-                    id={type}
-                    className="hidden"
-                    accept=".jpeg,.jpg,.pdf"
-                    onChange={(event) =>
-                      handleFileChange(event, type as fieldNames)
-                    }
-                  />
-                  {errors[type as fieldNames] && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors[type as fieldNames]?.message as string}
-                    </p>
-                  )}
-                </div>
-              ))}
+              <div className="col-span-2 text-center py-8 text-muted-foreground">
+                Document upload functionality is currently disabled
+              </div>
             </div>
-          </TabsContent> */}
+          </TabsContent>
 
           {/*  step 3: Account Access */}
           <TabsContent value="3">
@@ -729,8 +617,8 @@ export default function MultiStepForm() {
               </Button>
             )}
             {step === 3 && (
-              <Button disabled={isSubmitting} type="submit">
-                {isSubmitting ? "Saving..." : "Save Changes"}
+              <Button disabled={isUpdating} type="submit">
+                {isUpdating ? "Saving..." : "Save Changes"}
               </Button>
             )}
           </div>
