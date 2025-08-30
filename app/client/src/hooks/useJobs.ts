@@ -265,7 +265,6 @@ export const useCandidates = () => {
         },
         headers: {
           "X-User-Id": userId,
-          // cre,
         },
       });
       return response.data;

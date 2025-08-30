@@ -31,6 +31,7 @@ import {
   states,
 } from "@/constants";
 import Combobox from "@/components/ui/combobox";
+import { AxiosError } from "axios";
 
 export default function MultiStepForm() {
   const router = useRouter();
@@ -57,9 +58,30 @@ export default function MultiStepForm() {
         toast.success("Employee added successfully");
         router.push(`/all-employees/${newEmployee._id}`);
       },
-      onError: (error) => {
-        toast.error("Failed to add employee");
-        console.error("Add employee error:", error);
+      onError: (error: AxiosError) => {
+        if (error.response && error.response.data) {
+          const { details } = error.response.data;
+
+          if (details && Array.isArray(details)) {
+            // Collect all validation messages
+            const messages = details.map(
+              (d) => `${d.path.join(".")} - ${d.message}`
+            );
+
+            // Example: show in an alert or UI toast
+            toast.error(messages.join("\n"), {
+              position: "top-center",
+            });
+          } else {
+            toast.error(error.response.data.error || "Something went wrong", {
+              position: "top-center",
+            });
+          }
+        } else {
+          toast.error("Network error. Please try again.", {
+            position: "top-center",
+          });
+        }
       },
     });
   };

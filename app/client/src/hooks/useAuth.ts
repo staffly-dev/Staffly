@@ -4,6 +4,9 @@ import { toast } from "sonner";
 import axiosInstance from "@/lib/axiosInstance";
 import { tokenStore } from "@/lib/token";
 import { useEffect, useRef } from "react";
+import axios from "axios";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Types
 export interface User {
@@ -76,7 +79,17 @@ const authAPI = {
   },
 
   logoutAll: async (): Promise<void> => {
-    await axiosInstance.post("/hrms/auth/logout-all");
+    const refreshToken = tokenStore.getRefreshToken();
+    await axios.post(
+      API_BASE_URL + "/hrms/auth/logout-all",
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${refreshToken}`,
+        },
+      }
+    );
   },
 
   getCurrentUser: async (): Promise<UserData> => {
@@ -220,13 +233,16 @@ export function useAuth() {
       // Reset the refresh attempt flag since we're now authenticated
       hasAttemptedRefresh.current = false;
 
-      // Update the user data in React Query cache
-      queryClient.setQueryData(authKeys.user, data.data.user);
+      // Update the user data in React Query cache with the correct structure
+      queryClient.setQueryData(authKeys.user, {
+        user: data.data.user,
+        message: data.message,
+      });
 
-      // Invalidate and refetch user data
-      queryClient.invalidateQueries({ queryKey: authKeys.user });
+      // No need to invalidate since we're setting the data directly
 
       toast.success(data.message);
+
       router.push("/dashboard");
     },
   });
@@ -296,15 +312,13 @@ export function useAuth() {
       router.push("/login");
     },
     onError: () => {
-      // Even if logout fails on server, clear local state
-      tokenStore.clearAll();
-
-      // Reset the refresh attempt flag
-      hasAttemptedRefresh.current = false;
-
-      queryClient.clear();
-      router.push("/login");
-      toast.error("Logged out from all devices (with errors)");
+      // // Even if logout fails on server, clear local state
+      // tokenStore.clearAll();
+      // // Reset the refresh attempt flag
+      // hasAttemptedRefresh.current = false;
+      // queryClient.clear();
+      // router.push("/login");
+      // toast.error("Logged out from all devices (with errors)");
     },
   });
 

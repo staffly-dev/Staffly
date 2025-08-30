@@ -72,7 +72,7 @@ export default function FeaturesPage({
       </section>
 
       {/* HR Operations Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-primary/10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">
@@ -203,7 +203,7 @@ export default function FeaturesPage({
       </section>
 
       {/* Business Intelligence Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-primary/10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">
