@@ -1,10 +1,11 @@
 "use client";
 import { SearchInput } from "@/components/searchInput";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import React, { useEffect, useState } from "react";
 import { CustomTableContainer } from "../all-employees/components/CustomTableContainer";
 import Image from "next/image";
 import { Pagination } from "@/components/Pagination";
+import UnderDevelopment from "@/components/global/UnderDevelopment";
 
 type Leave = {
   id: string;
@@ -68,8 +69,13 @@ export default function LeavesPages() {
   }, [currentPage, itemsPerPage]);
 
   return (
-    <Card className="p-4">
-      <SearchInput />
+    <Card className="p-4 relative">
+      <CardHeader className="flex flex-row justify-between items-center">
+        <SearchInput />
+        <span className="font-bold text-gray-500">
+          {candidates.length} Leaves Recorded
+        </span>
+      </CardHeader>
       <LeavesTable leaves={data} />
       <Pagination
         currentPage={currentPage}
@@ -79,6 +85,7 @@ export default function LeavesPages() {
         totalItems={candidates.length}
         onItemsPerPageChange={setItemsPerPage}
       />
+      <UnderDevelopment />
     </Card>
   );
 }

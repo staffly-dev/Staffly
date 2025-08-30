@@ -12,7 +12,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <Suspense fallback={<div>Loading...</div>}>
           <Navbar />
         </Suspense>
-        <div className="pb-4 ">{children}</div>
+        <div className="pb-4">{children}</div>
       </main>
     </div>
   );
