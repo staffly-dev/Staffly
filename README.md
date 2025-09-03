@@ -338,8 +338,6 @@ docker-compose up -d --scale ats-backend=3
 
 - **[Backend Development Overview](./services/ats-system-checker/docs/00-backend-development-overview.md)**
 - **[Security Implementation Guide](./services/ats-system-checker/docs/02-security-implementation-guide.md)**
-- **[AWS S3 Setup Guide](./services/ats-system-checker/S3_SETUP.md)**
-- **[API Endpoints Reference](./services/ats-system-checker/docs/02-api-endpoints-reference.md)**
 
 ## 🤝 Support
 
@@ -354,10 +352,6 @@ docker-compose up -d --scale ats-backend=3
 - **Contributors**: We welcome contributions from the community
 - **Code of Conduct**: Please read our code of conduct
 - **License**: MIT License - see LICENSE file for details
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
