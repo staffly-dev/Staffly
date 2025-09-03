@@ -143,120 +143,124 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
 
   if (!Array.isArray(payrolls) || payrolls.length === 0) {
     return (
-      <CustomTableContainer>
-        <tbody>
-          <tr>
-            <td colSpan={6} className="text-center pt-4 text-yellow-500">
-              No payrolls yet
-            </td>
-          </tr>
-        </tbody>
-      </CustomTableContainer>
+      <div className="min-h-[55vh]">
+        <CustomTableContainer>
+          <tbody>
+            <tr>
+              <td colSpan={6} className="text-center pt-4 text-yellow-500">
+                No payrolls yet
+              </td>
+            </tr>
+          </tbody>
+        </CustomTableContainer>
+      </div>
     );
   }
 
   return (
-    <CustomTableContainer>
-      <thead className="sticky top-0 bg-background shadow-sm">
-        <tr className="*:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
-          <th>Employee Name</th>
-          <th>CTC</th>
-          <th>Salary Per Month</th>
-          <th>Deduction</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-hrms-gray/20">
-        {payrolls.map((payroll) => (
-          <tr
-            key={payroll._id}
-            className="hover:bg-hrms-gray/20 *:px-6 *:py-3 *:capitalize"
-          >
-            <td>
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    className="object-cover"
-                    src={payroll.employee.profilePicture || ""}
-                    alt={
-                      payroll.employee.firstName +
-                      " " +
-                      payroll.employee.lastName
-                    }
-                  />
-                  <AvatarFallback>
-                    {payroll.employee?.firstName.charAt(0) +
-                      payroll.employee?.lastName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                {payroll.employee.firstName + " " + payroll.employee.lastName}
-              </div>
-            </td>
-            <td>{payroll.ctc}</td>
-            <td>{payroll.salaryByMonth}</td>
-            <td>{payroll.deduction}</td>
-            <td className="  px-4 py-2">
-              <span
-                className={`rounded-lg text-xs px-2 py-1 ${
-                  colors[payroll.status]
-                }`}
-              >
-                {payroll.status}
-              </span>
-            </td>
-            <td className="px-6 py-3">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setSelectedPayroll(payroll);
-                    setOpenEditPayrollModal(true);
-                  }}
-                  className="hover:text-primary"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => handleDeletePayroll(payroll._id)}
-                  className="hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={deleteLoading}
-                >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </td>
+    <div className="min-h-[55vh]">
+      <CustomTableContainer>
+        <thead className="sticky top-0 bg-background shadow-sm">
+          <tr className="*:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
+            <th>Employee Name</th>
+            <th>CTC</th>
+            <th>Salary Per Month</th>
+            <th>Deduction</th>
+            <th>Status</th>
+            <th>Action</th>
           </tr>
-        ))}
-      </tbody>
-      <EditPayrollModal
-        open={openEditPayrollModal}
-        onOpenChange={setOpenEditPayrollModal}
-        payroll={selectedPayroll as Payroll}
-      />
-    </CustomTableContainer>
+        </thead>
+        <tbody className="divide-y divide-hrms-gray/20">
+          {payrolls.map((payroll) => (
+            <tr
+              key={payroll._id}
+              className="hover:bg-hrms-gray/20 *:px-6 *:py-3 *:capitalize"
+            >
+              <td>
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      className="object-cover"
+                      src={payroll.employee.profilePicture || ""}
+                      alt={
+                        payroll.employee.firstName +
+                        " " +
+                        payroll.employee.lastName
+                      }
+                    />
+                    <AvatarFallback>
+                      {payroll.employee?.firstName.charAt(0) +
+                        payroll.employee?.lastName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {payroll.employee.firstName + " " + payroll.employee.lastName}
+                </div>
+              </td>
+              <td>{payroll.ctc}</td>
+              <td>{payroll.salaryByMonth}</td>
+              <td>{payroll.deduction}</td>
+              <td className="  px-4 py-2">
+                <span
+                  className={`rounded-lg text-xs px-2 py-1 ${
+                    colors[payroll.status]
+                  }`}
+                >
+                  {payroll.status}
+                </span>
+              </td>
+              <td className="px-6 py-3">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setSelectedPayroll(payroll);
+                      setOpenEditPayrollModal(true);
+                    }}
+                    className="hover:text-primary"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleDeletePayroll(payroll._id)}
+                    className="hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={deleteLoading}
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <EditPayrollModal
+          open={openEditPayrollModal}
+          onOpenChange={setOpenEditPayrollModal}
+          payroll={selectedPayroll as Payroll}
+        />
+      </CustomTableContainer>
+    </div>
   );
 }

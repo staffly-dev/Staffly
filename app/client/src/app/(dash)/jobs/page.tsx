@@ -16,11 +16,11 @@ export default function Page() {
   const [isAddJobOpen, setIsAddJobOpen] = useState(false);
 
   if (error) {
-    return <ErrorComponent error="Failed to load jobs" />;
+    return <ErrorComponent error="Failed to load jobs" clearError={() => {}} />;
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 min-h-[80vh]">
       <div className="flex justify-between">
         <SearchInput placeholder="Search for a job" />
         <Button onClick={() => setIsAddJobOpen(true)}>
@@ -39,6 +39,11 @@ export default function Page() {
             {jobs.map((job) => (
               <Job key={job.job_id} job={job} />
             ))}
+            {!jobs.length && (
+              <div className="text-center col-span-full text-yellow-500">
+                No jobs found
+              </div>
+            )}
           </div>
         </Card>
       )}

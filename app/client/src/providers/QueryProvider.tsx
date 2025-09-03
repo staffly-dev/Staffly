@@ -16,7 +16,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
           queries: {
             refetchOnWindowFocus: false,
             refetchOnMount: false,
-            refetchOnReconnect: false,
+            refetchOnReconnect: true,
             staleTime: 5 * 60 * 1000, // 5 minutes
             gcTime: 30 * 60 * 1000, // 30 minutes
             retry: (failureCount, error: Error) => {

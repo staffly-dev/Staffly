@@ -55,7 +55,7 @@ export default function CandidatesPage() {
   }
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 ">
       <CardHeader className="flex flex-row justify-between items-center">
         <SearchInput />
         <span className="font-bold text-gray-500">
@@ -137,101 +137,105 @@ function CandidatesTable({
 
   if (!Array.isArray(candidates) || candidates.length === 0) {
     return (
-      <CustomTableContainer>
-        <tbody>
-          <tr>
-            <td colSpan={6} className="text-center pt-4 text-yellow-500">
-              No candidates yet
-            </td>
-          </tr>
-        </tbody>
-      </CustomTableContainer>
+      <div className="min-h-[55vh]">
+        <CustomTableContainer>
+          <tbody>
+            <tr>
+              <td colSpan={6} className="text-center pt-4 text-yellow-500">
+                No candidates yet
+              </td>
+            </tr>
+          </tbody>
+        </CustomTableContainer>
+      </div>
     );
   }
 
   return (
-    <CustomTableContainer>
-      <thead className="sticky top-0 bg-background shadow-sm">
-        <tr className="*:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
-          <th>Candidate Name</th>
-          <th>Applied For</th>
-          <th>Resume Link</th>
-          <th>CV Score</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-hrms-gray/20">
-        {candidates.map((cand) => (
-          <tr
-            key={cand.application_id}
-            className="hover:bg-hrms-gray/20 *:text-sm *:px-6 *:py-3 "
-          >
-            <td className="capitalize">{cand.candidate_name}</td>
-            <td className="capitalize">
-              {jobs.find((job) => job.job_id === cand.job_id)?.title}
-            </td>
-            <td className="capitalize">
-              <Link
-                href={handleCVLink(cand.cv_filename)}
-                className="flex items-center gap-2 hover:text-primary"
-                target="_blank"
-              >
-                <FaFilePdf className="w-4 h-4 " />
-                <span className="">Resume Link</span>
-              </Link>
-            </td>
-            <td className="text-center">
-              {cand.cv_score ? cand.cv_score : "-"}
-            </td>
-            <td className="px-4 py-2 w-52">
-              <span
-                className={`rounded-lg text-xs px-2 py-1 ${
-                  colors[cand.status as keyof typeof colors]
-                }`}
-              >
-                {getText(cand.status)}
-              </span>
-            </td>
-            <td className="flex gap-2">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setSelectedCandidate(cand);
-                  setOpen(true);
-                  setJobTitle(
-                    jobs.find((job) => job.job_id === cand.job_id)?.title ||
-                      null
-                  );
-                }}
-              >
-                <FaEye />
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                disabled={deleteLoading}
-                onClick={() => {
-                  handleDelete(cand.application_id);
-                }}
-              >
-                {deleteLoading ? (
-                  <FaSpinner className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FaTrash />
-                )}
-              </Button>
-            </td>
+    <div className="min-h-[55vh]">
+      <CustomTableContainer>
+        <thead className="sticky top-0 bg-background shadow-sm">
+          <tr className="*:px-6 *:py-4 *:text-left *:text-xs *:font-medium *:text-gray-500 *:uppercase border-b border-hrms-gray/20">
+            <th>Candidate Name</th>
+            <th>Applied For</th>
+            <th>Resume Link</th>
+            <th>CV Score</th>
+            <th>Status</th>
+            <th>Action</th>
           </tr>
-        ))}
-      </tbody>
-      <CandidateInfoModal
-        open={open}
-        onOpenChange={setOpen}
-        candidate={selectedCandidate}
-        jobTitle={jobTitle}
-      />
-    </CustomTableContainer>
+        </thead>
+        <tbody className="divide-y divide-hrms-gray/20">
+          {candidates.map((cand) => (
+            <tr
+              key={cand.application_id}
+              className="hover:bg-hrms-gray/20 *:text-sm *:px-6 *:py-3 "
+            >
+              <td className="capitalize">{cand.candidate_name}</td>
+              <td className="capitalize">
+                {jobs.find((job) => job.job_id === cand.job_id)?.title}
+              </td>
+              <td className="capitalize">
+                <Link
+                  href={handleCVLink(cand.cv_filename)}
+                  className="flex items-center gap-2 hover:text-primary"
+                  target="_blank"
+                >
+                  <FaFilePdf className="w-4 h-4 " />
+                  <span className="">Resume Link</span>
+                </Link>
+              </td>
+              <td className="text-center">
+                {cand.cv_score ? cand.cv_score : "-"}
+              </td>
+              <td className="px-4 py-2 w-52">
+                <span
+                  className={`rounded-lg text-xs px-2 py-1 ${
+                    colors[cand.status as keyof typeof colors]
+                  }`}
+                >
+                  {getText(cand.status)}
+                </span>
+              </td>
+              <td className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setSelectedCandidate(cand);
+                    setOpen(true);
+                    setJobTitle(
+                      jobs.find((job) => job.job_id === cand.job_id)?.title ||
+                        null
+                    );
+                  }}
+                >
+                  <FaEye />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={deleteLoading}
+                  onClick={() => {
+                    handleDelete(cand.application_id);
+                  }}
+                >
+                  {deleteLoading ? (
+                    <FaSpinner className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <FaTrash />
+                  )}
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <CandidateInfoModal
+          open={open}
+          onOpenChange={setOpen}
+          candidate={selectedCandidate}
+          jobTitle={jobTitle}
+        />
+      </CustomTableContainer>
+    </div>
   );
 }
