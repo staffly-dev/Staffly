@@ -8,7 +8,7 @@
     "build": "tsc && cp ./package.json ./dist",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "powershell -ExecutionPolicy Bypass -File ./fix-packages.ps1"
+    "postinstall": "node fix-packages.js"
   },
   "keywords": [],
   "author": "Staffly Team",

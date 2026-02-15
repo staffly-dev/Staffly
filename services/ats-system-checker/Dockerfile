@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
 
 # Copy package files
 COPY package.json ./
+COPY fix-packages.js ./
 
 # Install dependencies
 RUN npm install
