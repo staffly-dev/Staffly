@@ -2,30 +2,36 @@
 
 ## Project Overview
 
-The ATS (Applicant Tracking System) backend is a comprehensive Python-based API service built with FastAPI, designed to automate the hiring process from CV submission to interview scheduling. The system integrates AI-powered CV evaluation, automated quiz generation, and complete HR workflow management.
+The ATS (Applicant Tracking System) backend is a comprehensive TypeScript-based API service built with Express.js, designed to automate the hiring process from CV submission to interview scheduling. The system integrates AI-powered CV evaluation, automated quiz generation, and complete HR workflow management.
+
+**Note**: This service has been migrated from Python/FastAPI to TypeScript/Express.js. See [TypeScript Migration Guide](./08-typescript-migration.md) for details.
 
 ## Technology Stack
 
 ### Core Technologies
 
-- **Framework**: FastAPI (Python 3.9+)
-- **Database**: MongoDB with Motor (async driver)
-- **AI Integration**: External AI service via HTTP API
+- **Framework**: Express.js (Node.js 20+)
+- **Language**: TypeScript
+- **Database**: MongoDB with Mongoose ODM
+- **AI Integration**: External AI service via HTTP API (axios)
 - **Authentication**: JWT-based authentication
-- **Email**: SMTP-based email notifications
-- **Documentation**: Swagger/OpenAPI
+- **Email**: SMTP-based email notifications (nodemailer)
+- **File Upload**: Multer for multipart/form-data
 
 ### Key Dependencies
 
-```python
-fastapi==0.104.1
-uvicorn==0.24.0
-motor==3.3.1
-pydantic==2.5.0
-python-multipart==0.0.6
-httpx==0.25.2
-python-jose==3.3.0
-passlib==1.7.4
+```json
+{
+  "express": "^4.21.2",
+  "mongoose": "^8.13.0",
+  "typescript": "^5.8.3",
+  "@aws-sdk/client-s3": "^3.700.0",
+  "axios": "^1.8.4",
+  "jsonwebtoken": "^9.0.2",
+  "nodemailer": "^6.10.1",
+  "multer": "^1.4.5-lts.1",
+  "zod": "^3.24.2"
+}
 ```
 
 ## System Architecture

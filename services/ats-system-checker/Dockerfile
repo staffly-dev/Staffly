@@ -1,34 +1,49 @@
-# Backend Service Dockerfile
-FROM python:3.10-slim
+# Use Node.js 20 slim image as base
+FROM node:20-slim
 
-WORKDIR /app
-
-# Install system dependencies
+# Install build dependencies for native modules
 RUN apt-get update && apt-get install -y \
-  gcc \
+  python3 \
+  make \
+  g++ \
   && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Set working directory
+WORKDIR /app
 
-# Copy application code
-COPY ./src ./src
+# Copy package.json only (package-lock.json may be corrupted)
+COPY package.json ./
 
-# Create necessary directories
+# Install dependencies (skip scripts since fix-packages.js is Windows-only)
+# npm install will generate a fresh package-lock.json
+RUN npm install --ignore-scripts --legacy-peer-deps
+
+# Copy TypeScript configuration
+COPY tsconfig.json ./
+
+# Copy source code
+COPY src/ ./src/
+
+# Build TypeScript
+RUN npm run build
+
+# Remove development dependencies and unnecessary files (not needed in production)
+RUN npm prune --production && \
+  rm -rf src/ tsconfig.json
+
+# Create necessary directories for uploads and evaluations
 RUN mkdir -p uploads evaluations
 
-# Expose port (Railway will override this with $PORT)
+# Expose the port
 EXPOSE 4002
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH="/app"
-ENV PORT=4002
+# Set environment to production
+ENV NODE_ENV=production
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:$PORT/ats-checker/health/simple || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:4002/ats-checker/health/simple', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
 
-# Start the backend service
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "4002"]
+# Start the application
+CMD ["npm", "start"]
+
