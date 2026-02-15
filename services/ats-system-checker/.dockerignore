@@ -44,7 +44,7 @@ __tests__
 
 # Development files
 fix-packages.ps1
-fix-packages.js
+# Note: fix-packages.js is needed for postinstall script, so don't exclude it
 
 # Uploads and evaluations (will be created in container)
 uploads/*
