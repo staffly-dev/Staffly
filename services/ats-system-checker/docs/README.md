@@ -76,7 +76,25 @@ Welcome to the comprehensive documentation for the ATS (Applicant Tracking Syste
 - Credential management and best practices
 - Monitoring, logging, and troubleshooting
 
-### 9. [Complete System Security](08-complete-system-security.md)
+### 9. [TypeScript Migration Guide](08-typescript-migration.md)
+
+**Migration from Python to TypeScript**
+
+- Technology stack changes
+- Architecture preservation
+- Code examples and patterns
+- Migration benefits and troubleshooting
+
+### 10. [Quick Start Guide - TypeScript](QUICK_START_TYPESCRIPT.md)
+
+**Getting started with the TypeScript version**
+
+- Installation steps
+- Development workflow
+- Common commands
+- Troubleshooting guide
+
+### 10. [Complete System Security](08-complete-system-security.md)
 
 **Comprehensive security across all services**
 
@@ -89,8 +107,9 @@ Welcome to the comprehensive documentation for the ATS (Applicant Tracking Syste
 
 ### Prerequisites
 
-- Python 3.9+
+- Node.js 20+ (LTS recommended)
 - MongoDB 4.4+
+- npm or yarn
 - Docker (optional)
 
 ### Installation
@@ -101,24 +120,28 @@ git clone <repository-url>
 cd ats-system-checker
 
 # Install dependencies
-pip install -r requirements.txt
+npm install
 
 # Set up environment variables
-cp .env.example .env
+cp .example.env .env
 # Edit .env with your configuration
 
-# Run the application
-python -m src.main
+# Run the application (development)
+npm run dev
+
+# Or build and run (production)
+npm run build
+npm start
 ```
 
 ### API Documentation
 
-Once the server is running, visit:
+The API is accessible via REST endpoints. All endpoints are documented in the main README.
 
-- **Swagger UI**: http://localhost:4002/docs (Authentication Required)
-- **ReDoc**: http://localhost:4002/redoc (Authentication Required)
+- **Health Check**: http://localhost:4002/ats-checker/health
+- **API Root**: http://localhost:4002/
 
-**Note**: API documentation requires authentication. Default credentials are `admin:admin123`. See [API Documentation Security](07-api-documentation-security.md) for details.
+**Note**: The service has been converted from Python/FastAPI to TypeScript/Express.js. All functionality is preserved with improved type safety.
 
 ## 🔧 Development
 
@@ -167,22 +190,19 @@ src/
 ### Run Tests
 
 ```bash
-# Run all tests
-pytest
-
-# Run specific test file
-pytest tests/test_evaluation_service.py
+# Run all tests (when test suite is set up)
+npm test
 
 # Run with coverage
-pytest --cov=src
+npm run test:coverage
 ```
 
 ### Test Coverage
 
-- Unit tests for all services
-- Integration tests for API endpoints
-- Database operation tests
-- Security feature tests
+- Unit tests for all services (to be implemented)
+- Integration tests for API endpoints (to be implemented)
+- Database operation tests (to be implemented)
+- Security feature tests (to be implemented)
 
 ## 🚀 Deployment
 
@@ -190,10 +210,10 @@ pytest --cov=src
 
 ```bash
 # Build the image
-docker build -t ats-system .
+docker build -t ats-system-checker .
 
 # Run the container
-docker run -p 4000:4000 ats-system
+docker run -p 4002:4002 ats-system-checker
 ```
 
 ### Environment Variables

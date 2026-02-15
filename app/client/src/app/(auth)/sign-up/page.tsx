@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import logo from "/public/imgs/logo.png";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -45,7 +44,7 @@ export default function SignUpPage() {
     <div>
       <div className="flex gap-3 items-center mb-8">
         <div className="relative w-10 h-10">
-          <Image src={logo} alt="HRMS Logo" fill className="object-contain" />
+          <Image src={"/imgs/logo.png"} alt="HRMS Logo" fill className="object-contain" />
         </div>
         <h1 className="text-2xl font-semibold">HRMS</h1>
       </div>

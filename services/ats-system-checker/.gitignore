@@ -1,4 +1,4 @@
-# Python
+# Python (legacy)
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,6 +27,22 @@ env/
 ENV/
 venv.bak/
 env.bak/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+
+# TypeScript
+*.tsbuildinfo
+dist/
+build/
 
 # Environment variables
 .env
