@@ -76,7 +76,7 @@ const QuizSessionSchema = new Schema<IQuizSession>({
   job_description_hash: { type: String, required: true, index: true },
   associated_cv_filename: { type: String },
   candidate_email: { type: String, index: true },
-  questions: { type: Array, required: true },
+  questions: { type: [{}], required: true },
   total_questions: { type: Number, required: true },
   time_limit_seconds: { type: Number, default: 300 },
   pass_threshold: { type: Number, default: 7 },

@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y \
   g++ \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy package files
-COPY package.json ./
+# Copy package files (for better layer caching)
+COPY package.json package-lock.json* ./
 COPY fix-packages.js ./
 
 # Install dependencies
@@ -23,6 +23,10 @@ COPY src/ ./src/
 
 # Build TypeScript
 RUN npm run build
+
+# Remove development dependencies and fix-packages.js (not needed in production)
+RUN npm prune --production && \
+  rm -f fix-packages.js
 
 # Create necessary directories
 RUN mkdir -p uploads evaluations
