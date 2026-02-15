@@ -83,18 +83,23 @@ app.get("/", (req: Request, res: Response) => {
     docs: Env.DOCS_AUTH_ENABLED ? "/docs" : "disabled",
     available_endpoints: {
       health: "/ats-checker/health/simple",
+      health_test: "/ats-checker/health/test",
       jobs: "/ats-checker/jobs",
       statistics: "/ats-checker/statistics",
       applications: "/ats-checker/applications",
       s3_upload: "/ats-checker/s3/upload",
+      debug_db: "/ats-checker/debug/db",
+      debug_sample_data: "/ats-checker/debug/sample-data",
       documentation: Env.DOCS_AUTH_ENABLED ? "/docs" : "disabled"
     },
     timestamp: new Date().toISOString()
   });
 });
 
-// Routes
+// Health routes - available both with and without /ats-checker prefix
 app.use("/ats-checker", healthRoutes);
+// Also add direct health routes for easier access
+app.use("/", healthRoutes);
 
 // Import and use other routes
 import jobsRoutes from "./routes/jobs.routes";
@@ -102,12 +107,14 @@ import quizRoutes from "./routes/quiz.routes";
 import statisticsRoutes from "./routes/statistics.routes";
 import applicationsRoutes from "./routes/applications.routes";
 import awsS3Routes from "./routes/aws_s3.routes";
+import debugRoutes from "./routes/debug.routes";
 
 app.use("/ats-checker", jobsRoutes);
 app.use("/ats-checker", quizRoutes);
 app.use("/ats-checker", statisticsRoutes);
 app.use("/ats-checker", applicationsRoutes);
 app.use("/ats-checker", awsS3Routes);
+app.use("/ats-checker", debugRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);
@@ -120,6 +127,9 @@ app.get("/ats-checker/:path(*)", (req: Request, res: Response) => {
     available_endpoints: {
       root: "/",
       health: "/ats-checker/health/simple",
+      health_test: "/ats-checker/health/test",
+      debug_db: "/ats-checker/debug/db",
+      debug_sample_data: "/ats-checker/debug/sample-data",
       api: "/ats-checker"
     }
   });
