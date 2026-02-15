@@ -7,8 +7,13 @@
 # Accept the commit for deploy new work (8/19 6:43 AM)
 <<<<<<< HEAD
 # Accept the commit for deploy new work (8/19 6:46 AM)
+<<<<<<< HEAD
 =======
 # Accept the commit for deploy new work (9/3 3:00 AM)
 >>>>>>> e94402cf9088669d9bbff70601d3047045b71eb7
 
+=======
+# Accept the commit for deploy new work (8/19 7:27 AM)
+# Accept the commit for deploy new work (9/3 3:37 AM)
+>>>>>>> 5fa0eb3e76a3e1269db7e46572c620a5e5ed09b4
 
