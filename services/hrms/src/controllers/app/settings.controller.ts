@@ -61,7 +61,7 @@ export const updateSettingsSectionController = asyncHandler(
     
     // Validate section name
     const validSections = ['notifications', 'appearance', 'privacy', 'workspace'];
-    if (!validSections.includes(section)) {
+    if (!validSections.includes(section as string)) {
       return res.status(HTTPSTATUS.BAD_REQUEST).json({
         success: false,
         message: `Invalid settings section. Must be one of: ${validSections.join(', ')}`
@@ -77,7 +77,7 @@ export const updateSettingsSectionController = asyncHandler(
     return res.status(HTTPSTATUS.OK).json({
       success: true,
       data: settings,
-      message: `${section.charAt(0).toUpperCase() + section.slice(1)} settings updated successfully`
+      message: `${(section as string).charAt(0).toUpperCase() + (section as string).slice(1)} settings updated successfully`
     });
   }
 );

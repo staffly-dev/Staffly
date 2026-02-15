@@ -43,7 +43,7 @@ export const getAllAttendanceController = asyncHandler(
 export const getAttendanceController = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.id;
-    const attendance = await getAttendanceService(req.params.id, userId);
+    const attendance = await getAttendanceService(req.params.id as string, userId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Attendance fetched successfully",
       attendance,
