@@ -8,11 +8,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useJob, CreateJobData } from "@/context/JobContext";
+import { useCreateJob, CreateJobData } from "@/hooks/useJobs";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { tokenStore } from "@/lib/token";
 
 const addJobSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -41,11 +43,11 @@ interface AddJobModalProps {
 }
 
 export function AddJobModal({ open, onOpenChange }: AddJobModalProps) {
-  const { createJob, error } = useJob();
+  const { mutate: createJob, isPending: isCreating } = useCreateJob();
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     reset,
   } = useForm<AddJobFormData>({
     resolver: zodResolver(addJobSchema),
@@ -56,70 +58,69 @@ export function AddJobModal({ open, onOpenChange }: AddJobModalProps) {
       is_active: true,
     },
   });
+  const { user } = useAuth();
+  const userId = user?.user?.id || user?.user?._id;
+  const accessToken = tokenStore.getAccessToken();
 
   const onFormSubmit = async (data: AddJobFormData) => {
-    try {
-      // Validate required fields first
-      if (!data.title?.trim()) {
-        toast.error("Title is required");
-        return;
-      }
-      if (!data.description?.trim()) {
-        toast.error("Description is required");
-        return;
-      }
-      if (!data.required_skills?.trim()) {
-        toast.error("Required skills are required");
-        return;
-      }
+    // Try sending as plain object instead of FormData
+    const jobDataObject: {
+      title: string;
+      description: string;
+      required_skills: string;
+      evaluation_threshold: number;
+      quiz_required: boolean;
+      quiz_pass_threshold: number;
+      is_active: boolean;
+      hr_email?: string;
+      additional_details?: string;
+      hr_name?: string;
+    } = {
+      title: data.title.trim(),
+      description: data.description.trim(),
+      required_skills: data.required_skills.trim(),
+      evaluation_threshold: data.evaluation_threshold || 70,
+      quiz_required: data.quiz_required || false,
+      quiz_pass_threshold: data.quiz_pass_threshold || 7,
+      is_active: data.is_active || true,
+    };
 
-      // Try sending as plain object instead of FormData
-      const jobDataObject: {
-        title: string;
-        description: string;
-        required_skills: string;
-        evaluation_threshold: number;
-        quiz_required: boolean;
-        quiz_pass_threshold: number;
-        is_active: boolean;
-        hr_email?: string;
-        additional_details?: string;
-        hr_name?: string;
-      } = {
-        title: data.title.trim(),
-        description: data.description.trim(),
-        required_skills: data.required_skills.trim(),
-        evaluation_threshold: data.evaluation_threshold || 70,
-        quiz_required: data.quiz_required || false,
-        quiz_pass_threshold: data.quiz_pass_threshold || 7,
-        is_active: data.is_active || true,
-      };
-
-      // Only add optional fields if they have values
-      if (data.hr_email && data.hr_email.trim()) {
-        jobDataObject.hr_email = data.hr_email.trim();
-      }
-      if (data.additional_details && data.additional_details.trim()) {
-        jobDataObject.additional_details = data.additional_details.trim();
-      }
-      if (data.hr_name && data.hr_name.trim()) {
-        jobDataObject.hr_name = data.hr_name.trim();
-      }
-
-      console.log("Job data object:", jobDataObject);
-
-      const newJob = await createJob(jobDataObject as CreateJobData);
-      toast.success("Job added successfully", {
-        description: `${newJob.title} has been added successfully`,
-      });
-      onOpenChange(false);
-      reset();
-    } catch (error) {
-      console.error("Error creating job:", error);
-      toast.error("Failed to add job", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
+    // Only add optional fields if they have values
+    if (data.hr_email && data.hr_email.trim()) {
+      jobDataObject.hr_email = data.hr_email.trim();
     }
+    if (data.additional_details && data.additional_details.trim()) {
+      jobDataObject.additional_details = data.additional_details.trim();
+    }
+    if (data.hr_name && data.hr_name.trim()) {
+      jobDataObject.hr_name = data.hr_name.trim();
+    }
+
+    createJob(
+      {
+        ...jobDataObject,
+        user_id: userId,
+        access_token: accessToken || "",
+      } as CreateJobData,
+      {
+        onSuccess: (newJob) => {
+          toast.success("Job added successfully", {
+            description: `${
+              newJob?.title || "New Job"
+            } has been added successfully`,
+          });
+          onOpenChange(false);
+          reset();
+        },
+        onError: (error) => {
+          console.log("Error creating job:", error);
+          toast.error("Failed to add job", {
+            description:
+              error instanceof Error ? error.message : "Unknown error",
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -128,7 +129,6 @@ export function AddJobModal({ open, onOpenChange }: AddJobModalProps) {
         <DialogHeader>
           <DialogTitle>Add New Job</DialogTitle>
         </DialogHeader>
-        {error && <p className="text-red-500 text-xs">{error}</p>}
         <form onSubmit={handleSubmit(onFormSubmit)} className="grid gap-4 py-4">
           <Input
             id="title"
@@ -263,8 +263,8 @@ export function AddJobModal({ open, onOpenChange }: AddJobModalProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              Add
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? "Adding..." : "Add"}
             </Button>
           </div>
         </form>

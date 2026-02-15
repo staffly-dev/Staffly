@@ -3,8 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { LogoWithTitle } from "@/components/global/logo";
 import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ModeToggle";
+import User from "./User";
 
 const menuItems = [
   { name: "Features", href: "/features" },
@@ -64,18 +64,7 @@ export default function Header() {
 
               <div className="flex w-full items-center space-x-4">
                 <ModeToggle />
-                <div className="flex flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:border-l lg:pl-6">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/login">
-                      <span>Login</span>
-                    </Link>
-                  </Button>
-                  <Button asChild size="sm">
-                    <Link href="/sign-up">
-                      <span>Get Started</span>
-                    </Link>
-                  </Button>
-                </div>
+                <User />
               </div>
             </div>
           </div>

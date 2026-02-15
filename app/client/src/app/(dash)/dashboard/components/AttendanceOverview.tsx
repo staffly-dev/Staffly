@@ -3,31 +3,22 @@
 import ErrorComponent from "@/components/ErrorComponent";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAttendance } from "@/context/AttendanceContext";
+import { useAttendance } from "@/hooks/useAttendance";
 import { attStatusColors, getUtcTime } from "@/constants";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useEffect } from "react";
 
 export function AttendanceOverview() {
-  const {
-    fetchAttendance,
-    attendanceRecords,
-    isLoadingAttendance,
-    error,
-    clearError,
-  } = useAttendance();
+  const { data, isLoading, error } = useAttendance();
 
-  useEffect(() => {
-    fetchAttendance();
-  }, [fetchAttendance]);
+  console.log("data from useAttendance in AttendanceOverview", data);
 
-  if (isLoadingAttendance) {
+  if (isLoading) {
     return <LoadingComponent />;
   }
 
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return <ErrorComponent error={error.message} clearError={() => {}} />;
   }
 
   return (
@@ -54,7 +45,7 @@ export function AttendanceOverview() {
             </tr>
           </thead>
           <tbody className="divide-y divide-hrms-gray/20">
-            {attendanceRecords.slice(0, 5).map((att) => (
+            {data.slice(0, 5).map((att) => (
               <tr
                 key={att._id}
                 className="*:px-6 *:py-3 *:text-sm hover:bg-hrms-gray/20"

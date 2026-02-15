@@ -10,9 +10,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 export function UserProfile() {
-  const { user: data, logout, isLoggingOut } = useAuth();
+  const { user: data, logout, logoutAll, isLoggingOut } = useAuth();
 
   const user = data?.user;
 
@@ -26,26 +27,44 @@ export function UserProfile() {
     );
   }
 
+  const handleEditProfile = () => {
+    toast.warning("Editing profile is not available yet", {
+      position: "top-center",
+      cancel: {
+        label: "Close",
+        onClick: () => {},
+      },
+    });
+  };
+
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>User Profile</CardTitle>
-        <CardDescription>Your account information</CardDescription>
+    <Card className="w-full max-w-md h-fit">
+      <CardHeader className="flex flex-row justify-between items-center">
+        <div className="flex flex-col gap-1">
+          <CardTitle>User Profile</CardTitle>
+          <CardDescription>Your account information</CardDescription>
+        </div>
+        <Button variant="default" onClick={() => handleEditProfile()}>
+          Edit Profile
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center space-x-4">
-          <Avatar className="h-16 w-16">
+        <div className="flex flex-col items-center space-y-2">
+          <Avatar className="h-20 w-20">
             <AvatarImage
               src={user.profilePicture || undefined}
               alt={user.name}
             />
-            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarFallback className="bg-primary text-white text-lg font-semibold">
+              {user.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
-          <div>
+          <div className="text-center space-y-1">
             <h3 className="text-lg font-semibold">{user.name}</h3>
             <p className="text-sm text-muted-foreground">{user.email}</p>
-            <p className="text-xs text-muted-foreground">
-              {user.isVerified ? "✓ Verified" : "⚠ Not verified"}
+            <p className="text-xs text-green-500">
+              {/* {user.isVerified ? "✓ Verified" : "⚠ Not verified"} */}
+              Verified
             </p>
           </div>
         </div>
@@ -59,11 +78,13 @@ export function UserProfile() {
           </div>
           <div className="flex justify-between">
             <span className="text-sm font-medium">User ID:</span>
-            <span className="text-sm text-muted-foreground">{user.id}</span>
+            <span className="text-sm text-muted-foreground">
+              {user.id || user._id}
+            </span>
           </div>
         </div>
 
-        <div className="pt-4">
+        <div className="pt-4 flex justify-between items-center gap-2">
           <Button
             onClick={logout}
             disabled={isLoggingOut}
@@ -71,6 +92,14 @@ export function UserProfile() {
             className="w-full"
           >
             {isLoggingOut ? "Logging out..." : "Logout"}
+          </Button>
+          <Button
+            onClick={logoutAll}
+            disabled={isLoggingOut}
+            variant="destructive"
+            className="w-full"
+          >
+            {isLoggingOut ? "Logging out..." : "Logout All Devices"}
           </Button>
         </div>
       </CardContent>

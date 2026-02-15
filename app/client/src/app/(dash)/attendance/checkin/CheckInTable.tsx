@@ -1,76 +1,101 @@
 "use client";
 // import Image from "next/image";
-import { Employee } from "@/types/employee";
 import { Pagination } from "@/components/Pagination";
 import { useState } from "react";
 import Link from "next/link";
 import LoadingComponent from "@/components/LoadingComponent";
 import ErrorComponent from "@/components/ErrorComponent";
-import { useEmployee } from "@/context/EmployeeContext";
+import { useEmployees } from "@/hooks/useEmployees";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FaCalendarCheck } from "react-icons/fa6";
-import { useAttendance } from "@/context/AttendanceContext";
-import { cn, saveCheckedInEmployees, getCheckedInEmployees } from "@/lib/utils";
+import { useCheckIn, useAttendance } from "@/hooks/useAttendance";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
-export function CheckInTable({ employees }: { employees: Employee[] }) {
+export function CheckInTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const { loading, error, clearError } = useEmployee();
-  const router = useRouter();
   const {
-    checkIn,
-    error: checkInError,
-    clearError: clearCheckInError,
-  } = useAttendance();
-  const [isCheckedIn, setIsCheckedIn] = useState(getCheckedInEmployees());
-  const [checkInLoading, setCheckInLoading] = useState<Record<string, boolean>>(
-    {}
-  );
+    data: employees = [],
+    isLoading: loading,
+    error,
+    refetch,
+  } = useEmployees();
+  const router = useRouter();
+  const { mutate: checkIn } = useCheckIn();
+  const { data: attendanceData = [], isLoading: attendanceLoading } =
+    useAttendance();
+  const [checkInLoadingStates, setCheckInLoadingStates] = useState<
+    Record<string, boolean>
+  >({});
   const totalItems = employees.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // Helper function to check if an employee is checked in today
+  const isEmployeeCheckedIn = (employeeId: string) => {
+    if (!attendanceData || attendanceData.length === 0) return false;
+
+    const today = new Date().toISOString().split("T")[0];
+    return attendanceData.some(
+      (record) =>
+        record.employeeId &&
+        record.employeeId._id === employeeId &&
+        record.date === today &&
+        record.checkInTime &&
+        !record.checkOutTime
+    );
+  };
 
   const currentEmployees = employees.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  if (loading) {
+  const clearError = () => {
+    refetch();
+  };
+
+  if (loading || attendanceLoading) {
     return <LoadingComponent />;
   }
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return (
+      <ErrorComponent
+        error={error.message || "An error occurred"}
+        clearError={clearError}
+      />
+    );
   }
 
   const handleCheckIn = async (employeeId: string) => {
-    setCheckInLoading((prev) => ({ ...prev, [employeeId]: true }));
+    setCheckInLoadingStates((prev) => ({ ...prev, [employeeId]: true }));
 
-    const res = await checkIn({ employeeId });
-    if (res) {
-      toast.success("Employee Checked in successfully");
-      setIsCheckedIn([...isCheckedIn, employeeId]);
-      saveCheckedInEmployees(employeeId);
-    } else if (checkInError) {
-      toast.error(checkInError, {
-        description: "Employee already checked in",
-        action: {
-          label: "Attendance",
-          onClick: () => {
-            router.push("/attendance");
-          },
+    checkIn(
+      { employeeId },
+      {
+        onSuccess: () => {
+          toast.success("Employee Checked in successfully");
         },
-        cancel: {
-          label: "Cancel",
-          onClick: () => {
-            clearCheckInError();
-          },
+        onError: (error) => {
+          toast.error("Failed to check in employee", {
+            description: "Employee may already be checked in",
+            action: {
+              label: "Attendance",
+              onClick: () => {
+                router.push("/attendance");
+              },
+            },
+            position: "top-center",
+          });
+          console.log("Check-in error:", error);
         },
-        position: "top-center",
-      });
-    }
-    setCheckInLoading((prev) => ({ ...prev, [employeeId]: false }));
+        onSettled: () => {
+          setCheckInLoadingStates((prev) => ({ ...prev, [employeeId]: false }));
+        },
+      }
+    );
   };
 
   return (
@@ -135,17 +160,19 @@ export function CheckInTable({ employees }: { employees: Employee[] }) {
                   <Button
                     onClick={() => handleCheckIn(employee._id)}
                     disabled={
-                      checkInLoading[employee._id] ||
-                      isCheckedIn.includes(employee._id)
+                      checkInLoadingStates[employee._id] ||
+                      isEmployeeCheckedIn(employee._id)
                     }
                     className={cn(
                       "flex items-center gap-2",
-                      isCheckedIn.includes(employee._id) && "bg-green-500"
+                      isEmployeeCheckedIn(employee._id) && "bg-green-500"
                     )}
                   >
                     <FaCalendarCheck />
-                    {checkInLoading[employee._id]
+                    {checkInLoadingStates[employee._id]
                       ? "Checking In..."
+                      : isEmployeeCheckedIn(employee._id)
+                      ? "Checked In"
                       : "Check In"}
                   </Button>
                 </td>

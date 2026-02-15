@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     # Application Configuration
     ENV: str = Field(default="development", description="Environment (development/production)")
     DEBUG: bool = Field(default=True, description="Debug mode")
+    AUTO_RELOAD: bool = Field(default=True, description="Enable auto-reload on file changes (development only)")
     BACKEND_URL: str = Field(default="", description="Backend base URL for links")
     PRODUCTION_URL: str = Field(default="https://ats-system-checker-backend-production.up.railway.app", description="Production base URL for links")
     MAX_FILE_SIZE: int = Field(default=16777216, description="Maximum file size in bytes (16MB)")
@@ -139,6 +140,7 @@ class Settings(BaseSettings):
     ATS_SYSTEM_URL: str = Field(default="", description="ATS System URL")
     API_BASE_URL: str = Field(default="", description="API base URL")
     API_AUTH_URL: str = Field(default="", description="API auth URL")
+    API_GATEWAY_BASE_URL: str = Field(default="", description="API Gateway base URL")
     
     # Redis Configuration
     UPSTASH_REDIS_REST_URL: str = Field(default="", description="Upstash Redis REST URL")
@@ -174,7 +176,7 @@ class Settings(BaseSettings):
         case_sensitive = True
         extra = "ignore"  # Ignore extra environment variables
     
-    @validator('BACKEND_URL', 'MONGODB_URL', 'UPLOADS_BASE_URL', 'AI_SERVICE_URL', 'API_DOCUMENTATION', 'ALTERNATIVE_DOCS', 'OPENAPI_SCHEMA', pre=True)
+    @validator('BACKEND_URL', 'MONGODB_URL', 'UPLOADS_BASE_URL', 'AI_SERVICE_URL', 'API_DOCUMENTATION', 'ALTERNATIVE_DOCS', 'OPENAPI_SCHEMA', 'API_GATEWAY_BASE_URL', pre=True)
     def validate_urls(cls, v):
         """Validate and set default URLs based on environment"""
         if not v:
@@ -194,6 +196,8 @@ class Settings(BaseSettings):
                     return "http://localhost:4002"
                 elif 'OPENAPI_SCHEMA' in cls.__fields__:
                     return "http://localhost:4002"
+                elif 'API_GATEWAY_BASE_URL' in cls.__fields__:
+                    return "http://localhost:4000"
             else:
                 # Production defaults - these should be set in .env
                 return ""

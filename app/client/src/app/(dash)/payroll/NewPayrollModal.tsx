@@ -1,89 +1,104 @@
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect } from "react";
-import { toast } from "sonner";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CreatePayRollRequest, useCreatePayroll } from "@/hooks/usePayroll";
+import { Controller, useForm } from "react-hook-form";
+import {
+  NewPayrollFormData,
+  newPayrollSchema,
+} from "@/lib/validations/newPayroll";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import ErrorComponent from "@/components/ErrorComponent";
+import { Select } from "@/components/ui/select";
+import {
   SelectTrigger,
   SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/components/ui/select";
-import { useEmployee } from "@/context/EmployeeContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import ErrorComponent from "@/components/ErrorComponent";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  newPayrollSchema,
-  NewPayrollFormData,
-} from "@/lib/validations/newPayroll";
-import { Button } from "@/components/ui/button";
-import { CreatePayRollRequest, usePayRoll } from "@/context/PayRollContext";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useEmployees } from "@/hooks/useEmployees";
+import { useEffect } from "react";
 
-export default function NewPayrollPage() {
-  const { employees, getAllEmployees, loading, error, clearError } =
-    useEmployee();
+interface NewPayrollModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function NewPayrollModal({ open, onOpenChange }: NewPayrollModalProps) {
+  const { mutate: createPayroll, isPending: isCreating } = useCreatePayroll();
   const {
-    createPayroll,
-    error: payrollError,
-    clearError: clearPayrollError,
-  } = usePayRoll();
+    data: employees = [],
+    isLoading: loading,
+    error: employeeError,
+  } = useEmployees();
 
   const {
     register,
     handleSubmit,
     control,
+    formState: { errors },
     reset,
-    formState: { errors, isSubmitting },
   } = useForm<NewPayrollFormData>({
     resolver: zodResolver(newPayrollSchema),
   });
-  useEffect(() => {
-    if (!employees || employees.length === 0) {
-      getAllEmployees();
-    }
-  }, [employees, getAllEmployees]);
 
-  const onSubmit = async (data: NewPayrollFormData) => {
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (open) {
+      reset();
+    }
+  }, [open, reset]);
+
+  const onFormSubmit = async (data: NewPayrollFormData) => {
     const payrollData: CreatePayRollRequest = {
       employeeId: data.employeeId,
       ctc: data.ctc,
       salaryByMonth: data.salaryByMonth,
       deduction: data.deduction,
     };
-    const response = await createPayroll(payrollData);
-    if (response) {
-      console.log(response);
-      toast.success(response.message, {
-        position: "top-center",
-      });
-      reset();
-    }
+
+    createPayroll(payrollData, {
+      onSuccess: () => {
+        toast.success("Payroll created successfully", {
+          position: "top-center",
+        });
+        reset();
+        onOpenChange(false);
+      },
+      onError: (error) => {
+        toast.error("Failed to create payroll", {
+          position: "top-center",
+        });
+        console.error("Create error:", error);
+      },
+    });
   };
 
-  if (payrollError) {
-    return (
-      <ErrorComponent error={payrollError} clearError={clearPayrollError} />
-    );
-  }
-
   return (
-    <Card className="container mx-auto p-6">
-      <CardHeader>
-        <CardTitle className="text-2xl">
-          Register a New Payroll for an Employee
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Register a New Payroll for an Employee</DialogTitle>
+        </DialogHeader>
+        <form
+          onSubmit={handleSubmit(onFormSubmit)}
+          className="flex flex-col gap-4"
+        >
           <div className="flex flex-col gap-2">
             <Label>Select Employee</Label>
-            {error ? (
-              <ErrorComponent error={error} clearError={clearError} />
+            {employeeError ? (
+              <ErrorComponent
+                error="Failed to load employees"
+                clearError={() => {}}
+              />
             ) : (
               <Controller
                 name="employeeId"
@@ -175,12 +190,12 @@ export default function NewPayrollPage() {
             )}
           </div>
           <div className="flex justify-end pt-4">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save Payroll"}
+            <Button type="submit" disabled={isCreating}>
+              {isCreating ? "Saving..." : "Save Payroll"}
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }

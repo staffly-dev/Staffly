@@ -35,6 +35,13 @@ class JobPostingResponse(BaseModel):
     hr_email: Optional[str] = Field(None, description="HR contact email for this job")
     hr_name: Optional[str] = Field(None, description="HR contact name")
     created_by: Optional[str] = Field(None, description="User ID of the creator (from API Gateway)")
+    owner_username: Optional[str] = Field(None, description="Username of the creator (from API Gateway)")
+
+
+class JobPostingsListResponse(BaseModel):
+    """Response model for listing job postings with count"""
+    total_jobs: int = Field(..., description="Total number of job postings returned")
+    jobs: List[JobPostingResponse] = Field(..., description="List of job postings")
 
 class ApplicationRequest(BaseModel):
     """Request model for submitting a job application"""
@@ -111,6 +118,45 @@ class StatisticsResponse(BaseModel):
     average_score: float = Field(..., description="Average CV score")
     quiz_pass_rate: Optional[float] = Field(None, description="Quiz pass rate")
     daily_stats: Dict[str, Any] = Field(..., description="Daily statistics")
+
+class UserStatisticsRequest(BaseModel):
+    """Request model for user-specific statistics"""
+    user_id: str = Field(..., description="User ID from API Gateway", example="68a140ef2549fe9b5ea0b961")
+    created_by: str = Field(..., description="User who created the records", example="68a140ef2549fe9b5ea0b961")
+    access_token: str = Field(..., description="Access token from API Gateway", example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+
+class UserStatisticsResponse(BaseModel):
+    """Response model for user-specific statistics"""
+    user_id: str = Field(..., description="User ID from API Gateway")
+    created_by: str = Field(..., description="User who created the records")
+    total_applications: int = Field(..., description="Total applications created by this user")
+    total_evaluations: int = Field(..., description="Total CVs evaluated for this user")
+    acceptance_rate: float = Field(..., description="CV acceptance rate for this user")
+    average_score: float = Field(..., description="Average CV score for this user")
+    quiz_pass_rate: Optional[float] = Field(None, description="Quiz pass rate for this user")
+    daily_stats: Dict[str, Any] = Field(..., description="Daily statistics for this user")
+    last_activity: Optional[str] = Field(None, description="Last activity timestamp")
+
+class AuthenticatedRequest(BaseModel):
+    """Base model for authenticated requests"""
+    user_id: str = Field(..., description="User ID from API Gateway", example="68a140ef2549fe9b5ea0b961")
+    created_by: str = Field(..., description="User who created the records", example="68a140ef2549fe9b5ea0b961")
+    access_token: str = Field(..., description="Access token from API Gateway", example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+
+class CreateJobPostingRequest(BaseModel):
+    """Request model for creating job posting with authentication"""
+    user_id: str = Field(..., description="User ID from API Gateway", example="68a140ef2549fe9b5ea0b961")
+    created_by: str = Field(..., description="User who created the records", example="68a140ef2549fe9b5ea0b961")
+    access_token: str = Field(..., description="Access token from API Gateway", example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    title: str = Field(..., description="Job title", example="Senior Python Developer")
+    description: str = Field(..., description="Job description", example="We are looking for an experienced Python developer...")
+    required_skills: str = Field(..., description="Required skills (comma-separated)", example="Python, FastAPI, MongoDB")
+    additional_details: Optional[str] = Field(None, description="Additional job details", example="Remote work available")
+    hr_email: Optional[str] = Field(None, description="HR contact email", example="hr@company.com")
+    hr_name: Optional[str] = Field(None, description="HR contact name", example="John Smith")
+    evaluation_threshold: int = Field(70, description="Minimum CV score for acceptance (0-100)", ge=0, le=100)
+    quiz_required: bool = Field(True, description="Whether quiz is required")
+    quiz_pass_threshold: int = Field(7, description="Minimum quiz score to pass (0-10)", ge=0, le=10)
 
 class ApplicationListResponse(BaseModel):
     """Response model for individual application in the applications list - HR Review Format"""

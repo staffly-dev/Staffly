@@ -4,21 +4,19 @@ import LoadingComponent from "@/components/LoadingComponent";
 import { Pagination } from "@/components/Pagination";
 import { SearchInput } from "@/components/searchInput";
 import { Card } from "@/components/ui/card";
-import { useAttendance } from "@/context/AttendanceContext";
+import { useAttendance } from "@/hooks/useAttendance";
 import { attStatusColors, getUtcTime } from "@/constants";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Attendance() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const {
-    fetchAttendance,
-    attendanceRecords,
-    isLoadingAttendance,
+    data: attendanceRecords = [],
+    isLoading: isLoadingAttendance,
     error,
-    clearError,
   } = useAttendance();
 
   const totalPages = Math.ceil(attendanceRecords.length / itemsPerPage);
@@ -29,16 +27,17 @@ export default function Attendance() {
     currentPage * itemsPerPage
   );
 
-  useEffect(() => {
-    fetchAttendance();
-  }, [fetchAttendance]);
-
   if (isLoadingAttendance) {
     return <LoadingComponent />;
   }
 
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return (
+      <ErrorComponent
+        error="Failed to load attendance data"
+        clearError={() => {}}
+      />
+    );
   }
 
   const data = currentData.map((att) => {

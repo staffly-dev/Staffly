@@ -3,10 +3,6 @@ import "./globals.css";
 import { Metadata } from "next";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/providers/QueryProvider";
-import { EmployeeProvider } from "@/context/EmployeeContext";
-import { JobProvider } from "@/context/JobContext";
-import { AttendanceProvider } from "@/context/AttendanceContext";
-import { PayRollProvider } from "@/context/PayRollContext";
 
 export const metadata: Metadata = {
   title: "Staffly HRMS",
@@ -21,25 +17,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen" suppressHydrationWarning>
-        <EmployeeProvider>
-          <JobProvider>
-            <AttendanceProvider>
-              <PayRollProvider>
-                <QueryProvider>
-                  <Toaster richColors />
-                  <ThemeProvider
-                    attribute="class"
-                    defaultTheme="system"
-                    enableSystem
-                    disableTransitionOnChange
-                  >
-                    {children}
-                  </ThemeProvider>
-                </QueryProvider>
-              </PayRollProvider>
-            </AttendanceProvider>
-          </JobProvider>
-        </EmployeeProvider>
+        <QueryProvider>
+          <Toaster richColors />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

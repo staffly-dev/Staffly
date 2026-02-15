@@ -1,12 +1,11 @@
 "use client";
 import { notFound } from "next/navigation";
 import { EmployeesCard } from "../../all-employees/page";
-import { useEmployee } from "@/context/EmployeeContext";
 import { useParams } from "next/navigation";
 import { departments } from "@/constants";
 import LoadingComponent from "@/components/LoadingComponent";
 import ErrorComponent from "@/components/ErrorComponent";
-import { useEffect } from "react";
+import { useEmployees } from "@/hooks/useEmployees";
 
 export default function DepartmentPage() {
   const { departmentId } = useParams();
@@ -14,23 +13,18 @@ export default function DepartmentPage() {
   const dept = departmentId as string;
   const deptId = dept.toLowerCase();
 
-  const { getAllEmployees, employees, loading, error, clearError } =
-    useEmployee();
-
-  useEffect(() => {
-    getAllEmployees();
-  }, [getAllEmployees]);
+  const { data: employees = [], isLoading, error } = useEmployees();
 
   if (!departments.map((dept) => dept.toLowerCase()).includes(deptId)) {
     notFound();
   }
 
-  if (loading) {
+  if (isLoading) {
     <LoadingComponent />;
   }
 
   if (error) {
-    <ErrorComponent error={error} clearError={clearError} />;
+    <ErrorComponent error={error.message} clearError={() => {}} />;
   }
 
   const filteredEmployees = employees.filter(

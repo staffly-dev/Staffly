@@ -1,5 +1,5 @@
-import React from "react";
+import ComingSoon from "@/components/global/coming-soon";
 
 export default function page() {
-  return <div>Sittings</div>;
+  return <ComingSoon className="h-[80vh]" />;
 }

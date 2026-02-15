@@ -2,30 +2,24 @@
 import ErrorComponent from "@/components/ErrorComponent";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AdminStatistics, useJob } from "@/context/JobContext";
-import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { IoPersonAdd } from "react-icons/io5";
 import { SiSpeedtest } from "react-icons/si";
 import { TbAlarmAverage } from "react-icons/tb";
 import { RiPassValidFill } from "react-icons/ri";
+import { useAdminStatistics } from "@/hooks/useJobs";
 
 export const RecruitmentStatusCard = () => {
-  const { getAdminStatistics, loading, error, clearError } = useJob();
-  const [data, setData] = useState<AdminStatistics | null>(null);
+  const { data, isLoading, error } = useAdminStatistics();
 
-  useEffect(() => {
-    getAdminStatistics().then((data) => setData(data));
-  }, [getAdminStatistics]);
+  console.log("data from useAdminStatistics in RecruitmentStatusCard", data);
 
-  console.log(data);
-
-  if (loading) {
+  if (isLoading) {
     return <LoadingComponent className="h-[320px]" />;
   }
 
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return <ErrorComponent error={error.message} clearError={() => {}} />;
   }
 
   return (

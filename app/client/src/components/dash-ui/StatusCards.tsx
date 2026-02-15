@@ -1,9 +1,8 @@
 "use client";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { useAttendance } from "@/context/AttendanceContext";
+import { useDashboard } from "@/hooks/useAttendance";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
-import { useEffect } from "react";
 import {
   IoPersonOutline,
   IoBriefcaseOutline,
@@ -104,23 +103,22 @@ const statusData = [
 
 export function StatusCards() {
   const {
-    dashboardData,
-    isLoadingDashboard,
+    data: dashboardData,
+    isLoading: isLoadingDashboard,
     error,
-    clearError,
-    fetchDashboard,
-  } = useAttendance();
-
-  useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+  } = useDashboard();
 
   if (isLoadingDashboard) {
     return <LoadingComponent className="h-[320px]" />;
   }
 
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return (
+      <ErrorComponent
+        error="Failed to load dashboard data"
+        clearError={() => {}}
+      />
+    );
   }
 
   return (

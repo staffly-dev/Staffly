@@ -5,10 +5,12 @@ import { EmployeesTable } from "./components/EmployeesTable";
 import { AddNewEmployeeButton } from "./components/Buttons";
 import { SearchInput } from "@/components/searchInput";
 import { FilterDialog } from "./components/FilterDialog";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TbFilterPlus } from "react-icons/tb";
-import { useEmployee } from "@/context/EmployeeContext";
+import { useEmployees } from "@/hooks/useEmployees";
+import LoadingComponent from "@/components/LoadingComponent";
+import ErrorComponent from "@/components/ErrorComponent";
 
 export function EmployeesCard({ employees }: { employees: Employee[] }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -91,11 +93,19 @@ export function EmployeesCard({ employees }: { employees: Employee[] }) {
 }
 
 export default function EmployeesPage() {
-  const { employees, getAllEmployees } = useEmployee();
+  const { data: employees = [], isLoading, error } = useEmployees();
 
-  useEffect(() => {
-    getAllEmployees();
-  }, [getAllEmployees]);
+  console.log("employees from useEmployees in page", employees);
+
+  if (isLoading) {
+    return <LoadingComponent />;
+  }
+
+  if (error) {
+    return (
+      <ErrorComponent error="Failed to load employees" clearError={() => {}} />
+    );
+  }
 
   return <EmployeesCard employees={employees} />;
 }

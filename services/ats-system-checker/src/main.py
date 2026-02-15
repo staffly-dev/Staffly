@@ -215,6 +215,9 @@ async def root():
         "available_endpoints": {
             "health": "/ats-checker/health/simple",
             "jobs": "/ats-checker/jobs",
+            "statistics": "/ats-checker/statistics",
+            "user_statistics": "/ats-checker/user-statistics",
+            "applications": "/ats-checker/applications",
             "s3_upload": "/ats-checker/s3/upload",
             "s3_status": "/ats-checker/s3/status",
             "documentation": "/docs" if settings.DOCS_AUTH_ENABLED else "disabled"
@@ -346,6 +349,7 @@ async def catch_all(full_path: str):
             "Use /ats-checker/applications for application-related endpoints",
             "Use /ats-checker/quiz for quiz endpoints",
             "Use /ats-checker/statistics for system statistics",
+            "Use /ats-checker/user-statistics for user-specific statistics",
             "Use /health for health checks",
             "Use /ats-checker/s3/upload for file uploads",
             "Use /docs for API documentation",
@@ -363,7 +367,7 @@ if __name__ == "__main__":
         "src.main:app",
         host=settings.API_HOST,
         port=settings.API_PORT,
-        reload=settings.DEBUG,
+        reload=settings.DEBUG and settings.AUTO_RELOAD,  # Only reload if both DEBUG and AUTO_RELOAD are enabled
         log_level=settings.LOG_LEVEL.lower(),
         reload_excludes=["venv", ".pytest_cache", "__pycache__", "uploads", "ats_system.log"]
     ) 

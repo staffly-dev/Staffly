@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { JobApplicationData, useJob } from "@/context/JobContext";
+import { JobApplicationData, useApplyForJob } from "@/hooks/useJobs";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,11 +43,11 @@ export function ApplyForm({
   title,
   setApplied,
 }: ApplyFormProps) {
-  const { applyForJob, error } = useJob();
+  const { mutate: applyForJob, isPending: isApplying } = useApplyForJob();
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     reset,
   } = useForm<AddJobFormData>({
     resolver: zodResolver(applySchema),
@@ -59,41 +59,46 @@ export function ApplyForm({
   });
 
   const onFormSubmit = async (formData: AddJobFormData) => {
-    try {
-      const applicationData = new FormData();
-      applicationData.append("candidate_name", formData.candidate_name);
-      applicationData.append("candidate_email", formData.candidate_email);
+    const applicationData = new FormData();
+    applicationData.append("candidate_name", formData.candidate_name);
+    applicationData.append("candidate_email", formData.candidate_email);
 
-      if (formData.cv_file && formData.cv_file.length > 0) {
-        applicationData.append("cv_file", formData.cv_file[0]);
-      }
-      applicationData.append("job_id", jobId);
-
-      await applyForJob(
-        jobId,
-        applicationData as unknown as JobApplicationData
-      );
-      setApplied(true);
-      toast.success("Application submitted successfully", {
-        description:
-          "You will receive an email with the next steps in your application",
-        position: "top-center",
-        duration: 4000,
-      });
-      onOpenChange(false);
-      reset();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      toast.error("Application submission failed", {
-        description: error?.message || "An error occurred",
-        position: "top-center",
-        duration: 4000,
-        action: {
-          label: "Close",
-          onClick: () => {},
-        },
-      });
+    if (formData.cv_file && formData.cv_file.length > 0) {
+      applicationData.append("cv_file", formData.cv_file[0]);
     }
+    applicationData.append("job_id", jobId);
+
+    applyForJob(
+      {
+        jobId,
+        application: applicationData as unknown as JobApplicationData,
+      },
+      {
+        onSuccess: () => {
+          setApplied(true);
+          toast.success("Application submitted successfully", {
+            description:
+              "You will receive an email with the next steps in your application",
+            position: "top-center",
+            duration: 4000,
+          });
+          onOpenChange(false);
+          reset();
+        },
+        onError: (error) => {
+          toast.error("Application submission failed", {
+            description: error?.message || "An error occurred",
+            position: "top-center",
+            duration: 4000,
+            action: {
+              label: "Close",
+              onClick: () => {},
+            },
+          });
+          console.error("Application error:", error);
+        },
+      }
+    );
   };
 
   return (
@@ -105,7 +110,6 @@ export function ApplyForm({
             Please fill in the following details to apply for the job
           </DialogDescription>
         </DialogHeader>
-        {error && <p className="text-red-500 text-xs">{error}</p>}
         <form onSubmit={handleSubmit(onFormSubmit)} className="grid gap-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="candidate_name">Name</Label>
@@ -159,8 +163,8 @@ export function ApplyForm({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Applying..." : "Apply"}
+            <Button type="submit" disabled={isApplying}>
+              {isApplying ? "Applying..." : "Apply"}
             </Button>
           </div>
         </form>

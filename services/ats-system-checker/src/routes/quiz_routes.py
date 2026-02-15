@@ -4,13 +4,15 @@ Quiz evaluation endpoints
 """
 
 from typing import Optional
-from fastapi import APIRouter, Depends, Form, Path
+from fastapi import APIRouter, Depends, Form, Path, HTTPException, status, Header
 from fastapi.responses import JSONResponse
 
 from src.controllers import QuizController
 from src.utils.dependencies import get_quiz_controller
-from src.models.api_models import AllQuizUsersResponse, QuizDisplayResponse
+from src.models.api_models import AllQuizUsersResponse, QuizDisplayResponse, AuthenticatedRequest
 from src.models.evaluation_models import APIResponse
+from src.utils.jwt_utils import jwt_utils
+from src.utils.gateway_client import verify_user_exists_and_token_valid
 
 router = APIRouter(tags=["quiz"])
 
@@ -41,12 +43,20 @@ async def submit_quiz(
     )
 
 
-@router.get("/quiz/users", response_model=APIResponse, summary="Get All Quiz Users")
+@router.post("/quiz/users", response_model=APIResponse, summary="Get All Quiz Users")
 async def get_all_quiz_users(
+    request: Optional[AuthenticatedRequest] = None,
+    authorization: Optional[str] = None,
+    x_user_id: Optional[str] = Header(default=None, alias="X-User-Id"),
     controller: QuizController = Depends(get_quiz_controller) # type: ignore
 ):
     """
     Get all quiz information for users from the database.
+    
+    This endpoint requires:
+    - user_id: User ID from API Gateway
+    - created_by: User who created the records
+    - access_token: Valid access token from API Gateway
     
     Returns comprehensive information about all quiz sessions including:
     - Quiz session details
@@ -59,7 +69,38 @@ async def get_all_quiz_users(
     This endpoint is useful for administrators to track all quiz activities
     and monitor the quiz links that have been sent to candidates.
     """
-    return await controller.get_all_quiz_users()
+    try:
+        # Extract token from body or Authorization header
+        token_candidate = request.access_token if request else None
+        if not token_candidate and authorization and authorization.lower().startswith("bearer "):
+            token_candidate = authorization.split(" ", 1)[1]
+        if not token_candidate:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing access token")
+
+        # Normalize and validate token; do not derive user from token
+        token_candidate = token_candidate.strip().strip('"').strip("'")
+        if token_candidate.lower().startswith("bearer "):
+            token_candidate = token_candidate.split(" ", 1)[1].strip()
+        info = jwt_utils.decode_token(token_candidate)
+        # Determine effective user id from body or API Gateway header
+        effective_user_id = (request.user_id if request else None) or x_user_id
+        if effective_user_id:
+            if len(effective_user_id) != 24 or any(c not in '0123456789abcdef' for c in effective_user_id.lower()):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user_id format")
+            # Verify user exists in API Gateway database and token is valid
+            await verify_user_exists_and_token_valid(effective_user_id, token_candidate)
+        # For this admin-style listing we won't enforce user scoping here; controller can implement scoping if needed
+
+        return await controller.get_all_quiz_users()
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve quiz users: {str(e)}"
+        )
 
 
 @router.get("/quiz/{quiz_session_id}", response_model=APIResponse, summary="Get Quiz for Display")

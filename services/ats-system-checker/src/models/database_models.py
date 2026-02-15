@@ -41,6 +41,7 @@ class CVEvaluation(Document):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: Optional[datetime] = Field(None)
     processing_time_ms: Optional[int] = Field(None, description="Processing time in milliseconds")
+    created_by: Optional[str] = Field(None, description="User ID who created this evaluation")
     
     class Settings:
         name = "cv_evaluations"
@@ -51,6 +52,7 @@ class CVEvaluation(Document):
             IndexModel([("created_at", DESCENDING)]),
             IndexModel([("job_description_hash", ASCENDING)]),
             IndexModel([("email", ASCENDING)]),
+            IndexModel([("created_by", ASCENDING)]),
         ]
 
 
@@ -78,6 +80,7 @@ class QuizSession(Document):
     
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)
+    created_by: Optional[str] = Field(None, description="User ID who created this quiz session")
     
     class Settings:
         name = "quiz_sessions"
@@ -86,6 +89,7 @@ class QuizSession(Document):
             IndexModel([("candidate_email", ASCENDING)]),
             IndexModel([("status", ASCENDING)]),
             IndexModel([("created_at", DESCENDING)]),
+            IndexModel([("created_by", ASCENDING)]),
         ]
 
 
@@ -110,6 +114,7 @@ class QuizResult(Document):
     
     # Analysis
     question_analysis: Optional[List[Dict[str, Any]]] = Field(None, description="Per-question analysis")
+    created_by: Optional[str] = Field(None, description="User ID who created this quiz result")
     
     class Settings:
         name = "quiz_results"
@@ -119,6 +124,7 @@ class QuizResult(Document):
             IndexModel([("status", ASCENDING)]),
             IndexModel([("score", DESCENDING)]),
             IndexModel([("submitted_at", DESCENDING)]),
+            IndexModel([("created_by", ASCENDING)]),
         ]
 
 
@@ -137,6 +143,7 @@ class JobPosting(Document):
     
     # Ownership
     owner_user_id: Optional[str] = Field(None, description="User ID of the HR/creator (from API Gateway)")
+    owner_username: Optional[str] = Field(None, description="Username of the HR/creator (from API Gateway)")
     
     # Application settings
     evaluation_threshold: int = Field(default=70, ge=0, le=100, description="Minimum score for acceptance")
@@ -175,6 +182,7 @@ class JobPosting(Document):
             IndexModel([("description_hash", ASCENDING)]),
             IndexModel([("is_active", ASCENDING)]),
             IndexModel([("owner_user_id", ASCENDING)]),
+            IndexModel([("owner_username", ASCENDING)]),
             IndexModel([("created_at", DESCENDING)]),
         ]
 

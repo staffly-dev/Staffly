@@ -2,19 +2,22 @@
 // import Image from "next/image";
 import { Employee } from "@/types/employee";
 import { Pagination } from "@/components/Pagination";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import LoadingComponent from "@/components/LoadingComponent";
 import ErrorComponent from "@/components/ErrorComponent";
-import { useEmployee } from "@/context/EmployeeContext";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useDeleteEmployee } from "@/hooks/useEmployees";
 
 export function EmployeesTable({ employees }: { employees: Employee[] }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const { deleteEmployee, loading, DeleteLoading, error, clearError } =
-    useEmployee();
+  const {
+    mutate: deleteEmployee,
+    isPending: DeleteLoading,
+    error,
+    isSuccess,
+  } = useDeleteEmployee();
   const totalItems = employees.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -29,7 +32,6 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
         label: "Delete",
         onClick: () => {
           deleteEmployee(employeeId);
-          toast.success("Employee deleted successfully");
         },
       },
       cancel: {
@@ -40,11 +42,14 @@ export function EmployeesTable({ employees }: { employees: Employee[] }) {
     });
   };
 
-  if (loading) {
-    return <LoadingComponent />;
-  }
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success("Employee deleted successfully");
+    }
+  }, [isSuccess]);
+
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return <ErrorComponent error={error.message} clearError={() => {}} />;
   }
 
   return (

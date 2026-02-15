@@ -7,6 +7,7 @@ import os
 import json
 import re
 import logging
+import time
 from typing import Optional, Dict, List, Any
 import cohere
 from datetime import datetime
@@ -19,10 +20,12 @@ logger = logging.getLogger(__name__)
 class CohereService:
     """Service for interacting with Cohere AI API"""
     
-    def __init__(self, api_key: Optional[str]):
-        """Initialize Cohere service with API key"""
+    def __init__(self, api_key: Optional[str], timeout: int = 60, max_retries: int = 3):
+        """Initialize Cohere service with API key and configuration"""
         self.api_key = api_key
         self.client = None
+        self.max_retries = max_retries
+        self.base_timeout = timeout  # Use configurable timeout
         if api_key:
             self._initialize_client()
     
@@ -42,7 +45,7 @@ class CohereService:
     
     def evaluate_cv(self, cv_text: str, job_description: str) -> Optional[str]:
         """
-        Generate CV evaluation using Cohere Chat API
+        Generate CV evaluation using Cohere Chat API with retry logic
         
         Args:
             cv_text (str): Extracted CV text content
@@ -63,43 +66,72 @@ class CohereService:
         
         evaluation_prompt = self._build_evaluation_prompt(cv_text, job_description)
         
-        try:
-            logger.info("Sending CV evaluation request to Cohere API...")
-            
-            # Add timeout handling using concurrent.futures
-            import concurrent.futures
-            
-            def make_cohere_call():
-                return self.client.chat(
-                    model='command-r-plus',
-                    message=evaluation_prompt,
-                    max_tokens=2500,
-                    temperature=0.0,
-                    k=0,
-                    p=1.0
-                )
-            
-            # Use ThreadPoolExecutor with timeout
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(make_cohere_call)
-                try:
-                    response = future.result(timeout=30)  # 30-second timeout
-                    logger.info(" Successfully received response from Cohere API")
-                    return response.text.strip()
-                except concurrent.futures.TimeoutError:
-                    logger.error(" Cohere API call timed out after 30 seconds")
-                    return None
+        # Retry logic with exponential backoff
+        for attempt in range(self.max_retries):
+            start_time = time.time()
+            try:
+                logger.info(f"Sending CV evaluation request to Cohere API (attempt {attempt + 1}/{self.max_retries}, timeout: {self.base_timeout}s)...")
                 
-        except cohere.CohereAPIError as e:
-            logger.error(f" Cohere API error: {e}")
-            return None
-        except Exception as e:
-            logger.error(f" Unexpected error generating CV evaluation: {e}")
-            return None
+                # Add timeout handling using concurrent.futures
+                import concurrent.futures
+                
+                def make_cohere_call():
+                    return self.client.chat(
+                        model='command-r-plus',  # Updated from deprecated command-r-plus
+                        message=evaluation_prompt,
+                        max_tokens=2500,
+                        temperature=0.0,
+                        k=0,
+                        p=1.0
+                    )
+                
+                # Use ThreadPoolExecutor with timeout
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(make_cohere_call)
+                    try:
+                        response = future.result(timeout=self.base_timeout)
+                        elapsed_time = time.time() - start_time
+                        logger.info(f" Successfully received response from Cohere API in {elapsed_time:.2f}s")
+                        return response.text.strip()
+                    except concurrent.futures.TimeoutError:
+                        elapsed_time = time.time() - start_time
+                        logger.warning(f" Cohere API call timed out after {elapsed_time:.2f}s (attempt {attempt + 1}/{self.max_retries})")
+                        if attempt < self.max_retries - 1:
+                            # Exponential backoff: wait 2^attempt seconds before retry
+                            wait_time = 2 ** attempt
+                            logger.info(f" Waiting {wait_time}s before retry...")
+                            time.sleep(wait_time)
+                            continue
+                        else:
+                            logger.error(f" All {self.max_retries} retry attempts failed due to timeout")
+                            return None
+                
+            except cohere.CohereAPIError as e:
+                elapsed_time = time.time() - start_time
+                logger.error(f" Cohere API error (attempt {attempt + 1}/{self.max_retries}, elapsed: {elapsed_time:.2f}s): {e}")
+                if attempt < self.max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.info(f" Waiting {wait_time}s before retry...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    return None
+            except Exception as e:
+                elapsed_time = time.time() - start_time
+                logger.error(f" Unexpected error generating CV evaluation (attempt {attempt + 1}/{self.max_retries}, elapsed: {elapsed_time:.2f}s): {e}")
+                if attempt < self.max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.info(f" Waiting {wait_time}s before retry...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    return None
+        
+        return None
     
     def generate_quiz(self, job_description: str, num_questions: int = 10) -> Optional[List[Dict[str, Any]]]:
         """
-        Generate a quiz based on job description
+        Generate a quiz based on job description with retry logic
         
         Args:
             job_description (str): Job requirements and description
@@ -114,29 +146,67 @@ class CohereService:
         
         quiz_prompt = self._build_quiz_prompt(job_description, num_questions)
         
-        try:
-            logger.info("Sending quiz generation request to Cohere API...")
-            response = self.client.chat(
-                model='command-r-plus',
-                message=quiz_prompt,
-                max_tokens=3000,
-                temperature=0.3,
-                k=0,
-                p=0.9
-            )
-            
-            quiz_text = response.text.strip()
-            logger.info(f"Raw quiz response received ({len(quiz_text)} characters)")
-            logger.debug(f"Quiz response preview: {quiz_text[:200]}...")
-            
-            return self._parse_quiz_response(quiz_text, num_questions)
-            
-        except cohere.CohereAPIError as e:
-            logger.error(f" Cohere API error: {e}")
-            return None
-        except Exception as e:
-            logger.error(f" Unexpected error generating quiz: {e}")
-            return None
+        # Retry logic with exponential backoff
+        for attempt in range(self.max_retries):
+            try:
+                logger.info(f"Sending quiz generation request to Cohere API (attempt {attempt + 1}/{self.max_retries})...")
+                
+                # Add timeout handling using concurrent.futures
+                import concurrent.futures
+                
+                def make_cohere_call():
+                    return self.client.chat(
+                        model='command-r-plus',  # Updated from deprecated command-r-plus
+                        message=quiz_prompt,
+                        max_tokens=3000,
+                        temperature=0.3,
+                        k=0,
+                        p=0.9
+                    )
+                
+                # Use ThreadPoolExecutor with timeout
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(make_cohere_call)
+                    try:
+                        response = future.result(timeout=self.base_timeout)
+                        quiz_text = response.text.strip()
+                        logger.info(f"Raw quiz response received ({len(quiz_text)} characters)")
+                        logger.debug(f"Quiz response preview: {quiz_text[:200]}...")
+                        
+                        return self._parse_quiz_response(quiz_text, num_questions)
+                        
+                    except concurrent.futures.TimeoutError:
+                        logger.warning(f" Cohere API call timed out after {self.base_timeout} seconds (attempt {attempt + 1})")
+                        if attempt < self.max_retries - 1:
+                            # Exponential backoff: wait 2^attempt seconds before retry
+                            wait_time = 2 ** attempt
+                            logger.info(f" Waiting {wait_time} seconds before retry...")
+                            time.sleep(wait_time)
+                            continue
+                        else:
+                            logger.error(" All retry attempts failed due to timeout")
+                            return None
+                
+            except cohere.CohereAPIError as e:
+                logger.error(f" Cohere API error (attempt {attempt + 1}): {e}")
+                if attempt < self.max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.info(f" Waiting {wait_time} seconds before retry...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    return None
+            except Exception as e:
+                logger.error(f" Unexpected error generating quiz (attempt {attempt + 1}): {e}")
+                if attempt < self.max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.info(f" Waiting {wait_time} seconds before retry...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    return None
+        
+        return None
     
     def _build_evaluation_prompt(self, cv_text: str, job_description: str) -> str:
         """Build the evaluation prompt for Cohere"""
@@ -455,7 +525,7 @@ class CohereService:
         
         try:
             response = self.client.chat(
-                model='command-r',
+                model='command-r-plus',
                 message=prompt,
                 max_tokens=1000,
                 temperature=0.3
@@ -552,7 +622,7 @@ class CohereService:
         
         try:
             response = self.client.chat(
-                model='command-r',
+                model='command-r-plus',
                 message=skills_prompt,
                 max_tokens=200,
                 temperature=0.1

@@ -1,30 +1,24 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CiSearch } from "react-icons/ci";
 import Link from "next/link";
 import { FaChevronRight } from "react-icons/fa6";
-import { useEmployee } from "@/context/EmployeeContext";
 import LoadingComponent from "@/components/LoadingComponent";
 import ErrorComponent from "@/components/ErrorComponent";
 import { Employee } from "@/types/employee";
+import { useEmployees } from "@/hooks/useEmployees";
 
 export default function Page() {
-  const { employees, getAllEmployees, error, clearError, loading } =
-    useEmployee();
+  const { data: employees = [], isLoading, error } = useEmployees();
 
-  const [departments, setDepartments] = useState<Record<string, Employee[]>>(
-    {}
-  );
+  // Use useMemo to compute departments only when employees change
+  const departments = useMemo(() => {
+    if (!employees || employees.length === 0) return {};
 
-  useEffect(() => {
-    getAllEmployees();
-  }, [getAllEmployees]);
-
-  useEffect(() => {
-    const depts = employees.reduce((acc, employee) => {
+    return employees.reduce((acc, employee) => {
       const department = employee.department;
       if (!acc[department]) {
         acc[department] = [];
@@ -32,18 +26,17 @@ export default function Page() {
       acc[department].push(employee);
       return acc;
     }, {} as Record<string, Employee[]>);
-    setDepartments(depts);
   }, [employees]);
 
-  console.log(departments);
-  console.log(employees);
+  // Remove the problematic useEffect and console.logs
+  // The departments will be computed automatically when employees change
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingComponent className="h-[60vh]" />;
   }
 
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return <ErrorComponent error={error.message} clearError={() => {}} />;
   }
 
   return (

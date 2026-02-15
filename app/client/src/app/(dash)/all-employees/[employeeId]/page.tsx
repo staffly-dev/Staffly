@@ -8,7 +8,6 @@ import {
   CalendarCheck,
 } from "lucide-react";
 import { BriefcaseIcon } from "lucide-react";
-// import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { use, useState } from "react";
@@ -18,7 +17,7 @@ import { Profile } from "../components/Profile";
 import { Attendance } from "../components/Attendance";
 import { Projects } from "../components/Projects";
 import { Leave } from "../components/Leave";
-import { useEmployee } from "@/context/EmployeeContext";
+import { useEmployee } from "@/hooks/useEmployees";
 import ErrorComponent from "@/components/ErrorComponent";
 import LoadingComponent from "@/components/LoadingComponent";
 import Image from "next/image";
@@ -30,59 +29,19 @@ export default function EmployeePage({
 }) {
   const { employeeId } = use(params);
 
-  // const employee: EmployeeAdded = {
-  //   id: "mazin-emad123",
-  //   photo: "/imgs/mazin-picture.jpg",
-  //   personalInfo: {
-  //     name: "Mazin Emad",
-  //     email: "q6NtO@example.com",
-  //     phone: 1234567890,
-  //     address: "123 Main St, Anytown, USA",
-  //     city: "Anytown",
-  //     state: "CA",
-  //     zip: "12345",
-  //     gender: "Male",
-  //     maritalStatus: "Single",
-  //     nationality: "Egyptian",
-  //   },
-  //   professionalInfo: {
-  //     employeeId: "1234567890",
-  //     department: "Development",
-  //     designation: "Frontend Developer",
-  //     employeeType: "Remote",
-  //     status: "Permanent",
-  //     joiningDate: "2021-01-01",
-  //     officeLocation: "Remote",
-  //     workingDays: "5/2",
-  //     userName: "mazin-emad123",
-  //     workEmail: "q6NtO@example.com",
-  //   },
-  //   documents: {
-  //     appointmentLetter: "/imgs/mazin-picture.jpg",
-  //     salarySlips: "/imgs/mazin-picture.jpg",
-  //     relivingLetter: "/imgs/mazin-picture.jpg",
-  //     experienceLetter: "/imgs/mazin-picture.jpg",
-  //   },
-  //   accountAccess: {
-  //     emailAddress: "q6NtO@example.com",
-  //     skypeId: "mazin-emad123",
-  //     githubId: "mazin-emad123",
-  //     slackId: "mazin-emad123",
-  //   },
-  // };
-  const { singleEmployee, error, clearError, singleLoading } = useEmployee();
+  const { data: singleEmployee, isLoading, error } = useEmployee(employeeId);
 
   const [toShow, setToShow] = useState("profile");
 
-  if (singleLoading) {
+  if (isLoading) {
     return <LoadingComponent />;
   }
-  if (!singleEmployee && !singleLoading) {
+  if (!singleEmployee && !isLoading) {
     return notFound();
   }
 
   if (error) {
-    return <ErrorComponent error={error} clearError={clearError} />;
+    return <ErrorComponent error={error.message} clearError={() => {}} />;
   }
 
   return (

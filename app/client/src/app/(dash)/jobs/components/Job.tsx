@@ -1,9 +1,8 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Job as JobType, useJob } from "@/context/JobContext";
+import { Job as JobType, useDeleteJob } from "@/hooks/useJobs";
 import { IoBriefcaseOutline } from "react-icons/io5";
-// import { useDraggable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 import { FaLink, FaSpinner, FaTrash } from "react-icons/fa6";
 import { toast } from "sonner";
@@ -11,25 +10,27 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 function Job({ job }: { job: JobType }) {
-  // const { setNodeRef, attributes, listeners, transform } = useDraggable({
-  //   id: job.job_id,
-  // });
-  // const style = transform
-  //   ? {
-  //       transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  //     }
-  //   : undefined;
-  const { deleteJob, deleteLoading } = useJob();
+  const { mutate: deleteJob, isPending: deleteLoading } = useDeleteJob();
   const [id, setId] = useState<string | null>(null);
+
   const handleDelete = (id: string) => {
     setId(id);
     toast.warning("Are you sure you want to delete this job?", {
       action: {
         label: "Delete",
         onClick: () => {
-          deleteJob(id);
-          toast.success("Job deleted successfully", {
-            position: "top-center",
+          deleteJob(id, {
+            onSuccess: () => {
+              toast.success("Job deleted successfully", {
+                position: "top-center",
+              });
+            },
+            onError: (error) => {
+              toast.error("Failed to delete job", {
+                position: "top-center",
+              });
+              console.log("Delete error:", error);
+            },
           });
         },
       },
@@ -44,13 +45,7 @@ function Job({ job }: { job: JobType }) {
   const shareLink = `${process.env.NEXT_PUBLIC_APP_URL}/apply/${job.job_id}`;
 
   return (
-    <Card
-      // ref={setNodeRef}
-      className="w-full p-4 bg-hrms-gray/10 flex flex-col gap-3"
-      // style={style}
-      // {...listeners}
-      // {...attributes}
-    >
+    <Card className="w-full p-4 bg-hrms-gray/10 flex flex-col gap-3">
       <div className="flex justify-between">
         <div className="flex gap-3 items-center">
           <div className="bg-hrms-gray/10 rounded-md p-2 ">
@@ -87,9 +82,9 @@ function Job({ job }: { job: JobType }) {
         </Button>
       </div>
       <div className="flex gap-2 flex-wrap">
-        {job.required_skills.map((skill: string) => (
+        {job.required_skills.map((skill: string, index: number) => (
           <p
-            key={skill}
+            key={index}
             className="text-sm bg-primary rounded-md text-white px-4 py-2 capitalize"
           >
             {skill}

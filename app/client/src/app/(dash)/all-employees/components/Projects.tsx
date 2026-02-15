@@ -1,6 +1,6 @@
 "use client";
-import { CiCirclePlus } from "react-icons/ci";
 import { CustomTableContainer } from "./CustomTableContainer";
+import UnderDevelopment from "@/components/global/UnderDevelopment";
 
 type Project = {
   id: string;
@@ -106,13 +106,7 @@ export function Projects() {
           ))}
         </tbody>
       </CustomTableContainer>
-      <div className="absolute bottom-0 right-0 flex flex-col items-center gap-2">
-        <h3 className="text-xl font-bold">Under Development</h3>
-        <p className="text-sm text-gray-500">
-          This feature is under development. Please check back later.
-        </p>
-        <CiCirclePlus className="w-10 h-10" />
-      </div>
+      <UnderDevelopment />
     </div>
   );
 }

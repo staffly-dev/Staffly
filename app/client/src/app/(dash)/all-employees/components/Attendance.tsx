@@ -1,10 +1,9 @@
 "use client";
 import { getUtcTime } from "@/constants";
 import { CustomTableContainer } from "./CustomTableContainer";
-import { useAttendance } from "@/context/AttendanceContext";
+import { useAttendance } from "@/hooks/useAttendance";
 import { useParams } from "next/navigation";
-import { useEffect } from "react";
-import { AttendanceRecord } from "@/context/AttendanceContext";
+import { AttendanceRecord } from "@/hooks/useAttendance";
 
 const attendanceStatusColors = {
   "on-time": "bg-green-500/20 text-green-500",
@@ -15,11 +14,8 @@ const attendanceStatusColors = {
 };
 
 export function Attendance() {
-  const { fetchAttendance, attendanceRecords } = useAttendance();
+  const { data: attendanceRecords = [] } = useAttendance();
   const { employeeId } = useParams();
-  useEffect(() => {
-    fetchAttendance();
-  }, [fetchAttendance, employeeId]);
 
   const data = attendanceRecords
     .filter((attendance: AttendanceRecord) => {
