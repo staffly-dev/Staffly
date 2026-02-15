@@ -41,6 +41,9 @@ export class DatabaseService {
 
   async health_check(): Promise<boolean> {
     try {
+      if (!mongoose.connection.db) {
+        return false;
+      }
       await mongoose.connection.db.admin().ping();
       return true;
     } catch (error) {

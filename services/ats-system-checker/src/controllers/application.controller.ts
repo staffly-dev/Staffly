@@ -53,7 +53,7 @@ export class ApplicationController {
 
   async get_application_by_id(req: Request, res: Response): Promise<Response> {
     try {
-      const application_id = req.params.app_id;
+      const application_id = Array.isArray(req.params.app_id) ? req.params.app_id[0] : req.params.app_id;
       console.log(`Getting application: ${application_id}`);
       
       const application = await this.database_service.get_application_by_id(application_id);

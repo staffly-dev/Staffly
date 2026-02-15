@@ -62,7 +62,8 @@ export class AWS_S3Controller {
 
   async delete_file(req: Request, res: Response): Promise<Response> {
     try {
-      const s3_key = req.params.s3_key || req.body.s3_key;
+      const s3_key_param = Array.isArray(req.params.s3_key) ? req.params.s3_key[0] : req.params.s3_key;
+      const s3_key = s3_key_param || req.body.s3_key;
       if (!s3_key) {
         return res.status(400).json({
           success: false,
@@ -104,7 +105,8 @@ export class AWS_S3Controller {
 
   async get_presigned_url(req: Request, res: Response): Promise<Response> {
     try {
-      const s3_key = req.params.s3_key || req.query.s3_key as string;
+      const s3_key_param = Array.isArray(req.params.s3_key) ? req.params.s3_key[0] : req.params.s3_key;
+      const s3_key = s3_key_param || (Array.isArray(req.query.s3_key) ? req.query.s3_key[0] : req.query.s3_key) as string;
       const expires_in = parseInt(req.query.expires_in as string) || 3600;
       
       if (!s3_key) {
@@ -145,7 +147,8 @@ export class AWS_S3Controller {
 
   async download_file(req: Request, res: Response): Promise<Response> {
     try {
-      const s3_key = req.params.s3_key || req.query.s3_key as string;
+      const s3_key_param = Array.isArray(req.params.s3_key) ? req.params.s3_key[0] : req.params.s3_key;
+      const s3_key = s3_key_param || (Array.isArray(req.query.s3_key) ? req.query.s3_key[0] : req.query.s3_key) as string;
       if (!s3_key) {
         return res.status(400).json({
           success: false,

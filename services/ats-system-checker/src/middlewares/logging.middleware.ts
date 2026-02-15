@@ -14,7 +14,7 @@ export function requestLoggingMiddleware(req: Request, res: Response, next: Next
   
   // Override res.end to log response
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: any, encoding?: any): Response {
     const process_time = (Date.now() - start_time) / 1000;
     const status_code = res.statusCode;
     
@@ -25,6 +25,7 @@ export function requestLoggingMiddleware(req: Request, res: Response, next: Next
     
     // Call original end
     originalEnd.call(this, chunk, encoding);
+    return res;
   };
   
   next();

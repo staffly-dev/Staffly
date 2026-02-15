@@ -96,7 +96,7 @@ export class JobController {
 
   async get_job_posting(req: Request, res: Response): Promise<Response> {
     try {
-      const job_id = req.params.job_id;
+      const job_id = Array.isArray(req.params.job_id) ? req.params.job_id[0] : req.params.job_id;
       console.log(`Retrieving job posting: ${job_id}`);
 
       const job_posting = await this.database_service.get_job_posting_by_id(job_id);
@@ -175,7 +175,7 @@ export class JobController {
 
   async update_job_posting(req: Request, res: Response): Promise<Response> {
     try {
-      const job_id = req.params.job_id;
+      const job_id = Array.isArray(req.params.job_id) ? req.params.job_id[0] : req.params.job_id;
       const updates = req.body;
 
       console.log(`Updating job posting: ${job_id}`);
@@ -219,7 +219,7 @@ export class JobController {
 
   async delete_job_posting(req: Request, res: Response): Promise<Response> {
     try {
-      const job_id = req.params.job_id;
+      const job_id = Array.isArray(req.params.job_id) ? req.params.job_id[0] : req.params.job_id;
       console.log(`Deleting job posting: ${job_id}`);
 
       const success = await this.database_service.delete_job_posting(job_id);
@@ -247,7 +247,7 @@ export class JobController {
 
   async apply_for_job(req: Request, res: Response): Promise<Response> {
     try {
-      const job_id = req.params.job_id;
+      const job_id = Array.isArray(req.params.job_id) ? req.params.job_id[0] : req.params.job_id;
       const { candidate_email, candidate_name } = req.body;
       const file = req.file;
 
@@ -279,7 +279,7 @@ export class JobController {
       const application_id = uuidv4();
       const application = await this.database_service.create_application(
         application_id,
-        job_id,
+        job_id as string,
         s3_key,
         candidate_email,
         candidate_name

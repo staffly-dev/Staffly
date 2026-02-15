@@ -147,7 +147,7 @@ export class QuizController {
 
   async get_quiz_by_session_id(req: Request, res: Response): Promise<Response> {
     try {
-      const session_id = req.params.session_id;
+      const session_id = Array.isArray(req.params.session_id) ? req.params.session_id[0] : req.params.session_id;
       console.log(`Getting quiz for session: ${session_id}`);
       
       const quiz_session = await this.database_service.get_quiz_session_by_id(session_id);
@@ -168,7 +168,7 @@ export class QuizController {
       }
       
       const response: QuizDisplayResponse = {
-        quiz_session_id: session_id,
+        quiz_session_id: session_id as string,
         questions: quiz_session.questions,
         total_questions: quiz_session.total_questions,
         time_limit_seconds: quiz_session.time_limit_seconds,
