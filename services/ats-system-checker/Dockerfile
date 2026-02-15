@@ -1,34 +1,41 @@
-# Backend Service Dockerfile
-FROM python:3.10-slim
+# Use Node.js LTS image
+FROM node:20-slim
 
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-  gcc \
+  python3 \
+  make \
+  g++ \
   && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy package files
+COPY package.json ./
 
-# Copy application code
-COPY ./src ./src
+# Install dependencies
+RUN npm install
+
+# Copy source files
+COPY tsconfig.json ./
+COPY src/ ./src/
+
+# Build TypeScript
+RUN npm run build
 
 # Create necessary directories
 RUN mkdir -p uploads evaluations
 
-# Expose port (Railway will override this with $PORT)
+# Expose port
 EXPOSE 4002
 
 # Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH="/app"
+ENV NODE_ENV=production
 ENV PORT=4002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:$PORT/ats-checker/health/simple || exit 1
+  CMD node -e "require('http').get('http://localhost:4002/ats-checker/health/simple', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Start the backend service
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "4002"]
+# Start the application
+CMD ["npm", "start"]

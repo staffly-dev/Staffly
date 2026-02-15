@@ -1,6 +1,6 @@
 # 🖥️ ATS Backend Service
 
-A professional FastAPI-based backend for the Advanced Applicant Tracking System, providing comprehensive job management, AI-powered CV evaluation, automated quiz generation, and secure HR workflow management.
+A professional Express.js/TypeScript-based backend for the Advanced Applicant Tracking System, providing comprehensive job management, AI-powered CV evaluation, automated quiz generation, and secure HR workflow management.
 
 ## ✨ Features
 
@@ -36,13 +36,15 @@ Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 - **[🔒 Quiz Security Enhancement](./docs/04-quiz-security-enhancement.md)** - Preventing multiple submissions
 - **[👥 HR Review System Architecture](./docs/05-hr-review-system-architecture.md)** - Complete application management
 - **[💾 CV Evaluation Database Fix](./docs/06-cv-evaluation-database-fix.md)** - Resolving storage issues
-- **[☁️ AWS S3 Integration Guide](./S3_SETUP.md)** - Complete S3 setup and configuration
+- **[☁️ AWS S3 Integration Guide](./docs/S3_SETUP.md)** - Complete S3 setup and configuration
+- **[🔄 TypeScript Migration Guide](./docs/08-typescript-migration.md)** - Migration from Python to TypeScript
 
 ## 🏗️ Architecture
 
-- **FastAPI** application (Python 3.9+)
-- **MongoDB** with Motor async driver
-- **Pydantic** models for type safety and validation
+- **Express.js** application (Node.js 20+)
+- **TypeScript** for type safety and modern JavaScript features
+- **MongoDB** with Mongoose ODM
+- **Zod** for runtime validation
 - **AWS S3** for cloud file storage and public access
 - **Modular codebase**: `src/` with `config/`, `controllers/`, `models/`, `routes/`, `services/`, `middlewares/`, `utils/`
 - **AI Integration**: External AI service for CV evaluation and quiz generation
@@ -73,11 +75,12 @@ Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 
 | Endpoint                    | Method | Description                |
 | --------------------------- | ------ | -------------------------- |
-| `/ats-checker/upload`       | POST   | Upload file to S3 bucket   |
-| `/ats-checker/status`       | GET    | Check S3 service status    |
-| `/ats-checker/debug/s3`     | GET    | Debug S3 service status    |
-| `/ats-checker/{s3_key}`     | DELETE | Delete file from S3 bucket |
-| `/ats-checker/url/{s3_key}` | GET    | Get public URL for file    |
+| `/ats-checker/s3/upload`    | POST   | Upload file to S3 bucket   |
+| `/ats-checker/s3/status`     | GET    | Check S3 service status    |
+| `/ats-checker/s3/debug`     | GET    | Debug S3 service status    |
+| `/ats-checker/s3/{s3_key}`  | DELETE | Delete file from S3 bucket |
+| `/ats-checker/s3/presign/{s3_key}` | GET | Get presigned URL for file |
+| `/ats-checker/s3/file/{s3_key}` | GET | Stream file via backend |
 
 ### Quiz System
 
@@ -184,41 +187,41 @@ DOCS_AUTH_ENABLED=true
 ### 2. Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+npm install
 ```
 
 ### 3. Test S3 Integration
 
-```bash
-python test_s3_integration.py
-```
+The S3 integration can be tested via the API endpoints once the server is running.
 
 ### 4. Start the Server
 
+**Development:**
+
 ```bash
-python -m src.main
+npm run dev
+```
+
+**Production:**
+
+```bash
+npm run build
+npm start
 ```
 
 ### 5. Access the API
 
-- **API Documentation**: http://localhost:4002/docs (Authentication Required)
-- **Alternative Docs**: http://localhost:4002/redoc (Authentication Required)
-- **Health Check**: http://localhost:4002/health
+- **Health Check**: <http://localhost:4002/ats-checker/health>
+- **API Root**: <http://localhost:4002/>
 
-**Note**: API documentation requires authentication. Default credentials are `admin:admin123`. Change these in production!
+**Note**: API documentation endpoints (Swagger/ReDoc) can be added if needed. The API is fully functional via REST endpoints.
 
 ## 🔧 Testing
-
-### Test S3 Integration
-
-```bash
-python test_s3_integration.py
-```
 
 ### Test File Upload
 
 ```bash
-curl -X POST http://localhost:4002/ats-checker/upload \
+curl -X POST http://localhost:4002/ats-checker/s3/upload \
   -F "file=@test.pdf"
 ```
 
@@ -256,24 +259,50 @@ curl -X POST http://localhost:4002/ats-checker/jobs/{job_id}/apply \
 ```
 src/
 ├── config/          # Settings and configuration
+│   ├── env.config.ts       # Environment configuration
+│   └── database.config.ts  # Database connection
 ├── controllers/     # Business logic controllers
+│   ├── job.controller.ts
+│   ├── application.controller.ts
+│   ├── quiz.controller.ts
+│   ├── statistics.controller.ts
+│   ├── health.controller.ts
+│   └── aws_s3.controller.ts
 ├── models/          # Database and API models
+│   ├── database.models.ts  # Mongoose schemas
+│   ├── api.models.ts       # API interfaces
+│   └── evaluation.models.ts
 ├── routes/          # API endpoint definitions
+│   ├── jobs.routes.ts
+│   ├── applications.routes.ts
+│   ├── quiz.routes.ts
+│   ├── statistics.routes.ts
+│   ├── aws_s3.routes.ts
+│   └── health.routes.ts
 ├── services/        # External service integrations
-│   ├── s3_service.py    # AWS S3 integration
-│   ├── database_service.py
-│   ├── email_service.py
-│   └── evaluation_service.py
+│   ├── s3.service.ts           # AWS S3 integration
+│   ├── database.service.ts
+│   ├── email.service.ts
+│   ├── evaluation.service.ts
+│   └── template.service.ts
 ├── middlewares/     # Request/response middleware
+│   ├── errorHandler.middleware.ts
+│   ├── logging.middleware.ts
+│   └── security.middleware.ts
 └── utils/           # Utility functions
+    ├── jwt_utils.ts
+    ├── gateway_client.ts
+    ├── responses.ts
+    └── dependencies.ts
 ```
 
 ### Key Files
 
-- **S3 Integration**: `src/services/s3_service.py`
-- **AWS S3 Routes**: `src/routes/aws_s3_routes.py`
-- **Settings**: `src/config/settings.py`
-- **Job Controller**: `src/controllers/job.controller.py`
+- **S3 Integration**: `src/services/s3.service.ts`
+- **AWS S3 Routes**: `src/routes/aws_s3.routes.ts`
+- **Environment Config**: `src/config/env.config.ts`
+- **Job Controller**: `src/controllers/job.controller.ts`
+- **Main Application**: `src/index.ts`
 
 ## 📖 Additional Resources
 
