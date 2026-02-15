@@ -12,6 +12,7 @@ import { S3Service } from "./services/s3.service";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { requestLoggingMiddleware } from "./middlewares/logging.middleware";
 import { enhancedSecurityMiddleware, docsAuthenticationMiddleware } from "./middlewares/security.middleware";
+import { swaggerUi, swaggerSpec } from "./swagger";
 import healthRoutes from "./routes/health.routes";
 
 dotenv.config();
@@ -54,6 +55,14 @@ if (!fs.existsSync(evaluationsFolder)) {
 // Static file serving
 app.use("/uploads", express.static(uploadFolder));
 app.use("/evaluations", express.static(evaluationsFolder));
+
+// Swagger API Documentation
+// The docsAuthenticationMiddleware is already applied above, so it will protect /docs
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/openapi.json", (req: Request, res: Response) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpec);
+});
 
 // Initialize services (will be set in app.locals)
 let databaseService: DatabaseService;
