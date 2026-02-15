@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy package files (for better layer caching)
-COPY package.json package-lock.json* ./
+COPY package.json ./
 COPY fix-packages.js ./
 
 # Install dependencies
