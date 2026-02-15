@@ -5,23 +5,23 @@ const members = [
   {
     name: 'Mazin Emad',
     role: 'Frontend Developer',
-    avatar: 'https://alt.tailus.io/images/team/member-two.webp',
-    linkedin: 'https://linkedin.com/in/ahmedbadawihosny',
-    github: 'https://github.com/ahmedbadawihosny',
+    avatar: '/avatars/Mazin Emad.webp',
+    linkedin: 'https://www.linkedin.com/in/mazin0emd',
+    portfolio: 'https://mazin-emad.netlify.app/',
   },
   {
     name: 'Mohamed Abolyazeed',
     role: 'Backend Developer',
-    avatar: 'https://alt.tailus.io/images/team/member-two.webp',
-    linkedin: 'https://linkedin.com/in/ahmedbadawihosny',
-    github: 'https://github.com/ahmedbadawihosny',
+    avatar: '/avatars/Abolyazeed.jpg',
+    linkedin: 'https://www.linkedin.com/in/mohamed-abolyazeed-hashem-139ba0358/',
+    portfolio: 'https://mohamedabolyazeed.vercel.app/',
   },
   {
-    name: 'Moataz Dahy',
+    name: 'Abdelraouf Dahy',
     role: 'AI Engineer',
-    avatar: 'https://alt.tailus.io/images/team/member-two.webp',
-    linkedin: 'https://linkedin.com/in/ahmedbadawihosny',
-    github: 'https://github.com/ahmedbadawihosny',
+    avatar: '/avatars/Moataz Rashwan.webp',
+    linkedin: "https://www.linkedin.com/in/moataz-abdelraouf-390429290/",
+    github: "https://github.com/Moataz899",
   },
   {
     name: 'Ahmed Badawi',
@@ -33,28 +33,28 @@ const members = [
   {
     name: 'Andro',
     role: 'Backend Developer',
-    avatar: 'https://alt.tailus.io/images/team/member-two.webp',
-    linkedin: 'https://linkedin.com/in/ahmedbadawihosny',
-    github: 'https://github.com/ahmedbadawihosny',
+    avatar: '/avatars/Andro Refaat.webp',
+    linkedin: "https://www.linkedin.com/in/andro-refaat-a80081253/",
+    github: "https://github.com/AndroRefaat",
   },
   {
     name: 'Abdallah Makram',
     role: 'Backend Developer',
-    avatar: 'https://alt.tailus.io/images/team/member-two.webp',
-    linkedin: 'https://linkedin.com/in/ahmedbadawihosny',
-    github: 'https://github.com/ahmedbadawihosny',
+    avatar: '/avatars/Abdallah Makram.webp',
+    linkedin: "https://www.linkedin.com/in/abdallah-makram-ab337a249/",
+    github: "https://github.com/Abdallah-Makram",
   },
   {
     name: 'Shahd Ali',
     role: 'AI Engineer',
-    avatar: 'https://alt.tailus.io/images/team/member-two.webp',
+    avatar: '/avatars/Girl Image.webp',
     linkedin: 'https://linkedin.com/in/ahmedbadawihosny',
     github: 'https://github.com/ahmedbadawihosny',
   },
   {
     name: 'Esraa Naji',
     role: 'AI Engineer',
-    avatar: 'https://alt.tailus.io/images/team/member-two.webp',
+    avatar: '/avatars/Girl Image.webp',
     linkedin: 'https://linkedin.com/in/ahmedbadawihosny',
     github: 'https://github.com/ahmedbadawihosny',
   },
@@ -80,7 +80,7 @@ export default function AboutUSSection() {
                 key={index}
                 className="group overflow-hidden">
                 <Image
-                  className="h-96 w-full rounded-md object-cover object-top grayscale transition-all duration-500 hover:grayscale-0 group-hover:h-[22.5rem] group-hover:rounded-xl"
+                  className="h-96 w-full rounded-md object-cover object-top transition-all duration-500 hover:grayscale-0 group-hover:h-[22.5rem] group-hover:rounded-xl"
                   src={member.avatar}
                   alt="team member"
                   width="826"
@@ -99,12 +99,21 @@ export default function AboutUSSection() {
                       {' '}
                       LinkedIn
                     </Link>
-                    <Link
-                      href={member.github}
-                      className="group-hover:text-primary-600 dark:group-hover:text-primary-400 inline-block translate-y-8 text-sm tracking-wide opacity-0 transition-all duration-500 hover:underline group-hover:translate-y-0 group-hover:opacity-100">
-                      {' '}
-                      GitHub
-                    </Link>
+                    {member.portfolio ? (
+                      <Link
+                        href={member.portfolio}
+                        className="group-hover:text-primary-600 dark:group-hover:text-primary-400 inline-block translate-y-8 text-sm tracking-wide opacity-0 transition-all duration-500 hover:underline group-hover:translate-y-0 group-hover:opacity-100">
+                        {' '}
+                        Portfolio
+                      </Link>
+                    ) : (
+                      <Link
+                        href={member.github}
+                        className="group-hover:text-primary-600 dark:group-hover:text-primary-400 inline-block translate-y-8 text-sm tracking-wide opacity-0 transition-all duration-500 hover:underline group-hover:translate-y-0 group-hover:opacity-100">
+                        {' '}
+                        GitHub
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
