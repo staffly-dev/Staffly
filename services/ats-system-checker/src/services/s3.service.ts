@@ -27,13 +27,10 @@ export class S3Service {
             secretAccessKey: Env.AWS_SECRET_ACCESS_KEY
           }
         });
-        console.log("S3 client initialized");
       } else {
         this.s3_client = new S3Client({ region: this.region });
-        console.log("S3 client initialized with default credentials");
       }
     } catch (error) {
-      console.error("Failed to initialize S3 client:", error);
       this.s3_client = null;
     }
   }

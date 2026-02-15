@@ -1,10 +1,18 @@
 import mongoose from "mongoose";
 import { Env } from "./env.config";
 
+// Suppress Mongoose duplicate index warnings
+const originalWarn = process.emitWarning;
+process.emitWarning = function (warning: any, ...args: any[]) {
+  if (warning && typeof warning === 'object' && warning.name === 'MongooseWarning') {
+    return; // Suppress Mongoose warnings
+  }
+  return originalWarn.apply(process, [warning, ...args]);
+};
+
 const connectDatabase = async () => {
   try {
     await mongoose.connect(Env.MONGODB_URL);
-    console.log("Connected to MongoDB database:", Env.MONGODB_DATABASE);
   } catch (error) {
     console.error("❌ Error connecting to MongoDB:", error);
     process.exit(1);
@@ -14,9 +22,8 @@ const connectDatabase = async () => {
 const disconnectDatabase = async () => {
   try {
     await mongoose.disconnect();
-    console.log("Disconnected from MongoDB");
   } catch (error) {
-    console.error("❌ Error disconnecting from MongoDB:", error);
+    // Silent fail
   }
 };
 

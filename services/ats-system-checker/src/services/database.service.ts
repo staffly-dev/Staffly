@@ -23,9 +23,7 @@ export class DatabaseService {
   async connect(): Promise<void> {
     try {
       await mongoose.connect(this.mongodb_url);
-      console.log(`Connected to MongoDB: ${this.database_name}`);
     } catch (error) {
-      console.error("Failed to connect to MongoDB:", error);
       throw error;
     }
   }
@@ -33,9 +31,8 @@ export class DatabaseService {
   async disconnect(): Promise<void> {
     try {
       await mongoose.disconnect();
-      console.log("Disconnected from MongoDB");
     } catch (error) {
-      console.error("Error disconnecting from MongoDB:", error);
+      // Silent fail
     }
   }
 
