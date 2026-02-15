@@ -13,10 +13,9 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json ./
-COPY fix-packages.js ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies (skip scripts since fix-packages.js is Windows-only)
+RUN npm ci --ignore-scripts
 
 # Copy TypeScript configuration
 COPY tsconfig.json ./
@@ -29,7 +28,6 @@ RUN npm run build
 
 # Remove development dependencies and unnecessary files (not needed in production)
 RUN npm prune --production && \
-  rm -f fix-packages.js && \
   rm -rf src/ tsconfig.json
 
 # Create necessary directories for uploads and evaluations
