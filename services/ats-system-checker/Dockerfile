@@ -11,12 +11,11 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json ./
+# Copy package.json only (package-lock.json may be corrupted)
+COPY package.json ./
 
 # Install dependencies (skip scripts since fix-packages.js is Windows-only)
-# Using npm install instead of npm ci - it's more forgiving with lock file issues
-# If package-lock.json is corrupted, npm install will handle it gracefully
+# npm install will generate a fresh package-lock.json
 RUN npm install --ignore-scripts --legacy-peer-deps
 
 # Copy TypeScript configuration
