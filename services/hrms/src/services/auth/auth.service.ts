@@ -346,7 +346,7 @@ export const logoutAllDevicesService = async (
 
   if (!payload) throw new UnauthorizedException("Invalid refresh token");
 
-  await revokeAllUserTokens(payload.userId as string);
+  await revokeAllUserTokens(payload.userId as unknown as string);
 
   return { message: "Logged out from all devices successfully" };
 };
