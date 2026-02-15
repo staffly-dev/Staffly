@@ -15,7 +15,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install dependencies (skip scripts since fix-packages.js is Windows-only)
-RUN npm ci --ignore-scripts
+# Using npm install instead of npm ci - it's more forgiving with lock file issues
+# If package-lock.json is corrupted, npm install will handle it gracefully
+RUN npm install --ignore-scripts --legacy-peer-deps
 
 # Copy TypeScript configuration
 COPY tsconfig.json ./
