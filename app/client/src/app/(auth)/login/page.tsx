@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import logo from "/public/imgs/logo.png";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,7 +40,7 @@ export default function SignInPage() {
       <div className="flex gap-3 items-center mb-8">
         <div className="relative w-10 h-10">
           <Image
-            src={logo}
+            src={"/imgs/logo.png"}
             alt="Staffly Logo"
             fill
             className="object-contain"
