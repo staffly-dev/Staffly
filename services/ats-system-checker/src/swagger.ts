@@ -28,59 +28,58 @@ function initializeSwagger() {
         const filePath = path.join(docsDir, file);
         const content = fs.readFileSync(filePath, 'utf8');
 
-        // Extract all @swagger comment blocks
-        // Match /** ... @swagger ... ... */ blocks (non-greedy to handle multiple blocks)
-        const swaggerRegex = /\/\*\*[\s\S]*?@swagger([\s\S]*?)\*\//g;
-        let match;
-        let blockCount = 0;
+        // Extract the entire @swagger comment block
+        // Match /** ... @swagger ... ... */ block (captures everything between @swagger and closing */)
+        const swaggerBlockMatch = content.match(/\/\*\*[\s\S]*?@swagger([\s\S]*?)\*\//);
+        
+        if (!swaggerBlockMatch) {
+          console.warn(`  ⚠ No swagger block found in ${file}`);
+          return;
+        }
 
-        while ((match = swaggerRegex.exec(content)) !== null) {
-          blockCount++;
-          // Clean the block - remove comment markers
-          let yamlContent = match[1]
-            .replace(/\/\*\*/g, '')  // Remove opening /** if any
-            .replace(/\*\//g, '')    // Remove closing */ if any
-            .replace(/^\s*\*/gm, '')  // Remove leading * from each line
-            .trim();
+        // Clean the YAML content - remove comment markers
+        let yamlContent = swaggerBlockMatch[1]
+          .replace(/\/\*\*/g, '')  // Remove opening /** if any
+          .replace(/\*\//g, '')    // Remove closing */ if any
+          .replace(/^\s*\*/gm, '')  // Remove leading * from each line
+          .trim();
 
-          // Parse YAML using js-yaml
-          try {
-            const yaml = require("js-yaml");
-            const parsed = yaml.load(yamlContent) as any;
+        // Parse YAML using js-yaml
+        try {
+          const yaml = require("js-yaml");
+          const parsed = yaml.load(yamlContent, { 
+            schema: yaml.DEFAULT_SCHEMA,
+            strict: false 
+          }) as any;
 
-            if (parsed && typeof parsed === 'object') {
-              // Merge all paths from this block
-              Object.keys(parsed).forEach(key => {
-                // Accept paths that start with /ats-checker/ or /health
-                if (key.startsWith('/ats-checker/') || key.startsWith('/health')) {
-                  if (!allPaths[key]) {
-                    allPaths[key] = {};
-                  }
-                  // Merge methods for the same path
-                  Object.assign(allPaths[key], parsed[key]);
-                  console.log(`    ✓ Added path: ${key} with methods: ${Object.keys(parsed[key]).join(', ')}`);
-                } else {
-                  console.warn(`    ⚠ Skipping path ${key} (doesn't match expected pattern)`);
+          if (parsed && typeof parsed === 'object') {
+            // Merge all paths from this file
+            Object.keys(parsed).forEach(key => {
+              // Accept paths that start with /ats-checker/ or /health
+              if (key.startsWith('/ats-checker/') || key.startsWith('/health')) {
+                if (!allPaths[key]) {
+                  allPaths[key] = {};
                 }
-              });
-            } else {
-              console.warn(`    ⚠ Parsed content is not an object in ${file}, block ${blockCount}`);
-              console.warn(`    Parsed type: ${typeof parsed}, value:`, parsed);
-            }
-          } catch (yamlError: any) {
-            console.warn(`    ⚠ Could not parse YAML from ${file}, block ${blockCount}:`, yamlError.message);
-            // Log first few lines of YAML for debugging
-            const firstLines = yamlContent.split('\n').slice(0, 10).join('\n');
-            console.warn(`    First lines of YAML:\n${firstLines}`);
-            console.warn(`    YAML Error details:`, yamlError);
+                // Merge methods for the same path
+                Object.assign(allPaths[key], parsed[key]);
+                console.log(`    ✓ Added path: ${key} with methods: ${Object.keys(parsed[key]).join(', ')}`);
+              } else {
+                console.warn(`    ⚠ Skipping path ${key} (doesn't match expected pattern)`);
+              }
+            });
+            console.log(`  📝 Processed ${Object.keys(parsed).filter(k => k.startsWith('/ats-checker/') || k.startsWith('/health')).length} paths from ${file}`);
+          } else {
+            console.warn(`  ⚠ Parsed content is not an object in ${file}`);
+            console.warn(`  Parsed type: ${typeof parsed}, value:`, parsed);
           }
+        } catch (yamlError: any) {
+          console.error(`  ❌ Could not parse YAML from ${file}:`, yamlError.message);
+          // Log first few lines of YAML for debugging
+          const firstLines = yamlContent.split('\n').slice(0, 15).join('\n');
+          console.error(`  First 15 lines of YAML:\n${firstLines}`);
+          console.error(`  YAML Error at line ${yamlError.mark?.line || 'unknown'}:`, yamlError);
         }
 
-        if (blockCount === 0) {
-          console.warn(`  ⚠ No swagger blocks found in ${file}`);
-        } else {
-          console.log(`  📝 Found ${blockCount} swagger block(s) in ${file}`);
-        }
       } catch (fileError: any) {
         console.warn(`⚠ Error reading ${file}:`, fileError.message);
       }
