@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
+import net from "net";
 import { Env } from "./config/env.config";
 import { connectDatabase, disconnectDatabase } from "./config/database.config";
 import { DatabaseService } from "./services/database.service";
@@ -12,7 +13,7 @@ import { S3Service } from "./services/s3.service";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { requestLoggingMiddleware } from "./middlewares/logging.middleware";
 import { enhancedSecurityMiddleware, docsAuthenticationMiddleware } from "./middlewares/security.middleware";
-import { swaggerUi, swaggerSpec } from "./swagger";
+import { swaggerUi, getSwaggerSpec } from "./swagger";
 import healthRoutes from "./routes/health.routes";
 
 dotenv.config();
@@ -25,7 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 const corsOptions = {
-  origin: Env.CORS_ALLOW_ORIGINS ? Env.CORS_ALLOW_ORIGINS.split(",").map(o => o.trim()) : 
+  origin: Env.CORS_ALLOW_ORIGINS ? Env.CORS_ALLOW_ORIGINS.split(",").map(o => o.trim()) :
     Env.FRONTEND_ORIGIN ? [Env.FRONTEND_ORIGIN] : ["http://localhost:3000"],
   credentials: Env.CORS_ALLOW_CREDENTIALS,
   methods: Env.CORS_METHODS.split(","),
@@ -58,6 +59,7 @@ app.use("/evaluations", express.static(evaluationsFolder));
 
 // Swagger API Documentation
 // The docsAuthenticationMiddleware is already applied above, so it will protect /docs
+const swaggerSpec = getSwaggerSpec();
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/openapi.json", (req: Request, res: Response) => {
   res.setHeader("Content-Type", "application/json");
@@ -154,9 +156,38 @@ const startServer = async () => {
     app.locals.evaluationService = evaluationService;
     app.locals.s3Service = s3Service;
 
-    // Start server
-    const port = Env.PORT || Env.API_PORT || 4002;
-    app.listen(port, () => {
+    // Check if a port is available
+    const isPortAvailable = (port: number): Promise<boolean> => {
+      return new Promise((resolve) => {
+        const server = net.createServer();
+        server.listen(port, () => {
+          server.once('close', () => resolve(true));
+          server.close();
+        });
+        server.on('error', () => resolve(false));
+      });
+    };
+
+    // Find an available port
+    const findAvailablePort = async (startPort: number, maxAttempts: number = 10): Promise<number> => {
+      for (let i = 0; i < maxAttempts; i++) {
+        const port = startPort + i;
+        const available = await isPortAvailable(port);
+        if (available) {
+          if (i > 0) {
+            console.warn(`⚠ Port ${startPort} was in use. Using port ${port} instead.`);
+          }
+          return port;
+        }
+      }
+      throw new Error(`Could not find an available port after ${maxAttempts} attempts starting from ${startPort}`);
+    };
+
+    // Start server on available port
+    const defaultPort = Env.PORT || Env.API_PORT || 4002;
+    const port = await findAvailablePort(defaultPort);
+
+    const server = app.listen(port, () => {
       console.log("=".repeat(60));
       console.log("ATS System Backend Started Successfully");
       console.log(`Environment: ${Env.ENV.toUpperCase()}`);
@@ -165,7 +196,14 @@ const startServer = async () => {
       if (Env.AI_SERVICE_URL) {
         console.log(`AI Service URL: ${Env.AI_SERVICE_URL}`);
       }
+      console.log(`📚 API Documentation: ${Env.get_backend_url().replace(/:\d+$/, `:${port}`)}/docs`);
       console.log("=".repeat(60));
+    });
+
+    // Handle server errors
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      console.error('Server error:', error);
+      process.exit(1);
     });
   } catch (error) {
     console.error("Failed to initialize application:", error);

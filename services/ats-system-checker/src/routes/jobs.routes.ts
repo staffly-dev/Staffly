@@ -96,7 +96,7 @@ router.get(
     const evaluationService = get_evaluation_service(req);
     const s3Service = get_s3_service(req);
     const controller = new JobController(databaseService, evaluationService, s3Service);
-    
+
     // Note: get_all_job_postings needs to support filtering by owner_user_id
     return await controller.get_all_job_postings(req, res);
   })
@@ -169,11 +169,11 @@ router.post(
     const evaluationService = get_evaluation_service(req);
     const s3Service = get_s3_service(req);
     const controller = new JobController(databaseService, evaluationService, s3Service);
-    
+
     // Set owner_user_id from verified user_id
     req.body.owner_user_id = user_id;
     req.body.owner_username = owner_username;
-    
+
     return await controller.create_job_posting(req, res);
   })
 );

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import crypto from "crypto";
-import { 
+import {
   CVEvaluation, ICVEvaluation,
   QuizSession, IQuizSession,
   QuizResult, IQuizResult,
@@ -69,7 +69,7 @@ export class DatabaseService {
     created_by?: string
   ): Promise<ICVEvaluation> {
     const job_description_hash = this._generate_hash(job_description);
-    
+
     const evaluation = new CVEvaluation({
       filename,
       job_description_hash,

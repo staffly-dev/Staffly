@@ -29,6 +29,7 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.1.0",
     "http-proxy-middleware": "^3.0.5",
+    "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.7.0",
     "mime": "^4.0.4",
@@ -40,6 +41,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0",
+    "z-schema": "^5.0.0",
     "xss": "^1.0.15",
     "zod": "^3.24.2"
   },

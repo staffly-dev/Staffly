@@ -14,8 +14,8 @@ export const swaggerOptions = {
     },
     servers: [
       {
-        url: Env.is_development 
-          ? `http://localhost:${Env.PORT}` 
+        url: Env.is_development
+          ? `http://localhost:${Env.PORT}`
           : Env.get_backend_url(),
         description: Env.is_development ? 'Development server' : 'Production server',
       },
@@ -63,8 +63,8 @@ export const swaggerOptions = {
     ],
   },
   apis: [
-    path.join(process.cwd(), 'src/routes/*.ts'),
-    path.join(process.cwd(), 'dist/routes/*.js'), // For compiled JavaScript files
+    './src/docs/**/*.ts',
+    './dist/docs/**/*.js', // For compiled JavaScript files
   ],
 };
 
