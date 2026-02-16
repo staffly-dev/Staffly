@@ -167,12 +167,12 @@ export const refreshTokenService = async (
   });
 
   if (!storedToken) {
-    await revokeAllUserTokens(payload.userId as string);
+    await revokeAllUserTokens(payload.userId as unknown as string);
     throw new UnauthorizedException("Invalid or revoked token due to security reasons");
   }
 
   if (storedToken.deviceHash !== deviceHash) {
-    await revokeAllUserTokens(payload.userId as string);
+    await revokeAllUserTokens(payload.userId as unknown as string);
     throw new UnauthorizedException("Device mismatch - possible attack");
   }
 
@@ -301,7 +301,7 @@ export const resetPasswordService = async (
   user.password = newPassword;
   await user.save();
 
-  await revokeAllUserTokens(user._id as string);
+  await revokeAllUserTokens(user._id as unknown as string);
 
   await sendPasswordResetConfirmationEmail(user.email);
 
@@ -346,7 +346,7 @@ export const logoutAllDevicesService = async (
 
   if (!payload) throw new UnauthorizedException("Invalid refresh token");
 
-  await revokeAllUserTokens(payload.userId as string);
+  await revokeAllUserTokens(payload.userId as unknown as string);
 
   return { message: "Logged out from all devices successfully" };
 };

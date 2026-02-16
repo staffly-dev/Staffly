@@ -72,7 +72,7 @@ export const updatePayrollController = asyncHandler(
     }
 
     const payroll = await updatePayrollService(
-      id,
+      id as string,
       employeeId,
       ctc,
       salaryByMonth,
@@ -91,7 +91,7 @@ export const deletePayrollController = asyncHandler(
     const { id } = req.params;
     const userId = req.user!.id;
 
-    await deletePayrollService(id, userId);
+    await deletePayrollService(id as string, userId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Payroll deleted successfully",
     });

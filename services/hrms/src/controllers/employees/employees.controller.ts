@@ -34,7 +34,7 @@ export const getAllEmployeesController = asyncHandler(
 export const getEmployeeByIdController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user!.id;
-    const employee = await getEmployeeByIdService(req.params.id, userId);
+    const employee = await getEmployeeByIdService(req.params.id as string, userId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Employee fetched successfully",
       employee,
@@ -45,7 +45,7 @@ export const getEmployeeByIdController = asyncHandler(
 export const updateEmployeeController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user!.id;
-    const employee = await updateEmployeeService(req.params.id, req.body, userId);
+    const employee = await updateEmployeeService(req.params.id as string, req.body, userId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Employee updated successfully",
       employee
@@ -56,7 +56,7 @@ export const updateEmployeeController = asyncHandler(
 export const deleteEmployeeController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user!.id;
-    await deleteEmployeeService(req.params.id, userId);
+    await deleteEmployeeService(req.params.id as string, userId);
     return res.status(HTTPSTATUS.OK).json({
       message: "Employee deleted successfully",
     });

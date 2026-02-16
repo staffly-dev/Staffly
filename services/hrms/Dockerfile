@@ -15,10 +15,10 @@ COPY src/ ./src/
 COPY tsconfig.json ./
 
 # Build the TypeScript project
-RUN bun run build && cp ./package.json ./dist/
+RUN bun run build
 
 # Expose the port your app runs on
-EXPOSE 4004
+EXPOSE 4001
 
 # Start the compiled application
 CMD ["bun", "run", "start"]
