@@ -253,7 +253,7 @@ export const useQuizUsers = () => {
 // Get candidates
 export const useCandidates = () => {
   const { user } = useAuth();
-  const userId = user?.user?.id;
+  const userId = user?.user?.id || user?.id;
   const accessToken = tokenStore.getAccessToken();
   return useQuery({
     queryKey: jobKeys.candidates(),
