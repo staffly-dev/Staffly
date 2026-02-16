@@ -130,8 +130,15 @@ export class DatabaseService {
     return await JobPosting.findOne({ job_id }).exec();
   }
 
-  async get_all_job_postings(): Promise<IJobPosting[]> {
-    return await JobPosting.find({ is_active: true }).sort({ created_at: -1 }).exec();
+  async get_all_job_postings(owner_user_id?: string, include_inactive: boolean = false): Promise<IJobPosting[]> {
+    const filter: any = {};
+    if (!include_inactive) {
+      filter.is_active = true;
+    }
+    if (owner_user_id) {
+      filter.owner_user_id = owner_user_id;
+    }
+    return await JobPosting.find(filter).sort({ created_at: -1 }).exec();
   }
 
   async update_job_posting(job_id: string, updates: Partial<IJobPosting>): Promise<IJobPosting | null> {
@@ -177,7 +184,14 @@ export class DatabaseService {
     return await Application.find({ job_id }).sort({ submitted_at: -1 }).exec();
   }
 
-  async get_all_applications(): Promise<IApplication[]> {
+  async get_all_applications(owner_user_id?: string): Promise<IApplication[]> {
+    if (owner_user_id) {
+      // Get all job IDs owned by this user
+      const user_jobs = await JobPosting.find({ owner_user_id }).select('job_id').exec();
+      const job_ids = user_jobs.map(job => job.job_id);
+      // Filter applications by job_ids
+      return await Application.find({ job_id: { $in: job_ids } }).sort({ submitted_at: -1 }).exec();
+    }
     return await Application.find().sort({ submitted_at: -1 }).exec();
   }
 
@@ -367,8 +381,85 @@ export class DatabaseService {
     };
   }
 
-  async get_all_quiz_sessions(): Promise<IQuizSession[]> {
+  async get_all_quiz_sessions(owner_user_id?: string): Promise<IQuizSession[]> {
+    if (owner_user_id) {
+      // Get all job IDs owned by this user
+      const user_jobs = await JobPosting.find({ owner_user_id }).select('job_id').exec();
+      const job_ids = user_jobs.map(job => job.job_id);
+      // Get all applications for these jobs
+      const applications = await Application.find({ job_id: { $in: job_ids } }).select('application_id').exec();
+      const application_ids = applications.map(app => app.application_id);
+      // Filter quiz sessions by application_ids
+      return await QuizSession.find({ application_id: { $in: application_ids } }).sort({ created_at: -1 }).exec();
+    }
     return await QuizSession.find().sort({ created_at: -1 }).exec();
+  }
+
+  async get_user_evaluation_statistics(owner_user_id: string): Promise<any> {
+    // Get all job IDs owned by this user
+    const user_jobs = await JobPosting.find({ owner_user_id }).select('job_id').exec();
+    const job_ids = user_jobs.map(job => job.job_id);
+    
+    // Get all applications for these jobs
+    const applications = await Application.find({ job_id: { $in: job_ids } }).select('application_id').exec();
+    const application_ids = applications.map(app => app.application_id);
+    
+    // Get evaluations for these applications
+    const total_evaluations = await CVEvaluation.countDocuments({ application_id: { $in: application_ids } });
+    const total_accepted = await CVEvaluation.countDocuments({ 
+      application_id: { $in: application_ids },
+      decision: EvaluationDecision.ACCEPTED 
+    });
+    const total_rejected = await CVEvaluation.countDocuments({ 
+      application_id: { $in: application_ids },
+      decision: EvaluationDecision.REJECTED 
+    });
+
+    const acceptance_rate = total_evaluations > 0 ? (total_accepted / total_evaluations) * 100 : 0;
+
+    const avgResult = await CVEvaluation.aggregate([
+      { $match: { application_id: { $in: application_ids } } },
+      { $group: { _id: null, avg_score: { $avg: "$score" } } }
+    ]).exec();
+    const average_score = avgResult.length > 0 ? avgResult[0].avg_score : 0;
+
+    return {
+      total_evaluations,
+      total_accepted,
+      total_rejected,
+      acceptance_rate: Math.round(acceptance_rate * 100) / 100,
+      average_score: Math.round(average_score * 100) / 100
+    };
+  }
+
+  async get_user_quiz_statistics(owner_user_id: string): Promise<any> {
+    // Get all job IDs owned by this user
+    const user_jobs = await JobPosting.find({ owner_user_id }).select('job_id').exec();
+    const job_ids = user_jobs.map(job => job.job_id);
+    
+    // Get all applications for these jobs
+    const applications = await Application.find({ job_id: { $in: job_ids } }).select('application_id').exec();
+    const application_ids = applications.map(app => app.application_id);
+    
+    // Get quiz sessions for these applications
+    const total_quizzes = await QuizSession.countDocuments({ application_id: { $in: application_ids } });
+    const quiz_sessions = await QuizSession.find({ application_id: { $in: application_ids } }).select('_id').exec();
+    const quiz_session_ids = quiz_sessions.map(session => session._id.toString());
+    
+    const total_completed = await QuizResult.countDocuments({ quiz_session_id: { $in: quiz_session_ids } });
+    const total_passed = await QuizResult.countDocuments({ 
+      quiz_session_id: { $in: quiz_session_ids },
+      status: "PASSED" 
+    });
+
+    const pass_rate = total_completed > 0 ? (total_passed / total_completed) * 100 : 0;
+
+    return {
+      total_quizzes,
+      total_completed,
+      total_passed,
+      pass_rate: Math.round(pass_rate * 100) / 100
+    };
   }
 }
 

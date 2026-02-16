@@ -3,8 +3,6 @@ import multer from "multer";
 import { asyncHandler } from "../utils/asyncHandler";
 import { get_database_service, get_evaluation_service, get_s3_service } from "../utils/dependencies";
 import { JobController } from "../controllers/job.controller";
-import { jwt_utils } from "../utils/jwt_utils";
-import { verify_user_exists_and_token_valid } from "../utils/gateway_client";
 import { Env } from "../config/env.config";
 import path from "path";
 
@@ -25,34 +23,8 @@ const upload = multer({
 router.get(
   "/jobs",
   asyncHandler(async (req: Request, res: Response) => {
-    const authorization = req.headers.authorization;
     const x_user_id = req.headers["x-user-id"] as string;
     const include_inactive = req.query.include_inactive === "true";
-
-    // Validate token
-    if (!authorization || !authorization.toLowerCase().startsWith("bearer ")) {
-      return res.status(401).json({
-        success: false,
-        error: true,
-        message: "Missing or invalid Authorization header"
-      });
-    }
-
-    let access_token = authorization.split(" ", 2)[1];
-    access_token = access_token.trim().replace(/^["']|["']$/g, "");
-    if (access_token.toLowerCase().startsWith("bearer ")) {
-      access_token = access_token.split(" ", 2)[1].trim();
-    }
-
-    try {
-      jwt_utils.decode_token(access_token);
-    } catch (error: any) {
-      return res.status(401).json({
-        success: false,
-        error: true,
-        message: "Invalid token"
-      });
-    }
 
     // Require user id
     if (!x_user_id) {
@@ -69,17 +41,6 @@ router.get(
         success: false,
         error: true,
         message: "Invalid user_id format"
-      });
-    }
-
-    // Verify user exists
-    try {
-      await verify_user_exists_and_token_valid(x_user_id, access_token);
-    } catch (error: any) {
-      return res.status(401).json({
-        success: false,
-        error: true,
-        message: error.message || "User verification failed"
       });
     }
 
@@ -121,16 +82,26 @@ router.post(
       quiz_pass_threshold = 7
     } = req.body;
 
-    // Require user_id (optional validation - can be removed if not needed)
-    if (user_id) {
-      // Validate user_id format if provided
-      if (user_id.length !== 24 || !/^[0-9a-f]{24}$/i.test(user_id)) {
-        return res.status(400).json({
-          success: false,
-          error: true,
-          message: "Invalid user_id format"
-        });
-      }
+    // Get user_id from header or body
+    const x_user_id = req.headers["x-user-id"] as string;
+    const effective_user_id = user_id || x_user_id;
+
+    // Require user_id
+    if (!effective_user_id) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "user_id is required (provide in body or X-User-Id header)"
+      });
+    }
+
+    // Validate user_id format
+    if (effective_user_id.length !== 24 || !/^[0-9a-f]{24}$/i.test(effective_user_id)) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Invalid user_id format"
+      });
     }
 
     const databaseService = get_database_service(req);
@@ -138,10 +109,8 @@ router.post(
     const s3Service = get_s3_service(req);
     const controller = new JobController(databaseService, evaluationService, s3Service);
 
-    // Set owner_user_id from user_id if provided
-    if (user_id) {
-      req.body.owner_user_id = user_id;
-    }
+    // Set owner_user_id from effective_user_id
+    req.body.owner_user_id = effective_user_id;
     if (owner_username) {
       req.body.owner_username = owner_username;
     }
@@ -164,7 +133,48 @@ router.get(
 router.put(
   "/jobs/:job_id",
   asyncHandler(async (req: Request, res: Response) => {
+    const x_user_id = req.headers["x-user-id"] as string;
+    const user_id_from_body = req.body?.user_id as string;
+    const effective_user_id = user_id_from_body || x_user_id;
+    const job_id = req.params.job_id;
+
+    // Require user id
+    if (!effective_user_id) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "user_id is required (provide in body or X-User-Id header)"
+      });
+    }
+
+    // Validate user_id format
+    if (effective_user_id.length !== 24 || !/^[0-9a-f]{24}$/i.test(effective_user_id)) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Invalid user_id format"
+      });
+    }
+
+    // Verify user owns the job
     const databaseService = get_database_service(req);
+    const job = await databaseService.get_job_posting_by_id(job_id);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Job posting not found"
+      });
+    }
+
+    if (job.owner_user_id !== effective_user_id) {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "You can only update your own job postings"
+      });
+    }
+
     const evaluationService = get_evaluation_service(req);
     const s3Service = get_s3_service(req);
     const controller = new JobController(databaseService, evaluationService, s3Service);
@@ -175,7 +185,48 @@ router.put(
 router.delete(
   "/jobs/:job_id",
   asyncHandler(async (req: Request, res: Response) => {
+    const x_user_id = req.headers["x-user-id"] as string;
+    const user_id_from_body = req.body?.user_id as string;
+    const effective_user_id = user_id_from_body || x_user_id;
+    const job_id = req.params.job_id;
+
+    // Require user id
+    if (!effective_user_id) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "user_id is required (provide in body or X-User-Id header)"
+      });
+    }
+
+    // Validate user_id format
+    if (effective_user_id.length !== 24 || !/^[0-9a-f]{24}$/i.test(effective_user_id)) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Invalid user_id format"
+      });
+    }
+
+    // Verify user owns the job
     const databaseService = get_database_service(req);
+    const job = await databaseService.get_job_posting_by_id(job_id);
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Job posting not found"
+      });
+    }
+
+    if (job.owner_user_id !== effective_user_id) {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "You can only delete your own job postings"
+      });
+    }
+
     const evaluationService = get_evaluation_service(req);
     const s3Service = get_s3_service(req);
     const controller = new JobController(databaseService, evaluationService, s3Service);

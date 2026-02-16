@@ -2,8 +2,6 @@ import { Router, Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { get_database_service } from "../utils/dependencies";
 import { StatisticsController } from "../controllers/statistics.controller";
-import { jwt_utils } from "../utils/jwt_utils";
-import { verify_user_exists_and_token_valid } from "../utils/gateway_client";
 
 const router = Router();
 
@@ -20,34 +18,8 @@ router.get(
 router.get(
   "/user-statistics",
   asyncHandler(async (req: Request, res: Response) => {
-    const authorization = req.headers.authorization;
     const x_user_id = req.headers["x-user-id"] as string;
     const x_created_by = req.headers["x-created-by"] as string;
-
-    // Validate token
-    if (!authorization || !authorization.toLowerCase().startsWith("bearer ")) {
-      return res.status(401).json({
-        success: false,
-        error: true,
-        message: "Missing or invalid Authorization header"
-      });
-    }
-
-    let access_token = authorization.split(" ", 2)[1];
-    access_token = access_token.trim().replace(/^["']|["']$/g, "");
-    if (access_token.toLowerCase().startsWith("bearer ")) {
-      access_token = access_token.split(" ", 2)[1].trim();
-    }
-
-    try {
-      jwt_utils.decode_token(access_token);
-    } catch (error: any) {
-      return res.status(401).json({
-        success: false,
-        error: true,
-        message: "Invalid token"
-      });
-    }
 
     // Require user id
     if (!x_user_id) {
@@ -64,17 +36,6 @@ router.get(
         success: false,
         error: true,
         message: "Invalid user_id format"
-      });
-    }
-
-    // Verify user exists
-    try {
-      await verify_user_exists_and_token_valid(x_user_id, access_token);
-    } catch (error: any) {
-      return res.status(401).json({
-        success: false,
-        error: true,
-        message: error.message || "User verification failed"
       });
     }
 

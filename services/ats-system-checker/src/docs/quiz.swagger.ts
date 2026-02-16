@@ -85,15 +85,7 @@
  *     summary: List quiz participants
  *     description: List all quiz participants
  *     tags: [Quiz]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: false
- *         schema:
- *           type: string
- *         description: Bearer token (optional if provided in body)
  *       - in: header
  *         name: X-User-Id
  *         required: false
@@ -143,15 +135,7 @@
  *     summary: Get all quiz users
  *     description: Retrieve all users who have taken quizzes
  *     tags: [Quiz]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: false
- *         schema:
- *           type: string
- *         description: Bearer token (optional if provided in body)
  *       - in: header
  *         name: X-User-Id
  *         required: false
@@ -164,9 +148,6 @@
  *           schema:
  *             type: object
  *             properties:
- *               access_token:
- *                 type: string
- *                 description: Bearer token
  *               user_id:
  *                 type: string
  *                 description: User ID (24 character MongoDB ObjectId)

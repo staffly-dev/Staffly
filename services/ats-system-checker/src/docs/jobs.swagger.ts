@@ -5,15 +5,7 @@
  *     summary: Get all job postings
  *     description: Retrieve all job postings for the authenticated user
  *     tags: [Jobs]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Bearer token
  *       - in: header
  *         name: X-User-Id
  *         required: true
@@ -93,7 +85,6 @@
  *             required:
  *               - title
  *               - description
- *               - access_token
  *               - user_id
  *             properties:
  *               title:
@@ -124,9 +115,6 @@
  *               owner_username:
  *                 type: string
  *                 example: "john_doe"
- *               access_token:
- *                 type: string
- *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *               evaluation_threshold:
  *                 type: number
  *                 default: 70

@@ -44,18 +44,24 @@ export class StatisticsController {
     try {
       console.log(`Retrieving user statistics for user_id: ${user_id}, created_by: ${created_by}`);
       
-      // Note: get_user_evaluation_statistics and get_user_quiz_statistics 
-      // need to be implemented in DatabaseService
-      // For now, return empty statistics
+      // Get user's applications count
+      const user_applications = await this.database_service.get_all_applications(user_id);
+      const total_applications = user_applications.length;
+      
+      // Get user's evaluation statistics
+      const eval_stats = await this.database_service.get_user_evaluation_statistics(user_id);
+      
+      // Get user's quiz statistics
+      const quiz_stats = await this.database_service.get_user_quiz_statistics(user_id);
       
       return {
         user_id,
         created_by,
-        total_applications: 0,
-        total_evaluations: 0,
-        acceptance_rate: 0.0,
-        average_score: 0.0,
-        quiz_pass_rate: 0.0,
+        total_applications,
+        total_evaluations: eval_stats.total_evaluations || 0,
+        acceptance_rate: eval_stats.acceptance_rate || 0.0,
+        average_score: eval_stats.average_score || 0.0,
+        quiz_pass_rate: quiz_stats.pass_rate || 0.0,
         daily_stats: {},
         last_activity: undefined
       };

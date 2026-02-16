@@ -90,6 +90,7 @@ app.get("/", (req: Request, res: Response) => {
       s3_upload: "/ats-checker/s3/upload",
       debug_db: "/ats-checker/debug/db",
       debug_sample_data: "/ats-checker/debug/sample-data",
+      debug_ai_connection: "/ats-checker/debug/ai-connection",
       documentation: Env.DOCS_AUTH_ENABLED ? "/docs" : "disabled"
     },
     timestamp: new Date().toISOString()
@@ -130,6 +131,7 @@ app.get("/ats-checker/:path(*)", (req: Request, res: Response) => {
       health_test: "/ats-checker/health/test",
       debug_db: "/ats-checker/debug/db",
       debug_sample_data: "/ats-checker/debug/sample-data",
+      debug_ai_connection: "/ats-checker/debug/ai-connection",
       api: "/ats-checker"
     }
   });

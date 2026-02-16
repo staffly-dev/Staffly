@@ -145,7 +145,6 @@ export interface StatisticsResponse {
 export interface UserStatisticsRequest {
   user_id: string;
   created_by: string;
-  access_token: string;
 }
 
 export interface UserStatisticsResponse {
@@ -164,7 +163,6 @@ export interface UserStatisticsResponse {
 export interface AuthenticatedRequest {
   user_id: string;
   created_by: string;
-  access_token: string;
 }
 
 export interface CreateJobPostingRequest extends AuthenticatedRequest {
