@@ -136,7 +136,7 @@ router.put(
     const x_user_id = req.headers["x-user-id"] as string;
     const user_id_from_body = req.body?.user_id as string;
     const effective_user_id = user_id_from_body || x_user_id;
-    const job_id = req.params.job_id;
+    const job_id = Array.isArray(req.params.job_id) ? req.params.job_id[0] : req.params.job_id;
 
     // Require user id
     if (!effective_user_id) {
@@ -188,7 +188,7 @@ router.delete(
     const x_user_id = req.headers["x-user-id"] as string;
     const user_id_from_body = req.body?.user_id as string;
     const effective_user_id = user_id_from_body || x_user_id;
-    const job_id = req.params.job_id;
+    const job_id = Array.isArray(req.params.job_id) ? req.params.job_id[0] : req.params.job_id;
 
     // Require user id
     if (!effective_user_id) {
