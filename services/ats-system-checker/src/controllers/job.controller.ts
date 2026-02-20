@@ -362,7 +362,7 @@ export class JobController {
         } catch (docxError: any) {
           console.error("Error extracting text from DOCX:", docxError.message);
           // If DOCX extraction fails, send email notification
-          const email_service = (this.evaluation_service as any).email_service;
+          const email_service = this.evaluation_service.get_email_service();
           if (email_service && candidate_email) {
             try {
               await email_service.send_email_async(
@@ -434,8 +434,8 @@ export class JobController {
       }
 
       // Send email notification
-      // Access email_service from evaluation_service (it's a private property, so we use type assertion)
-      const email_service = (this.evaluation_service as any).email_service;
+      // Access email_service from evaluation_service using the getter method
+      const email_service = this.evaluation_service.get_email_service();
       if (email_service && candidate_email) {
         try {
           await email_service.send_cv_result_email(

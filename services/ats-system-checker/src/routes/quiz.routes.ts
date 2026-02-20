@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
-import { get_database_service, get_evaluation_service } from "../utils/dependencies";
+import { get_database_service, get_evaluation_service, get_email_service } from "../utils/dependencies";
 import { QuizController } from "../controllers/quiz.controller";
 
 const router = Router();
@@ -20,7 +20,8 @@ router.post(
 
     const databaseService = get_database_service(req);
     const evaluationService = get_evaluation_service(req);
-    const controller = new QuizController(databaseService, evaluationService);
+    const emailService = get_email_service(req);
+    const controller = new QuizController(databaseService, evaluationService, emailService);
     return await controller.evaluate_quiz(req, res);
   })
 );
@@ -45,7 +46,8 @@ router.get(
 
     const databaseService = get_database_service(req);
     const evaluationService = get_evaluation_service(req);
-    const controller = new QuizController(databaseService, evaluationService);
+    const emailService = get_email_service(req);
+    const controller = new QuizController(databaseService, evaluationService, emailService);
     return await controller.get_all_quiz_users(req, res);
   })
 );
@@ -69,7 +71,8 @@ router.post(
 
     const databaseService = get_database_service(req);
     const evaluationService = get_evaluation_service(req);
-    const controller = new QuizController(databaseService, evaluationService);
+    const emailService = get_email_service(req);
+    const controller = new QuizController(databaseService, evaluationService, emailService);
     return await controller.get_all_quiz_users(req, res);
   })
 );
@@ -79,7 +82,8 @@ router.get(
   asyncHandler(async (req: Request, res: Response) => {
     const databaseService = get_database_service(req);
     const evaluationService = get_evaluation_service(req);
-    const controller = new QuizController(databaseService, evaluationService);
+    const emailService = get_email_service(req);
+    const controller = new QuizController(databaseService, evaluationService, emailService);
     return await controller.get_quiz_by_session_id(req, res);
   })
 );

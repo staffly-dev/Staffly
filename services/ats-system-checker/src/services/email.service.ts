@@ -80,21 +80,35 @@ export class EmailService {
 
   private async _send_email_sync(to_email: string, subject: string, body: string): Promise<boolean> {
     if (!this.transporter) {
-      console.error("Email transporter not configured");
+      console.error("Email transporter not configured. Check GMAIL_USER and GMAIL_PASSWORD environment variables.");
+      return false;
+    }
+
+    if (!to_email || !to_email.trim()) {
+      console.error("Invalid email address:", to_email);
       return false;
     }
 
     try {
-      await this.transporter.sendMail({
+      const mailOptions = {
         from: Env.EMAIL_FROM || Env.GMAIL_USER,
-        to: to_email,
-        subject,
-        html: body
-      });
+        to: to_email.trim(),
+        subject: subject || "Notification from Staffly",
+        html: body || "<p>No content</p>"
+      };
 
+      console.log(`Attempting to send email to ${to_email}...`);
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log(`Email sent successfully to ${to_email}. Message ID: ${info.messageId}`);
       return true;
-    } catch (error) {
-      console.error("Failed to send email:", error);
+    } catch (error: any) {
+      console.error(`Failed to send email to ${to_email}:`, error.message);
+      if (error.code) {
+        console.error(`Error code: ${error.code}`);
+      }
+      if (error.response) {
+        console.error(`SMTP response:`, error.response);
+      }
       return false;
     }
   }
