@@ -23,29 +23,6 @@ router.get(
   })
 );
 
-router.post(
-  "/applications",
-  asyncHandler(async (req: Request, res: Response) => {
-    const x_user_id = req.headers["x-user-id"] as string;
-
-    // Validate user_id if provided
-    const effective_user_id = req.body?.user_id || x_user_id;
-    if (effective_user_id) {
-      if (effective_user_id.length !== 24 || !/^[0-9a-f]{24}$/i.test(effective_user_id)) {
-        return res.status(400).json({
-          success: false,
-          error: true,
-          message: "Invalid user_id format"
-        });
-      }
-    }
-
-    const databaseService = get_database_service(req);
-    const controller = new ApplicationController(databaseService);
-    return await controller.get_all_applications(req, res);
-  })
-);
-
 router.get(
   "/applications/:app_id",
   asyncHandler(async (req: Request, res: Response) => {
