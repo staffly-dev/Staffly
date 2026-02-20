@@ -77,7 +77,7 @@ class CohereService:
                 
                 def make_cohere_call():
                     return self.client.chat(
-                        model='command-r-plus',  # Updated from deprecated command-r-plus
+                        model='command-a-03-2025',  # Updated from deprecated command-r-plus
                         message=evaluation_prompt,
                         max_tokens=2500,
                         temperature=0.0,
