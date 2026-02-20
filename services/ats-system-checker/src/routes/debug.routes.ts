@@ -220,16 +220,15 @@ router.get(
       };
     }
 
-    // Test 2: Test evaluate-cv endpoint (if health check passed)
+    // Test 2: Test evaluate endpoint (if health check passed)
     if (aiHealthy) {
       try {
         const testStartTime = Date.now();
         const testResponse = await axios.post(
-          `${Env.AI_SERVICE_URL}/evaluate-cv`,
+          `${Env.AI_SERVICE_URL}/evaluate`,
           {
             cv_text: "Test CV content with Python, JavaScript, and React experience.",
-            job_description: "Software Engineer position requiring Python and JavaScript skills.",
-            required_skills: ["Python", "JavaScript", "React"]
+            job_description: "Software Engineer position requiring Python and JavaScript skills."
           },
           { timeout: 30000 }
         );

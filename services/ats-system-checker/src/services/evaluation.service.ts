@@ -130,18 +130,17 @@ export class EvaluationService {
       }
 
       const response = await axios.post(
-        `${this.ai_service_url}/evaluate-cv`,
+        `${this.ai_service_url}/evaluate`,
         {
           cv_text,
-          job_description,
-          required_skills
+          job_description
         },
         { timeout: 60000 }
       );
 
       return {
         decision: response.data.decision || EvaluationDecision.REVIEW,
-        score: response.data.score || 50,
+        score: response.data.score ?? 50,
         evaluation_text: response.data.reasoning || "Evaluation completed",
         text_length: cv_text.length,
         email: response.data.email,
