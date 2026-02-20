@@ -20,7 +20,7 @@ router.get(
   "/debug/db",
   asyncHandler(async (req: Request, res: Response) => {
     const db = mongoose.connection.db;
-    
+
     if (!db) {
       return res.status(503).json({
         error: "Database not connected",
@@ -36,7 +36,7 @@ router.get(
 
       // Get collection names
       const collections = await db.listCollections().toArray();
-      const collectionNames = collections.map((col) => col.name);
+      const collectionNames = collections.map((col: { name: string }) => col.name);
 
       // Get collection counts
       const collectionCounts: Record<string, number> = {};
@@ -188,7 +188,7 @@ router.get(
         timeout: 10000
       });
       aiPingTime = Date.now() - startTime;
-      
+
       if (healthResponse.status === 200 && healthResponse.data) {
         aiHealthy = healthResponse.data.status === "healthy" || healthResponse.data.status === "degraded";
         aiServiceInfo = {
@@ -234,7 +234,7 @@ router.get(
           { timeout: 30000 }
         );
         const testTime = Date.now() - testStartTime;
-        
+
         testResults.evaluate_cv_test = {
           success: true,
           response_time_ms: testTime,
@@ -265,7 +265,7 @@ router.get(
           { timeout: 30000 }
         );
         const testTime = Date.now() - testStartTime;
-        
+
         testResults.generate_quiz_test = {
           success: true,
           response_time_ms: testTime,
@@ -330,7 +330,7 @@ router.get(
           timeout: 5000
         });
         aiPingTime = Date.now() - startTime;
-        
+
         if (response.status === 200 && response.data) {
           aiHealthy = response.data.status === "healthy" || response.data.status === "degraded";
           aiServiceInfo = {

@@ -229,7 +229,7 @@ export class DatabaseService {
   }
 
   async get_quiz_session_by_id(quiz_id: string): Promise<IQuizSession | null> {
-    if (mongoose.Types.ObjectId.isValid(quiz_id)) {
+    if (mongoose.isValidObjectId(quiz_id)) {
       return await QuizSession.findById(quiz_id).exec();
     }
     return null;
@@ -246,7 +246,7 @@ export class DatabaseService {
   }
 
   async update_quiz_session(quiz_id: string, updates: Partial<IQuizSession>): Promise<IQuizSession | null> {
-    if (mongoose.Types.ObjectId.isValid(quiz_id)) {
+    if (mongoose.isValidObjectId(quiz_id)) {
       return await QuizSession.findByIdAndUpdate(quiz_id, updates, { new: true }).exec();
     }
     return null;
@@ -324,7 +324,7 @@ export class DatabaseService {
       updates.retry_count = { $inc: 1 };
     }
 
-    if (mongoose.Types.ObjectId.isValid(notification_id)) {
+    if (mongoose.isValidObjectId(notification_id)) {
       return await EmailNotification.findByIdAndUpdate(notification_id, updates, { new: true }).exec();
     }
     return null;
@@ -399,20 +399,20 @@ export class DatabaseService {
     // Get all job IDs owned by this user
     const user_jobs = await JobPosting.find({ owner_user_id }).select('job_id').exec();
     const job_ids = user_jobs.map(job => job.job_id);
-    
+
     // Get all applications for these jobs
     const applications = await Application.find({ job_id: { $in: job_ids } }).select('application_id').exec();
     const application_ids = applications.map(app => app.application_id);
-    
+
     // Get evaluations for these applications
     const total_evaluations = await CVEvaluation.countDocuments({ application_id: { $in: application_ids } });
-    const total_accepted = await CVEvaluation.countDocuments({ 
+    const total_accepted = await CVEvaluation.countDocuments({
       application_id: { $in: application_ids },
-      decision: EvaluationDecision.ACCEPTED 
+      decision: EvaluationDecision.ACCEPTED
     });
-    const total_rejected = await CVEvaluation.countDocuments({ 
+    const total_rejected = await CVEvaluation.countDocuments({
       application_id: { $in: application_ids },
-      decision: EvaluationDecision.REJECTED 
+      decision: EvaluationDecision.REJECTED
     });
 
     const acceptance_rate = total_evaluations > 0 ? (total_accepted / total_evaluations) * 100 : 0;
@@ -436,20 +436,20 @@ export class DatabaseService {
     // Get all job IDs owned by this user
     const user_jobs = await JobPosting.find({ owner_user_id }).select('job_id').exec();
     const job_ids = user_jobs.map(job => job.job_id);
-    
+
     // Get all applications for these jobs
     const applications = await Application.find({ job_id: { $in: job_ids } }).select('application_id').exec();
     const application_ids = applications.map(app => app.application_id);
-    
+
     // Get quiz sessions for these applications
     const total_quizzes = await QuizSession.countDocuments({ application_id: { $in: application_ids } });
     const quiz_sessions = await QuizSession.find({ application_id: { $in: application_ids } }).select('_id').exec();
     const quiz_session_ids = quiz_sessions.map(session => session._id.toString());
-    
+
     const total_completed = await QuizResult.countDocuments({ quiz_session_id: { $in: quiz_session_ids } });
-    const total_passed = await QuizResult.countDocuments({ 
+    const total_passed = await QuizResult.countDocuments({
       quiz_session_id: { $in: quiz_session_ids },
-      status: "PASSED" 
+      status: "PASSED"
     });
 
     const pass_rate = total_completed > 0 ? (total_passed / total_completed) * 100 : 0;
