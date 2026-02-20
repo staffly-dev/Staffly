@@ -305,7 +305,24 @@ export class JobController {
         candidate_name
       );
 
-      // Process CV evaluation and send email notifications asynchronously
+      // Send "new application" email to job owner / HR so they receive the message when CV is uploaded
+      const email_service = this.evaluation_service.get_email_service();
+      const notify_email = job_posting.hr_email || Env.GMAIL_USER;
+      if (email_service && notify_email) {
+        email_service.send_new_application_notification(
+          notify_email,
+          job_posting.title || "Job Position",
+          candidate_name || "Candidate",
+          candidate_email || "",
+          application.application_id,
+          Env.BACKEND_URL
+        ).then(sent => {
+          if (sent) console.log(`New application notification sent to ${notify_email}`);
+          else console.warn(`Failed to send new application notification to ${notify_email}`);
+        }).catch(err => console.error("Error sending new application email:", err.message));
+      }
+
+      // Process CV evaluation and send email notifications asynchronously (includes email to candidate with result)
       this._process_cv_evaluation_async(
         file,
         job_posting,

@@ -218,6 +218,12 @@ export interface IApplication extends Document {
   quiz_score?: number;
   status: string;
   submitted_at?: Date;
+  interview_date?: string;
+  interview_time?: string;
+  interview_type?: string;
+  interview_location?: string;
+  interview_notes?: string;
+  interview_scheduled_at?: Date;
 }
 
 const ApplicationSchema = new Schema<IApplication>({
@@ -230,7 +236,13 @@ const ApplicationSchema = new Schema<IApplication>({
   decision: { type: String },
   quiz_score: { type: Number, min: 0, max: 10 },
   status: { type: String, default: "SUBMITTED", index: true },
-  submitted_at: { type: Date, default: Date.now, index: true }
+  submitted_at: { type: Date, default: Date.now, index: true },
+  interview_date: { type: String },
+  interview_time: { type: String },
+  interview_type: { type: String },
+  interview_location: { type: String },
+  interview_notes: { type: String },
+  interview_scheduled_at: { type: Date }
 });
 
 ApplicationSchema.index({ application_id: 1 }, { unique: true, sparse: true });

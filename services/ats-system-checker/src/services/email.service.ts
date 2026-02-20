@@ -139,6 +139,28 @@ export class EmailService {
     return await this.send_email_async(to_email, subject, body, "CV_RESULT");
   }
 
+  async send_new_application_notification(
+    to_email: string,
+    job_title: string,
+    candidate_name: string,
+    candidate_email: string,
+    application_id: string,
+    backend_url?: string
+  ): Promise<boolean> {
+    const base_url = backend_url || this.backend_url;
+    const subject = `New application: ${candidate_name} applied for ${job_title}`;
+    const body = `
+      <h2>New Job Application</h2>
+      <p>A new CV has been submitted for the position <strong>${job_title}</strong>.</p>
+      <p><strong>Candidate:</strong> ${candidate_name || "N/A"}</p>
+      <p><strong>Email:</strong> ${candidate_email || "N/A"}</p>
+      <p><strong>Application ID:</strong> ${application_id}</p>
+      <p>You can view and manage this application in your dashboard.</p>
+      <p>Best regards,<br/>Staffly Team</p>
+    `;
+    return await this.send_email_async(to_email, subject, body, "NEW_APPLICATION");
+  }
+
   async send_quiz_result_email(
     to_email: string,
     candidate_name: string,

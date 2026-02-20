@@ -5,6 +5,24 @@ import { ApplicationController } from "../controllers/application.controller";
 
 const router = Router();
 
+router.get(
+  "/applications",
+  asyncHandler(async (req: Request, res: Response) => {
+    const x_user_id = req.headers["x-user-id"] as string;
+    const effective_user_id = (req.query.user_id as string) || x_user_id;
+    if (effective_user_id && (effective_user_id.length !== 24 || !/^[0-9a-f]{24}$/i.test(effective_user_id))) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Invalid user_id format (X-User-Id header or query user_id)"
+      });
+    }
+    const databaseService = get_database_service(req);
+    const controller = new ApplicationController(databaseService);
+    return await controller.get_all_applications(req, res);
+  })
+);
+
 router.post(
   "/applications",
   asyncHandler(async (req: Request, res: Response) => {
@@ -177,6 +195,40 @@ router.post(
 
     const controller = new ApplicationController(databaseService);
     return await controller.update_application(req, res);
+  })
+);
+
+router.post(
+  "/applications/:app_id/schedule-interview",
+  asyncHandler(async (req: Request, res: Response) => {
+    const x_user_id = req.headers["x-user-id"] as string;
+    if (!x_user_id || x_user_id.length !== 24 || !/^[0-9a-f]{24}$/i.test(x_user_id)) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "X-User-Id header is required (24 character MongoDB ObjectId)"
+      });
+    }
+    const app_id = Array.isArray(req.params.app_id) ? req.params.app_id[0] : req.params.app_id;
+    const databaseService = get_database_service(req);
+    const application = await databaseService.get_application_by_id(app_id);
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Application not found"
+      });
+    }
+    const job = await databaseService.get_job_posting_by_id(application.job_id);
+    if (!job || job.owner_user_id !== x_user_id) {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "You can only schedule interviews for applications to your job postings"
+      });
+    }
+    const controller = new ApplicationController(databaseService);
+    return await controller.schedule_interview(req, res);
   })
 );
 
