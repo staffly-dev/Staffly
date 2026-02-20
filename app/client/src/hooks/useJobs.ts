@@ -141,12 +141,12 @@ const ATS_URL = process.env.NEXT_PUBLIC_ATS_ERL;
 
 // Fetch all jobs
 export const useJobs = () => {
-  const { user } = useAuth();
-  const userId = user?.user?.id;
+  const { userId, isLoadingUser } = useAuth();
 
   return useQuery({
-    queryKey: jobKeys.lists(),
+    queryKey: [...jobKeys.lists(), userId],
     queryFn: async (): Promise<Job[]> => {
+      if (!userId) return [];
       const response = await axiosInstance.get(`/ats-checker/jobs`, {
         headers: {
           "X-User-Id": userId,
@@ -156,7 +156,7 @@ export const useJobs = () => {
         (job: Job) => job.created_by === userId
       ) as Job[];
     },
-    enabled: !!userId,
+    enabled: !!userId && !isLoadingUser,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -250,26 +250,32 @@ export const useQuizUsers = () => {
   });
 };
 
-// Get candidates
+// Get candidates (backend expects POST for list, not GET)
 export const useCandidates = () => {
-  const { user } = useAuth();
-  const userId = user?.user?.id;
-  const accessToken = tokenStore.getAccessToken();
+  const { userId, isLoadingUser } = useAuth();
+
   return useQuery({
-    queryKey: jobKeys.candidates(),
+    queryKey: [...jobKeys.candidates(), userId],
     queryFn: async (): Promise<CandidateResponse> => {
-      const response = await axiosInstance.get(`/ats-checker/applications`, {
-        data: {
+      if (!userId) return { applications: [], total_applications: 0 };
+      const accessToken = tokenStore.getAccessToken();
+      const response = await axiosInstance.post<CandidateResponse>(
+        `/ats-checker/applications`,
+        {
           user_id: userId,
           created_by: userId,
-          access_token: accessToken,
+          access_token: accessToken ?? "",
         },
-        headers: {
-          "X-User-Id": userId,
-        },
-      });
+        {
+          headers: {
+            "X-User-Id": userId,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       return response.data;
     },
+    enabled: !!userId && !isLoadingUser,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -347,11 +353,11 @@ export const useDeleteApplication = () => {
 // Delete job
 export const useDeleteJob = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const userId = user?.user?.id;
+  const { userId } = useAuth();
 
   return useMutation({
     mutationFn: async (id: string): Promise<void> => {
+      if (!userId) throw new Error("User not authenticated");
       await axiosInstance.delete(`/ats-checker/jobs/${id}`, {
         headers: {
           "X-User-Id": userId,

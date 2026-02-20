@@ -175,7 +175,7 @@ async def health_check():
                 "cohere_configured": bool(cohere_service and cohere_service.api_key),
                 "timeout_seconds": config['AI_TIMEOUT'],
                 "max_retries": config['AI_MAX_RETRIES'],
-                "model": "command-r-plus"  # Current model being used
+                "model": "command-r-plus-08-2024"  # Current model being used
             },
             "document_service": bool(document_service),
             "cors_enabled": bool(config['CORS_ALLOW_ORIGINS']),

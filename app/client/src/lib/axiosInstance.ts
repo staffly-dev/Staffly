@@ -183,17 +183,11 @@ async function refreshToken(): Promise<string> {
 
     console.log("Attempting to refresh access token...");
 
-    const response = await refreshAxiosInstance.post(
-      "/hrms/auth/refresh",
-      {
-        refreshToken: refreshToken,
+    const response = await refreshAxiosInstance.get("/hrms/auth/refresh", {
+      headers: {
+        Authorization: `Bearer ${refreshToken}`,
       },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    });
 
     const { accessToken, refreshToken: newRefreshToken } = response.data;
 

@@ -58,8 +58,7 @@ export function AddJobModal({ open, onOpenChange }: AddJobModalProps) {
       is_active: true,
     },
   });
-  const { user } = useAuth();
-  const userId = user?.user?.id || user?.user?._id;
+  const { userId } = useAuth();
   const accessToken = tokenStore.getAccessToken();
 
   const onFormSubmit = async (data: AddJobFormData) => {
