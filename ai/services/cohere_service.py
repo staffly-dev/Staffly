@@ -77,7 +77,7 @@ class CohereService:
                 
                 def make_cohere_call():
                     return self.client.chat(
-                        model='command-a-03-2025',  # Updated from deprecated command-r-plus
+                        model='command-r-plus-08-2024',  # Updated from deprecated command-r-plus
                         message=evaluation_prompt,
                         max_tokens=2500,
                         temperature=0.0,
@@ -156,7 +156,7 @@ class CohereService:
                 
                 def make_cohere_call():
                     return self.client.chat(
-                        model='command-r-plus',  # Updated from deprecated command-r-plus
+                        model='command-r-plus-08-2024',  # Updated from deprecated command-r-plus
                         message=quiz_prompt,
                         max_tokens=3000,
                         temperature=0.3,
@@ -525,7 +525,7 @@ class CohereService:
         
         try:
             response = self.client.chat(
-                model='command-r-plus',
+                model='command-r-plus-08-2024',
                 message=prompt,
                 max_tokens=1000,
                 temperature=0.3
@@ -622,7 +622,7 @@ class CohereService:
         
         try:
             response = self.client.chat(
-                model='command-r-plus',
+                model='command-r-plus-08-2024',
                 message=skills_prompt,
                 max_tokens=200,
                 temperature=0.1
