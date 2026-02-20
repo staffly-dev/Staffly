@@ -268,7 +268,7 @@ export class JobController {
   async apply_for_job(req: Request, res: Response): Promise<Response> {
     try {
       const job_id = Array.isArray(req.params.job_id) ? req.params.job_id[0] : req.params.job_id;
-      const { candidate_email, candidate_name } = req.body;
+      const { candidate_email, candidate_name } = req.body || {};
       const file = req.file;
 
       console.log(`Processing job application for job: ${job_id}`);
@@ -277,7 +277,15 @@ export class JobController {
         return res.status(400).json({
           success: false,
           error: true,
-          message: "CV file is required"
+          message: "CV file is required (cv_file)"
+        });
+      }
+
+      if (!candidate_email || !String(candidate_email).trim()) {
+        return res.status(400).json({
+          success: false,
+          error: true,
+          message: "candidate_email is required so we can send you the evaluation result"
         });
       }
 
@@ -404,6 +412,22 @@ export class JobController {
 
       if (!cv_text || cv_text.trim().length === 0) {
         console.warn("No text extracted from CV file");
+        const email_service = this.evaluation_service.get_email_service();
+        if (email_service && candidate_email) {
+          try {
+            await email_service.send_email_async(
+              candidate_email,
+              "CV Received - Manual Review",
+              `<p>Dear ${candidate_name || "Candidate"},</p>
+              <p>Thank you for submitting your CV for <strong>${job_posting.title || "the position"}</strong>.</p>
+              <p>We have received your application and saved your CV. We could not extract text from your file for automated evaluation, so your application will be reviewed manually.</p>
+              <p>Best regards,<br/>Staffly Team</p>`,
+              "CV_RECEIVED"
+            );
+          } catch (e: any) {
+            console.error("Failed to send CV-received email:", e.message);
+          }
+        }
         return;
       }
 
@@ -450,22 +474,23 @@ export class JobController {
         quiz_link = `${Env.BACKEND_URL}/ats-checker/quiz/${quiz_session._id}`;
       }
 
-      // Send email notification
-      // Access email_service from evaluation_service using the getter method
+      // Send email to the applicant with the AI evaluation result (score, decision, reasoning)
       const email_service = this.evaluation_service.get_email_service();
-      if (email_service && candidate_email) {
+      const applicant_email = candidate_email || evaluation_result.email;
+      if (email_service && applicant_email) {
         try {
           await email_service.send_cv_result_email(
-            candidate_email,
+            applicant_email,
             candidate_name || "Candidate",
             job_posting.title || "Job Position",
-            evaluation_result.decision,
+            String(evaluation_result.decision),
             evaluation_result.score,
-            quiz_link
+            quiz_link,
+            evaluation_result.evaluation_text
           );
-          console.log(`Email sent successfully to ${candidate_email}`);
+          console.log(`CV result email sent to applicant ${applicant_email}`);
         } catch (emailError: any) {
-          console.error(`Failed to send email to ${candidate_email}:`, emailError.message);
+          console.error(`Failed to send email to ${applicant_email}:`, emailError.message);
         }
       } else {
         console.warn("Email service not available or candidate email missing");

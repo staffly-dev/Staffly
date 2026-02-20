@@ -119,7 +119,8 @@ export class EmailService {
     job_title: string,
     decision: string,
     score: number,
-    quiz_link?: string
+    quiz_link?: string,
+    evaluation_text?: string
   ): Promise<boolean> {
     const subject = `CV Evaluation Result - ${job_title}`;
     let body = `
@@ -129,6 +130,10 @@ export class EmailService {
       <p>Your CV has been evaluated with a score of <strong>${score}/100</strong>.</p>
       <p>Decision: <strong>${decision}</strong></p>
     `;
+
+    if (evaluation_text && evaluation_text.trim()) {
+      body += `<h3>Feedback</h3><p>${evaluation_text.trim().replace(/\n/g, "<br/>")}</p>`;
+    }
 
     if (quiz_link) {
       body += `<p>Please complete the quiz: <a href="${quiz_link}">Take Quiz</a></p>`;
