@@ -3,9 +3,13 @@ import { DatabaseService } from "../services/database.service";
 import { EvaluationService } from "../services/evaluation.service";
 import { S3Service } from "../services/s3.service";
 import { JobPostingResponse, JobPostingsListResponse, ApplicationResponse } from "../models/api.models";
+import { EvaluationDecision } from "../models/evaluation.models";
 import { Env } from "../config/env.config";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
+import pdfParse from "pdf-parse";
+import fs from "fs";
+import path from "path";
 
 export class JobController {
   private database_service: DatabaseService;
@@ -108,6 +112,19 @@ export class JobController {
         });
       }
 
+      // Check if job is active - if not, only allow owner to view it
+      const x_user_id = req.headers["x-user-id"] as string;
+      if (!job_posting.is_active) {
+        // If user is not the owner, return 404 (as if job doesn't exist)
+        if (!x_user_id || job_posting.owner_user_id !== x_user_id) {
+          return res.status(404).json({
+            success: false,
+            error: true,
+            message: "Job posting not found"
+          });
+        }
+      }
+
       const base_url = Env.BACKEND_URL;
       const shareable_link = `${base_url}/apply/${job_posting.job_id}`;
 
@@ -139,8 +156,11 @@ export class JobController {
   async get_all_job_postings(req: Request, res: Response): Promise<Response> {
     try {
       console.log("Retrieving all job postings");
-
-      const job_postings = await this.database_service.get_all_job_postings();
+      
+      const x_user_id = req.headers["x-user-id"] as string;
+      const include_inactive = req.query.include_inactive === "true";
+      
+      const job_postings = await this.database_service.get_all_job_postings(x_user_id, include_inactive);
       const base_url = Env.BACKEND_URL;
 
       const job_responses: JobPostingResponse[] = job_postings.map(job => ({
@@ -285,8 +305,16 @@ export class JobController {
         candidate_name
       );
 
-      // TODO: Process CV evaluation and send email notifications
-      // This would involve calling the evaluation service
+      // Process CV evaluation and send email notifications asynchronously
+      this._process_cv_evaluation_async(
+        file,
+        job_posting,
+        application,
+        candidate_email,
+        candidate_name
+      ).catch(error => {
+        console.error("Error processing CV evaluation:", error);
+      });
 
       const response: ApplicationResponse = {
         application_id: application.application_id,
@@ -303,6 +331,131 @@ export class JobController {
         error: true,
         message: `Failed to process application: ${error.message}`
       });
+    }
+  }
+
+  private async _process_cv_evaluation_async(
+    file: Express.Multer.File,
+    job_posting: any,
+    application: any,
+    candidate_email: string,
+    candidate_name: string
+  ): Promise<void> {
+    try {
+      const startTime = Date.now();
+      
+      // Extract text from CV file
+      let cv_text = "";
+      const file_extension = path.extname(file.originalname).toLowerCase();
+      
+      if (file_extension === ".pdf") {
+        const pdf_buffer = fs.readFileSync(file.path);
+        const pdf_data = await pdfParse(pdf_buffer);
+        cv_text = pdf_data.text;
+      } else if (file_extension === ".docx") {
+        try {
+          // Dynamic import to avoid loading issues
+          const mammoth = await import("mammoth");
+          const docx_buffer = fs.readFileSync(file.path);
+          const result = await mammoth.default.extractRawText({ buffer: docx_buffer });
+          cv_text = result.value;
+        } catch (docxError: any) {
+          console.error("Error extracting text from DOCX:", docxError.message);
+          // If DOCX extraction fails, send email notification
+          const email_service = (this.evaluation_service as any).email_service;
+          if (email_service && candidate_email) {
+            try {
+              await email_service.send_email_async(
+                candidate_email,
+                "CV Submission Received",
+                `<p>Dear ${candidate_name || "Candidate"},</p>
+                <p>Thank you for submitting your CV. We have received your application.</p>
+                <p>However, we encountered an issue processing your DOCX file. Please resubmit your CV as a PDF file for automated evaluation.</p>
+                <p>Best regards,<br/>Staffly Team</p>`,
+                "CV_SUBMISSION"
+              );
+            } catch (emailError: any) {
+              console.error(`Failed to send email:`, emailError.message);
+            }
+          }
+          return;
+        }
+      } else {
+        console.warn(`Unsupported file type: ${file_extension}`);
+        return;
+      }
+
+      if (!cv_text || cv_text.trim().length === 0) {
+        console.warn("No text extracted from CV file");
+        return;
+      }
+
+      // Evaluate CV using AI service
+      const evaluation_result = await this.evaluation_service.evaluate_cv(
+        cv_text,
+        job_posting.description || "",
+        job_posting.required_skills || []
+      );
+
+      const processing_time = Date.now() - startTime;
+
+      // Save evaluation to database
+      const evaluation = await this.database_service.save_cv_evaluation(
+        file.originalname,
+        job_posting.description || "",
+        evaluation_result.decision,
+        evaluation_result.score,
+        evaluation_result.evaluation_text,
+        evaluation_result.text_length,
+        candidate_email || evaluation_result.email,
+        processing_time,
+        job_posting.owner_user_id
+      );
+
+      // Update application with evaluation_id if needed
+      // (You may want to add evaluation_id field to Application model)
+
+      // Generate quiz link if quiz is required and CV is accepted
+      let quiz_link: string | undefined;
+      if (job_posting.quiz_required && (evaluation_result.decision === EvaluationDecision.ACCEPT || evaluation_result.decision === EvaluationDecision.ACCEPTED)) {
+        // Create quiz session
+        const quiz = await this.evaluation_service.generate_quiz(job_posting.description || "");
+        const quiz_session = await this.database_service.save_quiz_session(
+          job_posting.description || "",
+          quiz.questions || [],
+          file.originalname,
+          candidate_email || "",
+          job_posting.quiz_time_limit || 300,
+          job_posting.quiz_pass_threshold || 7,
+          job_posting.owner_user_id
+        );
+
+        quiz_link = `${Env.BACKEND_URL}/ats-checker/quiz/${quiz_session._id}`;
+      }
+
+      // Send email notification
+      // Access email_service from evaluation_service (it's a private property, so we use type assertion)
+      const email_service = (this.evaluation_service as any).email_service;
+      if (email_service && candidate_email) {
+        try {
+          await email_service.send_cv_result_email(
+            candidate_email,
+            candidate_name || "Candidate",
+            job_posting.title || "Job Position",
+            evaluation_result.decision,
+            evaluation_result.score,
+            quiz_link
+          );
+          console.log(`Email sent successfully to ${candidate_email}`);
+        } catch (emailError: any) {
+          console.error(`Failed to send email to ${candidate_email}:`, emailError.message);
+        }
+      } else {
+        console.warn("Email service not available or candidate email missing");
+      }
+    } catch (error: any) {
+      console.error("Error in CV evaluation process:", error);
+      // Optionally send error notification email
     }
   }
 }

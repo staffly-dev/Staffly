@@ -122,15 +122,7 @@
  *     summary: Get user statistics
  *     description: Retrieve statistics for a specific user
  *     tags: [Statistics]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Bearer token
  *       - in: header
  *         name: X-User-Id
  *         required: true

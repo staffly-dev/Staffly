@@ -67,7 +67,7 @@ export class S3Service {
 
       // Check bucket access
       try {
-        await this.s3_client.send(new HeadBucketCommand({ Bucket: this.bucket_name }));
+        await (this.s3_client as any).send(new HeadBucketCommand({ Bucket: this.bucket_name }));
       } catch (error: any) {
         if (error.name === "NotFound") {
           throw new Error(`S3 bucket '${this.bucket_name}' not found`);
@@ -80,7 +80,7 @@ export class S3Service {
       const s3_key = this._generate_unique_filename(file.originalname);
       const file_content = fs.readFileSync(file.path);
 
-      await this.s3_client.send(new PutObjectCommand({
+      await (this.s3_client as any).send(new PutObjectCommand({
         Bucket: this.bucket_name,
         Key: s3_key,
         Body: file_content,
@@ -93,7 +93,7 @@ export class S3Service {
       }));
 
       // Verify upload
-      await this.s3_client.send(new HeadObjectCommand({
+      await (this.s3_client as any).send(new HeadObjectCommand({
         Bucket: this.bucket_name,
         Key: s3_key
       }));
@@ -137,7 +137,7 @@ export class S3Service {
         return false;
       }
 
-      await this.s3_client.send(new DeleteObjectCommand({
+      await (this.s3_client as any).send(new DeleteObjectCommand({
         Bucket: this.bucket_name,
         Key: s3_key
       }));
@@ -178,7 +178,7 @@ export class S3Service {
         Key: s3_key
       });
 
-      const response = await this.s3_client.send(command);
+      const response = await (this.s3_client as any).send(command);
       const chunks: Uint8Array[] = [];
       
       if (response.Body) {

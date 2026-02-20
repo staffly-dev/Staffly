@@ -5,15 +5,7 @@
  *     summary: List all applications
  *     description: Retrieve all job applications for the authenticated user
  *     tags: [Applications]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: false
- *         schema:
- *           type: string
- *         description: Bearer token (optional if provided in body)
  *       - in: header
  *         name: X-User-Id
  *         required: false
@@ -82,15 +74,7 @@
  *     summary: Get all applications (POST method)
  *     description: Retrieve all job applications for the authenticated user using POST
  *     tags: [Applications]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: false
- *         schema:
- *           type: string
- *         description: Bearer token (optional if provided in body)
  *       - in: header
  *         name: X-User-Id
  *         required: false
@@ -103,9 +87,6 @@
  *           schema:
  *             type: object
  *             properties:
- *               access_token:
- *                 type: string
- *                 description: Bearer token
  *               user_id:
  *                 type: string
  *                 description: User ID (24 character MongoDB ObjectId)
@@ -228,8 +209,6 @@
  *     summary: Schedule interview
  *     description: Schedule an interview for a specific application
  *     tags: [Applications]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: app_id
@@ -237,12 +216,6 @@
  *         schema:
  *           type: string
  *         description: Application ID
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Bearer token
  *       - in: header
  *         name: X-User-Id
  *         required: true

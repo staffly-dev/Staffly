@@ -14,7 +14,10 @@ export class ApplicationController {
     try {
       console.log("Getting all applications");
       
-      const applications = await this.database_service.get_all_applications();
+      const x_user_id = req.headers["x-user-id"] as string;
+      const effective_user_id = req.body?.user_id || x_user_id;
+      
+      const applications = await this.database_service.get_all_applications(effective_user_id);
       
       const application_responses: ApplicationListResponse[] = applications.map(app => {
         const cv_filename = this._fix_cv_filename_url(app.cv_filename);
@@ -114,6 +117,90 @@ export class ApplicationController {
     
     // Default: assume it's a filename in cv_uploads
     return `cv_uploads/${cv_filename}`;
+  }
+
+  async update_application(req: Request, res: Response): Promise<Response> {
+    try {
+      const application_id = Array.isArray(req.params.app_id) ? req.params.app_id[0] : req.params.app_id;
+      const updates = req.body;
+      
+      // Remove user_id and created_by from updates (they're for authentication only)
+      delete updates.user_id;
+      delete updates.created_by;
+      
+      console.log(`Updating application: ${application_id}`);
+      
+      const updated_application = await this.database_service.update_application(application_id, updates);
+      if (!updated_application) {
+        return res.status(404).json({
+          success: false,
+          error: true,
+          message: "Application not found"
+        });
+      }
+      
+      const cv_filename = this._fix_cv_filename_url(updated_application.cv_filename);
+      const s3_key = this._extract_s3_key(updated_application.cv_filename);
+      
+      const response: SingleApplicationResponse = {
+        application_id: updated_application.application_id,
+        candidate_email: updated_application.candidate_email || "",
+        candidate_name: updated_application.candidate_name || "",
+        cv_score: updated_application.cv_score || 0,
+        cv_filename,
+        s3_key,
+        decision: updated_application.decision || "PENDING",
+        job_id: updated_application.job_id,
+        quiz_score: updated_application.quiz_score,
+        status: updated_application.status
+      };
+      
+      return res.status(200).json({
+        success: true,
+        message: "Application updated successfully",
+        data: response
+      });
+    } catch (error: any) {
+      console.error(`Failed to update application: ${error.message}`);
+      return res.status(500).json({
+        success: false,
+        error: true,
+        message: `Failed to update application: ${error.message}`
+      });
+    }
+  }
+
+  async delete_application(req: Request, res: Response): Promise<Response> {
+    try {
+      const application_id = Array.isArray(req.params.app_id) ? req.params.app_id[0] : req.params.app_id;
+      console.log(`Deleting application: ${application_id}`);
+      
+      // Note: We might want to implement soft delete or hard delete
+      // For now, we'll use update to set status to DELETED or similar
+      const result = await this.database_service.update_application(application_id, {
+        status: "DELETED"
+      });
+      
+      if (!result) {
+        return res.status(404).json({
+          success: false,
+          error: true,
+          message: "Application not found"
+        });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: "Application deleted successfully"
+      });
+    } catch (error: any) {
+      console.error(`Failed to delete application: ${error.message}`);
+      return res.status(500).json({
+        success: false,
+        error: true,
+        message: `Failed to delete application: ${error.message}`
+      });
+    }
   }
 
   private _fix_cv_filename_url(cv_filename: string): string {

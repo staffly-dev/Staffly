@@ -106,8 +106,12 @@ export class QuizController {
     try {
       console.log("Retrieving all quiz users information");
       
-      // Get all quiz sessions
-      const quiz_sessions = await this.database_service.get_all_quiz_sessions();
+      const x_user_id = req.headers["x-user-id"] as string;
+      // Support user_id from body (POST) or query params (GET)
+      const effective_user_id = req.body?.user_id || req.query?.user_id as string || x_user_id;
+      
+      // Get all quiz sessions filtered by user_id
+      const quiz_sessions = await this.database_service.get_all_quiz_sessions(effective_user_id);
       
       const quiz_users: QuizUserInfoResponse[] = [];
       for (const session of quiz_sessions) {
