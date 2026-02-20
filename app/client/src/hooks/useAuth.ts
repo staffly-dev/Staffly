@@ -393,6 +393,12 @@ export function useAuth() {
   // Check if user is authenticated
   const isAuthenticated = tokenStore.isAuthenticated() && !!data;
 
+  // Normalized user id for ATS/headers from authenticated user payload.
+  const userId =
+    data?.user != null
+      ? String(data.user.id ?? data.user._id ?? "").trim() || undefined
+      : undefined;
+
   // Function to manually reset refresh attempt flag
   const resetRefreshAttempt = () => {
     hasAttemptedRefresh.current = false;
@@ -420,6 +426,7 @@ export function useAuth() {
   return {
     // Data
     user: data,
+    userId,
     isAuthenticated,
     isLoadingUser,
     userError,

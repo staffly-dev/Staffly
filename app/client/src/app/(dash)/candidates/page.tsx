@@ -1,7 +1,7 @@
 "use client";
 import { SearchInput } from "@/components/searchInput";
 import { Card, CardHeader } from "@/components/ui/card";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CustomTableContainer } from "../all-employees/components/CustomTableContainer";
 import { Pagination } from "@/components/Pagination";
 import {

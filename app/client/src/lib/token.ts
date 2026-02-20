@@ -10,6 +10,24 @@ class TokenStore {
   private readonly MAX_REFRESH_FAILURES = 3;
   private readonly FAILURE_RESET_TIMEOUT = 60 * 1000; // 1 minute
 
+  private decodeJwtPayload(token: string): Record<string, unknown> | null {
+    try {
+      const payloadPart = token.split(".")[1];
+      if (!payloadPart) return null;
+
+      // JWT uses base64url; normalize before atob.
+      const normalized = payloadPart.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized.padEnd(
+        normalized.length + ((4 - (normalized.length % 4)) % 4),
+        "="
+      );
+
+      return JSON.parse(atob(padded)) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+
   private initializeIfNeeded(): void {
     if (!this.initialized && typeof window !== "undefined") {
       this.accessToken = localStorage.getItem("accessToken");
@@ -66,18 +84,40 @@ class TokenStore {
     const token = this.getAccessToken();
     if (!token) return true;
 
-    try {
-      // Decode JWT to check expiry (without verification)
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const expiryTime = payload.exp * 1000; // Convert to milliseconds
-      const currentTime = Date.now();
-
-      // Consider token expired if it expires within the next 5 minutes
-      return currentTime >= expiryTime - 5 * 60 * 1000;
-    } catch {
-      // If we can't decode the token, assume it's expired
+    const payload = this.decodeJwtPayload(token);
+    if (!payload) {
       return true;
     }
+
+    const expValue = payload.exp;
+    if (typeof expValue !== "number") return true;
+
+    const expiryTime = expValue * 1000; // Convert to milliseconds
+    const currentTime = Date.now();
+
+    // Consider token expired if it expires within the next 5 minutes
+    return currentTime >= expiryTime - 5 * 60 * 1000;
+  }
+
+  getUserIdFromAccessToken(): string | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+
+    const payload = this.decodeJwtPayload(token);
+    if (!payload) return null;
+
+    const candidates = [payload.userId, payload.user_id, payload.id, payload._id];
+
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" && candidate.trim().length > 0) {
+        const normalized = candidate.trim();
+        if (/^[0-9a-f]{24}$/i.test(normalized)) {
+          return normalized;
+        }
+      }
+    }
+
+    return null;
   }
 
   // Check if we have a refresh token available

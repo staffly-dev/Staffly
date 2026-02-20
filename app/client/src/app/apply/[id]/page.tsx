@@ -1,5 +1,5 @@
 "use client";
-import { Job, useJob } from "@/hooks/useJobs";
+import { useJob } from "@/hooks/useJobs";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
