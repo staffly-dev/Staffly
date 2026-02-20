@@ -19,19 +19,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
             refetchOnReconnect: true,
             staleTime: 5 * 60 * 1000, // 5 minutes
             gcTime: 30 * 60 * 1000, // 30 minutes
-            retry: (failureCount, error: Error) => {
-              // Don't retry on 401/403 errors
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const axiosError = error as any;
-              if (
-                axiosError?.response?.status === 401 ||
-                axiosError?.response?.status === 403
-              ) {
-                return false;
-              }
-              // Retry up to 3 times for other errors
-              return failureCount < 3;
-            },
+            retry: false,
           },
           mutations: {
             retry: false,
