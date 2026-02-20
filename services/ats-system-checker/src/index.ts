@@ -26,11 +26,42 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 const corsOptions = {
-  origin: Env.CORS_ALLOW_ORIGINS ? Env.CORS_ALLOW_ORIGINS.split(",").map(o => o.trim()) :
-    Env.FRONTEND_ORIGIN ? [Env.FRONTEND_ORIGIN] : ["http://localhost:3000"],
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (same-origin requests, mobile apps, Postman, Swagger UI from same origin)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    const allowedOrigins = Env.get_cors_origins();
+    // If no origins are configured, allow all (development mode)
+    if (allowedOrigins.length === 0) {
+      callback(null, true);
+      return;
+    }
+
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS: Origin ${origin} not allowed. Allowed origins: ${allowedOrigins.join(', ')}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: Env.CORS_ALLOW_CREDENTIALS,
-  methods: Env.CORS_METHODS.split(","),
-  allowedHeaders: Env.CORS_ALLOWED_HEADERS.split(",")
+  methods: Env.CORS_METHODS.split(",").map(m => m.trim()),
+  allowedHeaders: [
+    ...Env.CORS_ALLOWED_HEADERS.split(",").map(h => h.trim()),
+    "X-User-Id",
+    "X-Created-By",
+    "accept",
+    "accept-language",
+    "content-language",
+    "content-type"
+  ],
+  exposedHeaders: Env.CORS_EXPOSED_HEADERS.split(",").map(h => h.trim()),
+  maxAge: Env.CORS_MAX_AGE,
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 app.use(cors(corsOptions));
 
@@ -60,10 +91,25 @@ app.use("/evaluations", express.static(evaluationsFolder));
 // Swagger API Documentation
 // The docsAuthenticationMiddleware is already applied above, so it will protect /docs
 const swaggerSpec = getSwaggerSpec();
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "ATS System Checker API",
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    filter: true,
+    tryItOutEnabled: true
+  }
+}));
 app.get("/openapi.json", (req: Request, res: Response) => {
   res.setHeader("Content-Type", "application/json");
-  res.send(swaggerSpec);
+  // Update server URL dynamically based on request
+  const spec = JSON.parse(JSON.stringify(swaggerSpec)); // Deep clone
+  if (spec.servers && spec.servers.length > 0) {
+    const currentUrl = `${req.protocol}://${req.get('host')}`;
+    spec.servers[0].url = currentUrl;
+  }
+  res.send(spec);
 });
 
 // Initialize services (will be set in app.locals)
