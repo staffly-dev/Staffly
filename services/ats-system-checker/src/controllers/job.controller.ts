@@ -453,8 +453,15 @@ export class JobController {
         job_posting.owner_user_id
       );
 
-      // Update application with evaluation_id if needed
-      // (You may want to add evaluation_id field to Application model)
+      // Update application with cv_score and decision so GET /applications/{id} and list views show correct data
+      const isAccepted =
+        evaluation_result.decision === EvaluationDecision.ACCEPT ||
+        evaluation_result.decision === EvaluationDecision.ACCEPTED;
+      await this.database_service.update_application(application.application_id, {
+        cv_score: evaluation_result.score,
+        decision: String(evaluation_result.decision),
+        status: isAccepted ? "ACCEPTED" : "REJECTED"
+      });
 
       // Generate quiz link if quiz is required and CV is accepted
       let quiz_link: string | undefined;
