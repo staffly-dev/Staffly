@@ -37,7 +37,10 @@ export default function SignInPage() {
 
   return (
     <div>
-      <div className="flex gap-3 items-center mb-8">
+      <Link
+        href="/"
+        className="flex gap-3 items-center mb-8 w-fit hover:opacity-80 transition-opacity"
+      >
         <div className="relative w-10 h-10">
           <Image
             src={"/imgs/logo.png"}
@@ -47,7 +50,7 @@ export default function SignInPage() {
           />
         </div>
         <h1 className="text-2xl font-semibold">Staffly</h1>
-      </div>
+      </Link>
 
       <div className="space-y-6">
         <div>

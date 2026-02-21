@@ -4,7 +4,11 @@ import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
 
-export function DarkLightSwitch() {
+interface DarkLightSwitchProps {
+  compact?: boolean;
+}
+
+export function DarkLightSwitch({ compact = false }: DarkLightSwitchProps) {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
@@ -14,6 +18,23 @@ export function DarkLightSwitch() {
   }, []);
 
   if (!mounted) return null;
+
+  if (compact) {
+    return (
+      <button
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        className="flex items-center justify-center p-2 rounded-full bg-primary/15 hover:bg-primary/25 transition-colors"
+        title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {theme === "dark" ? (
+          <MdLightMode className="h-5 w-5" />
+        ) : (
+          <MdDarkMode className="h-5 w-5" />
+        )}
+      </button>
+    );
+  }
 
   return (
     <div className="flex items-center bg-primary/15 rounded-full p-1">

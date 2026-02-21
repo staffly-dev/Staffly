@@ -153,7 +153,7 @@ export const useJobs = () => {
         },
       });
       return response.data.jobs.filter(
-        (job: Job) => job.created_by === userId
+        (job: Job) => job.created_by === userId,
       ) as Job[];
     },
     enabled: !!userId && !isLoadingUser,
@@ -214,7 +214,7 @@ export const useApplyForJob = () => {
     }): Promise<unknown> => {
       const response = await axios.post(
         `${ATS_URL}/ats-checker/jobs/${jobId}/apply`,
-        application
+        application,
       );
       return response.data;
     },
@@ -227,7 +227,7 @@ export const useQuizBySessionId = (quizSessionId: string) => {
     queryKey: [...jobKeys.all, "quiz", quizSessionId],
     queryFn: async (): Promise<QuizData> => {
       const response = await axiosInstance.get(
-        `/ats-checker/quiz/${quizSessionId}`
+        `/ats-checker/quiz/${quizSessionId}`,
       );
       return response.data?.data;
     },
@@ -271,7 +271,7 @@ export const useCandidates = () => {
             "X-User-Id": userId,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       return response.data;
     },
@@ -310,7 +310,7 @@ export const useSubmitQuiz = () => {
             "Content-Type": "multipart/form-data",
             Accept: "*/*",
           },
-        }
+        },
       );
       return response.data;
     },
@@ -343,7 +343,7 @@ export const useDeleteApplication = () => {
         },
       });
     },
-    onSuccess: (_, id) => {
+    onSuccess: () => {
       // Invalidate candidates query to refetch data
       queryClient.invalidateQueries({ queryKey: jobKeys.candidates() });
     },

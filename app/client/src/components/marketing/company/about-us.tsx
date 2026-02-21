@@ -5,7 +5,7 @@ const members = [
   {
     name: "Mazin Emad",
     role: "Frontend Developer",
-    avatar: "/avatars/Mazin Emad.webp",
+    avatar: "/avatars/IMG_8802.JPG",
     linkedin: "https://www.linkedin.com/in/mazin0emd",
     portfolio: "https://mazin-emad.netlify.app/",
   },

@@ -42,12 +42,20 @@ export default function SignUpPage() {
 
   return (
     <div>
-      <div className="flex gap-3 items-center mb-8">
+      <Link
+        href="/"
+        className="flex gap-3 items-center mb-8 w-fit hover:opacity-80 transition-opacity"
+      >
         <div className="relative w-10 h-10">
-          <Image src={"/imgs/logo.png"} alt="HRMS Logo" fill className="object-contain" />
+          <Image
+            src={"/imgs/logo.png"}
+            alt="Staffly Logo"
+            fill
+            className="object-contain"
+          />
         </div>
-        <h1 className="text-2xl font-semibold">HRMS</h1>
-      </div>
+        <h1 className="text-2xl font-semibold">Staffly</h1>
+      </Link>
 
       <div className="space-y-6">
         <div>
