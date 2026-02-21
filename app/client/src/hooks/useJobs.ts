@@ -141,14 +141,22 @@ const ATS_URL = process.env.NEXT_PUBLIC_ATS_ERL;
 const ATS_DIRECT_URL =
   "https://ats-system-checker-backend-production.up.railway.app";
 
-// Fetch all jobs (no auth required - uses direct ATS URL)
+// Fetch all jobs (no Authorization - uses direct ATS URL, sends X-User-Id)
 export const useJobs = () => {
+  const { userId } = useAuth();
+
   return useQuery({
-    queryKey: jobKeys.lists(),
+    queryKey: [...jobKeys.lists(), userId],
     queryFn: async (): Promise<Job[]> => {
-      const response = await axios.get(`${ATS_DIRECT_URL}/ats-checker/jobs`);
+      if (!userId) return [];
+      const response = await axios.get(`${ATS_DIRECT_URL}/ats-checker/jobs`, {
+        headers: {
+          "X-User-Id": userId,
+        },
+      });
       return (response.data.jobs ?? []) as Job[];
     },
+    enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
