@@ -317,7 +317,7 @@ export const useCandidate = (applicationId: string) => {
           headers: {
             "X-User-Id": userId ?? "",
           },
-        }
+        },
       );
       return response.data;
     },
@@ -348,7 +348,7 @@ export const useScheduleInterview = () => {
             "X-User-Id": userId ?? "",
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       return response.data;
     },
@@ -370,7 +370,7 @@ export const useAdminStatistics = () => {
     queryFn: async (): Promise<AdminStatistics> => {
       if (!userId) return {} as AdminStatistics;
       const response = await axios.get(
-        `${ATS_DIRECT_URL}/ats-checker/statistics`,
+        `${ATS_DIRECT_URL}/ats-checker/user-statistics`,
         {
           headers: {
             "X-User-Id": userId,
