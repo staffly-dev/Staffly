@@ -264,18 +264,20 @@ export const useCandidates = () => {
     queryKey: [...jobKeys.candidates(), userId],
     queryFn: async (): Promise<CandidateResponse> => {
       if (!userId) return { applications: [], total_applications: 0 };
-      const response = await axios.post<CandidateResponse>(
+      const response = await axios.get<CandidateResponse>(
         `${ATS_DIRECT_URL}/ats-checker/applications`,
-        {
-          user_id: userId,
-          created_by: userId,
-        },
         {
           headers: {
             "X-User-Id": userId,
-            "Content-Type": "application/json",
           },
+          // created_by: userId,
         },
+        // {
+        //   headers: {
+        //     "X-User-Id": userId,
+        //     "Content-Type": "application/json",
+        //   },
+        // },
       );
       return response.data;
     },
@@ -293,11 +295,14 @@ export const useAdminStatistics = () => {
     queryKey: [...jobKeys.statistics(), userId],
     queryFn: async (): Promise<AdminStatistics> => {
       if (!userId) return {} as AdminStatistics;
-      const response = await axios.get(`${ATS_DIRECT_URL}/ats-checker/statistics`, {
-        headers: {
-          "X-User-Id": userId,
+      const response = await axios.get(
+        `${ATS_DIRECT_URL}/ats-checker/statistics`,
+        {
+          headers: {
+            "X-User-Id": userId,
+          },
         },
-      });
+      );
       return response.data;
     },
     enabled: !!userId,
