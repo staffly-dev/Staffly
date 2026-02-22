@@ -478,7 +478,7 @@ export class JobController {
           job_posting.owner_user_id
         );
 
-        quiz_link = `${Env.FRONTEND_URL_QUIZ}/ats-checker/quiz/${quiz_session._id}`;
+        quiz_link = `${Env.FRONTEND_URL_QUIZ}/quiz/${quiz_session._id}`;
       }
 
       // Send email to the applicant with the AI evaluation result (score, decision, reasoning)
