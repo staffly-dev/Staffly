@@ -24,13 +24,16 @@ export const createPayrollService = async (
     deduction,
     createdBy: userId,
   });
+  await payroll.save();
   return payroll;
 };
 
 export const getAllPayrollService = async (userId: string) => {
   const payroll = await Payroll.find({
     createdBy: userId,
-  });
+  })
+    .populate("employeeId", "firstName lastName profilePicture")
+    .lean();
   return payroll;
 };
 

@@ -51,7 +51,7 @@ export const searchPayrollController = asyncHandler(
       lastName as string
     );
     return res.status(HTTPSTATUS.OK).json({
-      message: "Attendance fetched successfully",
+      message: "Payroll fetched successfully",
       payroll: payrolls,
     });
   }

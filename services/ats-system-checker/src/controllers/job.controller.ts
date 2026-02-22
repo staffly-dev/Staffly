@@ -440,7 +440,7 @@ export class JobController {
 
       const processing_time = Date.now() - startTime;
 
-      // Save evaluation to database
+      // Save evaluation to database (always use applicant-provided email, never AI-extracted from CV)
       const evaluation = await this.database_service.save_cv_evaluation(
         file.originalname,
         job_posting.description || "",
@@ -448,7 +448,7 @@ export class JobController {
         evaluation_result.score,
         evaluation_result.evaluation_text,
         evaluation_result.text_length,
-        candidate_email || evaluation_result.email,
+        candidate_email,
         processing_time,
         job_posting.owner_user_id
       );
@@ -481,13 +481,12 @@ export class JobController {
         quiz_link = `${Env.FRONTEND_URL_QUIZ}/quiz/${quiz_session._id}`;
       }
 
-      // Send email to the applicant with the AI evaluation result (score, decision, reasoning)
+      // Send email to the applicant with the AI evaluation result (always use applicant-provided email)
       const email_service = this.evaluation_service.get_email_service();
-      const applicant_email = candidate_email || evaluation_result.email;
-      if (email_service && applicant_email) {
+      if (email_service && candidate_email) {
         try {
           await email_service.send_cv_result_email(
-            applicant_email,
+            candidate_email,
             candidate_name || "Candidate",
             job_posting.title || "Job Position",
             String(evaluation_result.decision),
