@@ -177,5 +177,67 @@ export class EmailService {
 
     return await this.send_email_async(to_email, subject, body, "QUIZ_RESULT");
   }
+
+  /**
+   * Sends the applicant an email with interview date and details.
+   * For online (video/hybrid): include meeting link from notes if present.
+   * For offline (phone/on-site): include location.
+   */
+  async send_interview_scheduled_email(
+    to_email: string,
+    candidate_name: string,
+    job_title: string,
+    interview_date: string,
+    interview_time: string,
+    interview_type: string,
+    location?: string,
+    notes?: string
+  ): Promise<boolean> {
+    const subject = `Interview Scheduled - ${job_title}`;
+    const typeLabel = (interview_type || "video").toLowerCase();
+    const isOnline = ["video", "hybrid"].includes(typeLabel);
+    const isOffline = ["phone", "on-site", "onsite"].includes(typeLabel) || typeLabel === "on site";
+
+    let details = `
+      <h2>Interview Scheduled</h2>
+      <p>Dear ${candidate_name || "Candidate"},</p>
+      <p>Congratulations on passing the evaluation stages. We would like to invite you for an interview for the position of <strong>${job_title}</strong>.</p>
+      <p><strong>Date:</strong> ${interview_date || "N/A"}</p>
+      <p><strong>Time:</strong> ${interview_time || "N/A"}</p>
+      <p><strong>Interview type:</strong> ${(interview_type || "Video").replace(/-/g, " ")}</p>
+    `;
+
+    if (isOnline && (notes || location)) {
+      details += `<p><strong>Format:</strong> Online</p>`;
+      const linkMatch = notes && notes.match(/https?:\/\/[^\s<>"]+/);
+      if (linkMatch) {
+        const meetingLink = linkMatch[0];
+        details += `<p><strong>Meeting link:</strong> <a href="${meetingLink}">${meetingLink}</a></p>`;
+      }
+      if (location && location.trim()) {
+        details += `<p><strong>Platform/Location:</strong> ${location.trim()}</p>`;
+      }
+      if (notes && notes.trim() && !notes.match(/^https?:\/\/\S+$/)) {
+        details += `<p><strong>Notes:</strong><br/>${notes.trim().replace(/\n/g, "<br/>")}</p>`;
+      }
+    } else if (isOffline && location) {
+      details += `<p><strong>Format:</strong> In-person / Offline</p>`;
+      details += `<p><strong>Location:</strong> ${location.trim()}</p>`;
+      if (notes && notes.trim()) {
+        details += `<p><strong>Notes:</strong><br/>${notes.trim().replace(/\n/g, "<br/>")}</p>`;
+      }
+    } else {
+      if (location && location.trim()) {
+        details += `<p><strong>Location / Platform:</strong> ${location.trim()}</p>`;
+      }
+      if (notes && notes.trim()) {
+        details += `<p><strong>Notes:</strong><br/>${notes.trim().replace(/\n/g, "<br/>")}</p>`;
+      }
+    }
+
+    details += `<p>Best regards,<br/>Staffly Team</p>`;
+
+    return await this.send_email_async(to_email, subject, details, "INTERVIEW_SCHEDULED");
+  }
 }
 

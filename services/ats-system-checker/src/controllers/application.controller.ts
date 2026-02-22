@@ -1,13 +1,16 @@
 import { Request, Response } from "express";
 import { DatabaseService } from "../services/database.service";
+import { EmailService } from "../services/email.service";
 import { ApplicationsListResponse, ApplicationListResponse, SingleApplicationResponse } from "../models/api.models";
 import { Env } from "../config/env.config";
 
 export class ApplicationController {
   private database_service: DatabaseService;
+  private email_service: EmailService | null;
 
-  constructor(database_service: DatabaseService) {
+  constructor(database_service: DatabaseService, email_service?: EmailService) {
     this.database_service = database_service;
+    this.email_service = email_service || null;
   }
 
   async get_all_applications(req: Request, res: Response): Promise<Response> {
@@ -183,6 +186,15 @@ export class ApplicationController {
         });
       }
 
+      const application = await this.database_service.get_application_by_id(application_id);
+      if (!application) {
+        return res.status(404).json({
+          success: false,
+          error: true,
+          message: "Application not found"
+        });
+      }
+
       const updated = await this.database_service.update_application(application_id, {
         interview_date,
         interview_time,
@@ -199,6 +211,28 @@ export class ApplicationController {
           error: true,
           message: "Application not found"
         });
+      }
+
+      // Send interview details email to the applicant (online: meeting link; offline: location)
+      if (this.email_service && application.candidate_email) {
+        const job_posting = await this.database_service.get_job_posting_by_id(application.job_id);
+        const job_title = job_posting?.title || "Job Position";
+        this.email_service
+          .send_interview_scheduled_email(
+            application.candidate_email,
+            application.candidate_name || "Candidate",
+            job_title,
+            interview_date,
+            interview_time,
+            interview_type || "video",
+            location,
+            notes
+          )
+          .then(sent => {
+            if (sent) console.log("Interview scheduled email sent to applicant");
+            else console.warn("Failed to send interview scheduled email");
+          })
+          .catch(err => console.error("Error sending interview scheduled email:", err.message));
       }
 
       return res.status(200).json({

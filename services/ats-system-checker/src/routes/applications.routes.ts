@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
-import { get_database_service } from "../utils/dependencies";
+import { get_database_service, get_email_service } from "../utils/dependencies";
 import { ApplicationController } from "../controllers/application.controller";
 
 const router = Router();
@@ -204,7 +204,8 @@ router.post(
         message: "You can only schedule interviews for applications to your job postings"
       });
     }
-    const controller = new ApplicationController(databaseService);
+    const emailService = get_email_service(req);
+    const controller = new ApplicationController(databaseService, emailService);
     return await controller.schedule_interview(req, res);
   })
 );
