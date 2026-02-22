@@ -21,15 +21,15 @@ const envConfig = () => ({
   BACKEND_URL: getEnv("BACKEND_URL"),
   PRODUCTION_URL: getEnv("PRODUCTION_URL"),
   UPLOADS_BASE_URL: getEnv("UPLOADS_BASE_URL"),
-  FRONTEND_URL: (() => {
-    const raw = getEnv("FRONTEND_URL", process.env.FRONTEND_ORIGIN || "http://localhost:3000");
+  FRONTEND_URL_QUIZ: (() => {
+    const raw = getEnv("FRONTEND_URL_QUIZ", process.env.FRONTEND_ORIGIN || "http://localhost:3000");
     return raw.split(",").map((u) => u.trim())[0] || raw;
   })(),
 
   // AI Service Configuration
   AI_SERVICE_URL: getEnv("AI_SERVICE_URL"),
   AI_SERVICE_ENABLED: getEnv("AI_SERVICE_ENABLED") === "true",
-  AI_SERVICE_FALLBACK: getEnv("AI_SERVICE_FALLBACK" ) === "true",
+  AI_SERVICE_FALLBACK: getEnv("AI_SERVICE_FALLBACK") === "true",
   AI_SERVICE_TIMEOUT_MS: parseInt(getEnv("AI_SERVICE_TIMEOUT_MS", "120000"), 10),
   COHERE_API_KEY: getEnv("COHERE_API_KEY"),
 
