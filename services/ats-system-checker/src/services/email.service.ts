@@ -1,31 +1,22 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { Env } from "../config/env.config";
 import { DatabaseService } from "./database.service";
 
 export class EmailService {
-  private transporter: nodemailer.Transporter | null = null;
+  private resend: Resend;
   private database_service: DatabaseService | null = null;
   private backend_url: string;
 
   constructor(
-    gmail_user: string,
-    gmail_password: string,
+    resend_api_key: string,
     database_service?: DatabaseService,
     frontend_url?: string
   ) {
     this.backend_url = frontend_url || Env.BACKEND_URL;
     this.database_service = database_service || null;
-
-    if (gmail_user && gmail_password) {
-      this.transporter = nodemailer.createTransport({
-        host: Env.EMAIL_HOST,
-        port: Env.EMAIL_PORT,
-        secure: Env.EMAIL_SECURE,
-        auth: {
-          user: gmail_user,
-          pass: gmail_password
-        }
-      });
+    
+    if (resend_api_key) {
+      this.resend = new Resend(resend_api_key);
     }
   }
 
@@ -79,8 +70,8 @@ export class EmailService {
   }
 
   private async _send_email_sync(to_email: string, subject: string, body: string): Promise<boolean> {
-    if (!this.transporter) {
-      console.error("Email transporter not configured. Check GMAIL_USER and GMAIL_PASSWORD environment variables.");
+    if (!this.resend) {
+      console.error("Resend client not configured. Check RESEND_API_KEY environment variable.");
       return false;
     }
 
@@ -90,24 +81,24 @@ export class EmailService {
     }
 
     try {
-      const mailOptions = {
-        from: Env.EMAIL_FROM || Env.GMAIL_USER,
+      const { data, error } = await this.resend.emails.send({
+        from: Env.EMAIL_FROM,
         to: to_email.trim(),
         subject: subject || "Notification from Staffly",
         html: body || "<p>No content</p>"
-      };
+      });
 
-      console.log(`Attempting to send email to ${to_email}...`);
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log(`Email sent successfully to ${to_email}. Message ID: ${info.messageId}`);
+      if (error) {
+        console.error("Resend API error:", error);
+        return false;
+      }
+
+      console.log(`Email sent successfully to ${to_email}. Message ID: ${data?.id}`);
       return true;
     } catch (error: any) {
       console.error(`Failed to send email to ${to_email}:`, error.message);
       if (error.code) {
         console.error(`Error code: ${error.code}`);
-      }
-      if (error.response) {
-        console.error(`SMTP response:`, error.response);
       }
       return false;
     }

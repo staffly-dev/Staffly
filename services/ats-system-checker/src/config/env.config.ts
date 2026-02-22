@@ -33,12 +33,8 @@ const envConfig = () => ({
   MONGODB_DATABASE: getEnv("MONGODB_DATABASE", "ats_system"),
 
   // Email Configuration
-  GMAIL_USER: getEnv("GMAIL_USER", ""),
-  GMAIL_PASSWORD: getEnv("GMAIL_PASSWORD", ""),
-  EMAIL_HOST: getEnv("EMAIL_HOST", "smtp.gmail.com"),
-  EMAIL_PORT: parseInt(getEnv("EMAIL_PORT", "465")),
-  EMAIL_SECURE: getEnv("EMAIL_SECURE", "true") === "true",
   EMAIL_FROM: getEnv("EMAIL_FROM", ""),
+  RESEND_API_KEY: getEnv("RESEND_API_KEY", ""),
 
   // Security Configuration
   SECRET_KEY: getEnv("SECRET_KEY", ""),
