@@ -91,6 +91,22 @@ export interface QuizSubmitData {
   email: string;
 }
 
+export interface InterviewDetails {
+  interview_date: string;
+  interview_time: string;
+  interview_type: string;
+  location: string;
+  notes: string;
+}
+
+export interface ScheduleInterviewData {
+  interview_date: string;
+  interview_time: string;
+  interview_type: string;
+  location: string;
+  notes: string;
+}
+
 export interface Candidate {
   candidate_name: string;
   candidate_email: string;
@@ -102,6 +118,7 @@ export interface Candidate {
   quiz_score: number;
   decision: string;
   cv_filename: string;
+  interview?: InterviewDetails | null;
 }
 
 export interface CandidateResponse {
@@ -284,6 +301,63 @@ export const useCandidates = () => {
     enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
+  });
+};
+
+// Get candidate by ID (no Authorization - uses direct ATS URL, sends X-User-Id)
+export const useCandidate = (applicationId: string) => {
+  const { userId } = useAuth();
+
+  return useQuery({
+    queryKey: [...jobKeys.candidates(), "detail", applicationId],
+    queryFn: async (): Promise<Candidate> => {
+      const response = await axios.get(
+        `${ATS_DIRECT_URL}/ats-checker/applications/${applicationId}`,
+        {
+          headers: {
+            "X-User-Id": userId ?? "",
+          },
+        }
+      );
+      return response.data;
+    },
+    enabled: !!applicationId && !!userId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+};
+
+// Schedule interview for application (no Authorization - uses direct ATS URL, sends X-User-Id)
+export const useScheduleInterview = () => {
+  const queryClient = useQueryClient();
+  const { userId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      applicationId,
+      data,
+    }: {
+      applicationId: string;
+      data: ScheduleInterviewData;
+    }): Promise<Candidate> => {
+      const response = await axios.post(
+        `${ATS_DIRECT_URL}/ats-checker/applications/${applicationId}/schedule-interview`,
+        data,
+        {
+          headers: {
+            "X-User-Id": userId ?? "",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (_, { applicationId }) => {
+      queryClient.invalidateQueries({ queryKey: jobKeys.candidates() });
+      queryClient.invalidateQueries({
+        queryKey: [...jobKeys.candidates(), "detail", applicationId],
+      });
+    },
   });
 };
 

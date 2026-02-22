@@ -11,10 +11,11 @@ import {
   useCandidates,
   useDeleteApplication,
 } from "@/hooks/useJobs";
+import { ScheduleInterviewDialog } from "./ScheduleInterviewDialog";
 import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FaEye, FaFilePdf, FaTrash } from "react-icons/fa";
+import { FaEye, FaFilePdf, FaTrash, FaCalendarPlus } from "react-icons/fa";
 import { CandidateInfoModal } from "./CandidateInfoModel";
 import { toast } from "sonner";
 import { FaSpinner } from "react-icons/fa6";
@@ -105,9 +106,12 @@ function CandidatesTable({
   jobs: Job[];
 }) {
   const [open, setOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null
   );
+  const [scheduleCandidate, setScheduleCandidate] =
+    useState<Candidate | null>(null);
   const [jobTitle, setJobTitle] = useState<string | undefined>(undefined);
   const { mutate: deleteApplication, isPending: deleteLoading } =
     useDeleteApplication();
@@ -208,8 +212,20 @@ function CandidatesTable({
                         null
                     );
                   }}
+                  title="View details"
                 >
                   <FaEye />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setScheduleCandidate(cand);
+                    setScheduleOpen(true);
+                  }}
+                  title="Schedule interview"
+                >
+                  <FaCalendarPlus />
                 </Button>
                 <Button
                   variant="outline"
@@ -218,6 +234,7 @@ function CandidatesTable({
                   onClick={() => {
                     handleDelete(cand.application_id);
                   }}
+                  title="Delete"
                 >
                   {deleteLoading ? (
                     <FaSpinner className="w-4 h-4 animate-spin" />
@@ -234,6 +251,11 @@ function CandidatesTable({
           onOpenChange={setOpen}
           candidate={selectedCandidate}
           jobTitle={jobTitle}
+        />
+        <ScheduleInterviewDialog
+          open={scheduleOpen}
+          onOpenChange={setScheduleOpen}
+          candidate={scheduleCandidate}
         />
       </CustomTableContainer>
     </div>
