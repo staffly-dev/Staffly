@@ -58,14 +58,8 @@ const envConfig = () => ({
   CORS_BLACKLIST: getEnv("CORS_BLACKLIST", ""),
   CORS_SECURITY_HEADERS: getEnv("CORS_SECURITY_HEADERS", "true"),
 
-  //? Email configuration
-  EMAIL_HOST: getEnv("EMAIL_HOST"),
-  EMAIL_PORT: parseInt(getEnv("EMAIL_PORT") || "465"),
-  EMAIL_SECURE: getEnv("EMAIL_SECURE", "true") === "true",
-  EMAIL_PASSWORD: getEnv("EMAIL_PASSWORD"),
-  EMAIL_USER: getEnv("EMAIL_USER"),
-  EMAIL_FROM: getEnv("EMAIL_FROM"),
   //* Resend (Email Service)
+  EMAIL_FROM: getEnv("EMAIL_FROM"),
   RESEND_API_KEY: getEnv("RESEND_API_KEY"),
 
   // ============ Anothers Configuration ============
