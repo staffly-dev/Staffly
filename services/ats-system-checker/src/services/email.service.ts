@@ -80,21 +80,35 @@ export class EmailService {
 
   private async _send_email_sync(to_email: string, subject: string, body: string): Promise<boolean> {
     if (!this.transporter) {
-      console.error("Email transporter not configured");
+      console.error("Email transporter not configured. Check GMAIL_USER and GMAIL_PASSWORD environment variables.");
+      return false;
+    }
+
+    if (!to_email || !to_email.trim()) {
+      console.error("Invalid email address:", to_email);
       return false;
     }
 
     try {
-      await this.transporter.sendMail({
+      const mailOptions = {
         from: Env.EMAIL_FROM || Env.GMAIL_USER,
-        to: to_email,
-        subject,
-        html: body
-      });
+        to: to_email.trim(),
+        subject: subject || "Notification from Staffly",
+        html: body || "<p>No content</p>"
+      };
 
+      console.log(`Attempting to send email to ${to_email}...`);
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log(`Email sent successfully to ${to_email}. Message ID: ${info.messageId}`);
       return true;
-    } catch (error) {
-      console.error("Failed to send email:", error);
+    } catch (error: any) {
+      console.error(`Failed to send email to ${to_email}:`, error.message);
+      if (error.code) {
+        console.error(`Error code: ${error.code}`);
+      }
+      if (error.response) {
+        console.error(`SMTP response:`, error.response);
+      }
       return false;
     }
   }
@@ -105,7 +119,8 @@ export class EmailService {
     job_title: string,
     decision: string,
     score: number,
-    quiz_link?: string
+    quiz_link?: string,
+    evaluation_text?: string
   ): Promise<boolean> {
     const subject = `CV Evaluation Result - ${job_title}`;
     let body = `
@@ -116,6 +131,10 @@ export class EmailService {
       <p>Decision: <strong>${decision}</strong></p>
     `;
 
+    if (evaluation_text && evaluation_text.trim()) {
+      body += `<h3>Feedback</h3><p>${evaluation_text.trim().replace(/\n/g, "<br/>")}</p>`;
+    }
+
     if (quiz_link) {
       body += `<p>Please complete the quiz: <a href="${quiz_link}">Take Quiz</a></p>`;
     }
@@ -123,6 +142,28 @@ export class EmailService {
     body += `<p>Best regards,<br/>Staffly Team</p>`;
 
     return await this.send_email_async(to_email, subject, body, "CV_RESULT");
+  }
+
+  async send_new_application_notification(
+    to_email: string,
+    job_title: string,
+    candidate_name: string,
+    candidate_email: string,
+    application_id: string,
+    backend_url?: string
+  ): Promise<boolean> {
+    const base_url = backend_url || this.backend_url;
+    const subject = `New application: ${candidate_name} applied for ${job_title}`;
+    const body = `
+      <h2>New Job Application</h2>
+      <p>A new CV has been submitted for the position <strong>${job_title}</strong>.</p>
+      <p><strong>Candidate:</strong> ${candidate_name || "N/A"}</p>
+      <p><strong>Email:</strong> ${candidate_email || "N/A"}</p>
+      <p><strong>Application ID:</strong> ${application_id}</p>
+      <p>You can view and manage this application in your dashboard.</p>
+      <p>Best regards,<br/>Staffly Team</p>
+    `;
+    return await this.send_email_async(to_email, subject, body, "NEW_APPLICATION");
   }
 
   async send_quiz_result_email(

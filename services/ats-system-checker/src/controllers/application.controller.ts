@@ -15,7 +15,7 @@ export class ApplicationController {
       console.log("Getting all applications");
       
       const x_user_id = req.headers["x-user-id"] as string;
-      const effective_user_id = req.body?.user_id || x_user_id;
+      const effective_user_id = (req.query?.user_id as string) || req.body?.user_id || x_user_id;
       
       const applications = await this.database_service.get_all_applications(effective_user_id);
       
@@ -166,6 +166,59 @@ export class ApplicationController {
         success: false,
         error: true,
         message: `Failed to update application: ${error.message}`
+      });
+    }
+  }
+
+  async schedule_interview(req: Request, res: Response): Promise<Response> {
+    try {
+      const application_id = Array.isArray(req.params.app_id) ? req.params.app_id[0] : req.params.app_id;
+      const { interview_date, interview_time, interview_type, location, notes } = req.body || {};
+
+      if (!interview_date || !interview_time) {
+        return res.status(400).json({
+          success: false,
+          error: true,
+          message: "interview_date and interview_time are required"
+        });
+      }
+
+      const updated = await this.database_service.update_application(application_id, {
+        interview_date,
+        interview_time,
+        interview_type: interview_type || "video",
+        interview_location: location,
+        interview_notes: notes,
+        interview_scheduled_at: new Date(),
+        status: "INTERVIEW_SCHEDULED"
+      });
+
+      if (!updated) {
+        return res.status(404).json({
+          success: false,
+          error: true,
+          message: "Application not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Interview scheduled successfully",
+        data: {
+          application_id: updated.application_id,
+          interview_date: updated.interview_date,
+          interview_time: updated.interview_time,
+          interview_type: updated.interview_type,
+          interview_location: updated.interview_location,
+          status: updated.status
+        }
+      });
+    } catch (error: any) {
+      console.error(`Failed to schedule interview: ${error.message}`);
+      return res.status(500).json({
+        success: false,
+        error: true,
+        message: `Failed to schedule interview: ${error.message}`
       });
     }
   }

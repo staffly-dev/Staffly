@@ -19,6 +19,41 @@ export class EvaluationService {
     this.database_service = database_service;
   }
 
+  // Getter for email service to allow access from controllers
+  get_email_service(): EmailService {
+    return this.email_service;
+  }
+
+  // Check AI service health
+  async check_ai_service_health(): Promise<{ healthy: boolean; message: string; response_time_ms?: number }> {
+    try {
+      if (!this.ai_service_url || !this.ai_service_url.trim()) {
+        return { healthy: false, message: "AI service URL not configured" };
+      }
+
+      const startTime = Date.now();
+      const response = await axios.get(`${this.ai_service_url}/health`, { timeout: 10000 });
+      const responseTime = Date.now() - startTime;
+
+      if (response.status === 200 && response.data) {
+        const isHealthy = response.data.status === "healthy" || response.data.status === "degraded";
+        return {
+          healthy: isHealthy,
+          message: `AI service is ${response.data.status}`,
+          response_time_ms: responseTime
+        };
+      }
+
+      return { healthy: false, message: "AI service returned unexpected response" };
+    } catch (error: any) {
+      console.error("AI service health check failed:", error.message);
+      return {
+        healthy: false,
+        message: error.message || "Failed to connect to AI service"
+      };
+    }
+  }
+
   async generate_quiz(job_description: string): Promise<any> {
     try {
       if (!this.ai_service_url || !this.ai_service_url.trim()) {
@@ -95,18 +130,17 @@ export class EvaluationService {
       }
 
       const response = await axios.post(
-        `${this.ai_service_url}/evaluate-cv`,
+        `${this.ai_service_url}/evaluate`,
         {
           cv_text,
-          job_description,
-          required_skills
+          job_description
         },
         { timeout: 60000 }
       );
 
       return {
         decision: response.data.decision || EvaluationDecision.REVIEW,
-        score: response.data.score || 50,
+        score: response.data.score ?? 50,
         evaluation_text: response.data.reasoning || "Evaluation completed",
         text_length: cv_text.length,
         email: response.data.email,
@@ -130,10 +164,10 @@ export class EvaluationService {
   } {
     // Simple fallback evaluation
     const text_lower = cv_text.toLowerCase();
-    const skills_found = required_skills.filter(skill => 
+    const skills_found = required_skills.filter(skill =>
       text_lower.includes(skill.toLowerCase())
     ).length;
-    
+
     const score = Math.min(100, (skills_found / required_skills.length) * 100);
     const decision = score >= 70 ? EvaluationDecision.ACCEPT : EvaluationDecision.REJECT;
 
