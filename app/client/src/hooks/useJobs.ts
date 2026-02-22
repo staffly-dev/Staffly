@@ -54,17 +54,36 @@ export interface QuizQuestion {
 
 export interface QuizData {
   quiz_session_id: string;
-  application_id: string;
+  application_id?: string;
   questions: QuizQuestion[];
   total_questions: number;
   time_limit_seconds: number;
   pass_threshold: number;
-  job_title: string;
-  job_description: string;
-  started_at: Date;
-  completed_at: Date;
-  candidate_email: string;
+  job_title?: string;
+  job_description?: string;
+  started_at?: string | Date;
+  completed_at?: string | Date;
+  candidate_email?: string;
   status: string;
+  created_at?: string;
+}
+
+function normalizeQuizData(raw: Record<string, unknown>): QuizData {
+  return {
+    quiz_session_id: String(raw.quiz_session_id ?? ""),
+    application_id: raw.application_id != null ? String(raw.application_id) : undefined,
+    questions: Array.isArray(raw.questions) ? raw.questions as QuizQuestion[] : [],
+    total_questions: Number(raw.total_questions) || 0,
+    time_limit_seconds: Number(raw.time_limit_seconds) || 0,
+    pass_threshold: Number(raw.pass_threshold) ?? 7,
+    job_title: raw.job_title != null ? String(raw.job_title) : undefined,
+    job_description: raw.job_description != null ? String(raw.job_description) : undefined,
+    started_at: raw.started_at != null ? String(raw.started_at) : undefined,
+    completed_at: raw.completed_at != null ? String(raw.completed_at) : undefined,
+    candidate_email: raw.candidate_email != null ? String(raw.candidate_email) : undefined,
+    status: String(raw.status ?? "IN_PROGRESS"),
+    created_at: raw.created_at != null ? String(raw.created_at) : undefined,
+  };
 }
 
 interface QuizUser {
@@ -244,15 +263,17 @@ export const useApplyForJob = () => {
   });
 };
 
-// Get quiz by session ID
+// Get quiz by session ID (no auth - uses direct ATS URL, public/candidate-facing)
 export const useQuizBySessionId = (quizSessionId: string) => {
   return useQuery({
     queryKey: [...jobKeys.all, "quiz", quizSessionId],
     queryFn: async (): Promise<QuizData> => {
-      const response = await axiosInstance.get(
-        `/ats-checker/quiz/${quizSessionId}`,
+      const response = await axios.get(
+        `${ATS_DIRECT_URL}/ats-checker/quiz/${quizSessionId}`,
       );
-      return response.data?.data;
+      const raw = response.data?.data ?? response.data;
+      if (!raw) throw new Error("No quiz data");
+      return normalizeQuizData(raw);
     },
     enabled: !!quizSessionId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -385,12 +406,12 @@ export const useAdminStatistics = () => {
   });
 };
 
-// Submit quiz
+// Submit quiz (no auth - uses direct ATS URL, public/candidate-facing)
 export const useSubmitQuiz = () => {
   return useMutation({
     mutationFn: async (params: QuizSubmitData): Promise<QuizResult> => {
-      const response = await axiosInstance.post(
-        `/ats-checker/quiz/submit`,
+      const response = await axios.post(
+        `${ATS_DIRECT_URL}/ats-checker/quiz/submit`,
         {
           answers: params.answers,
           quiz_session_id: params.quiz_session_id,
@@ -398,8 +419,7 @@ export const useSubmitQuiz = () => {
         },
         {
           headers: {
-            "Content-Type": "multipart/form-data",
-            Accept: "*/*",
+            "Content-Type": "application/json",
           },
         },
       );

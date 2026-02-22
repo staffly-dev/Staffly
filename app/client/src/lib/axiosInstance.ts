@@ -14,7 +14,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Public routes that don't require authentication
+// Public routes that don't require authentication (apply + quiz are candidate-facing, no login)
 const PUBLIC_ROUTES = [
   "/login",
   "/register",
@@ -25,6 +25,8 @@ const PUBLIC_ROUTES = [
   "/forgot-password",
   "/reset-password",
   "/congrats",
+  "/apply",
+  "/quiz",
 ];
 
 // Check if current route is public
