@@ -114,12 +114,12 @@ export class QuizController {
             status === "PASSED"
           );
           if (emailSent) {
-            console.log(`Quiz result email sent successfully to ${email}`);
+            console.log("Quiz result email sent successfully");
           } else {
-            console.warn(`Failed to send quiz result email to ${email}`);
+            console.warn("Failed to send quiz result email");
           }
         } catch (emailError: any) {
-          console.error(`Error sending quiz result email to ${email}:`, emailError.message);
+          console.error("Error sending quiz result email:", emailError.message);
         }
       } else {
         console.warn("Email service not available or email missing, skipping email notification");
@@ -159,7 +159,7 @@ export class QuizController {
 
       const quiz_users: QuizUserInfoResponse[] = [];
       for (const session of quiz_sessions) {
-        const quiz_link = `${Env.BACKEND_URL}/quiz/${session._id}`;
+        const quiz_link = `${Env.FRONTEND_URL}/quiz/${session._id}`;
         const result = await this.database_service.get_quiz_result_by_session_id(session._id.toString());
 
         quiz_users.push({

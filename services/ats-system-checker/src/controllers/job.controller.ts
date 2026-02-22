@@ -325,8 +325,8 @@ export class JobController {
           application.application_id,
           Env.BACKEND_URL
         ).then(sent => {
-          if (sent) console.log(`New application notification sent to ${notify_email}`);
-          else console.warn(`Failed to send new application notification to ${notify_email}`);
+          if (sent) console.log("New application notification sent");
+          else console.warn("Failed to send new application notification");
         }).catch(err => console.error("Error sending new application email:", err.message));
       }
 
@@ -478,7 +478,7 @@ export class JobController {
           job_posting.owner_user_id
         );
 
-        quiz_link = `${Env.BACKEND_URL}/ats-checker/quiz/${quiz_session._id}`;
+        quiz_link = `${Env.FRONTEND_URL}/ats-checker/quiz/${quiz_session._id}`;
       }
 
       // Send email to the applicant with the AI evaluation result (score, decision, reasoning)
@@ -495,9 +495,9 @@ export class JobController {
             quiz_link,
             evaluation_result.evaluation_text
           );
-          console.log(`CV result email sent to applicant ${applicant_email}`);
+          console.log("CV result email sent to applicant");
         } catch (emailError: any) {
-          console.error(`Failed to send email to ${applicant_email}:`, emailError.message);
+          console.error("Failed to send email to applicant:", emailError.message);
         }
       } else {
         console.warn("Email service not available or candidate email missing");

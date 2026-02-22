@@ -21,6 +21,10 @@ const envConfig = () => ({
   BACKEND_URL: getEnv("BACKEND_URL"),
   PRODUCTION_URL: getEnv("PRODUCTION_URL"),
   UPLOADS_BASE_URL: getEnv("UPLOADS_BASE_URL"),
+  FRONTEND_URL: (() => {
+    const raw = getEnv("FRONTEND_URL", process.env.FRONTEND_ORIGIN || "http://localhost:3000");
+    return raw.split(",").map((u) => u.trim())[0] || raw;
+  })(),
 
   // AI Service Configuration
   AI_SERVICE_URL: getEnv("AI_SERVICE_URL"),

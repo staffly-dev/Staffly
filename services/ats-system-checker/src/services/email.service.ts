@@ -76,7 +76,7 @@ export class EmailService {
     }
 
     if (!to_email || !to_email.trim()) {
-      console.error("Invalid email address:", to_email);
+      console.error("Invalid email address");
       return false;
     }
 
@@ -93,10 +93,10 @@ export class EmailService {
         return false;
       }
 
-      console.log(`Email sent successfully to ${to_email}. Message ID: ${data?.id}`);
+      console.log(`Email sent successfully. Message ID: ${data?.id}`);
       return true;
     } catch (error: any) {
-      console.error(`Failed to send email to ${to_email}:`, error.message);
+      console.error("Failed to send email:", error.message);
       if (error.code) {
         console.error(`Error code: ${error.code}`);
       }
