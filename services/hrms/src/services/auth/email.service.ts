@@ -1,5 +1,7 @@
-import nodemailer from "nodemailer";
+// import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { Env } from "../../config/env.config";
+
 
 interface EmailOptions {
   to: string;
@@ -8,31 +10,22 @@ interface EmailOptions {
   text?: string;
 }
 
-// Configuration for a nodemailer transporter
-const transporter = nodemailer.createTransport({
-  host: Env.EMAIL_HOST,
-  port: Env.EMAIL_PORT,
-  secure: Env.EMAIL_SECURE,
-  auth: {
-    user: Env.EMAIL_USER,
-    pass: Env.EMAIL_PASSWORD,
-  },
-});
+const resend = new Resend(Env.RESEND_API_KEY);
 
 const sendEmail = async (options: EmailOptions): Promise<void> => {
-  const mailOptions = {
-    from: Env.EMAIL_FROM,
-    to: options.to,
-    subject: options.subject,
-    html: options.html,
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent");
+    await resend.emails.send({
+      from: Env.EMAIL_FROM,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.text,
+    });
+
+    console.log(`✅ Email sent to ${options.to}`);
   } catch (err) {
-    console.error("Email send error: ", err);
-    throw new Error("Failed to send verification email");
+    console.error("❌ Email send error:", err);
+    throw new Error("Failed to send email");
   }
 };
 

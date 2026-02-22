@@ -65,6 +65,8 @@ const envConfig = () => ({
   EMAIL_PASSWORD: getEnv("EMAIL_PASSWORD"),
   EMAIL_USER: getEnv("EMAIL_USER"),
   EMAIL_FROM: getEnv("EMAIL_FROM"),
+  //* Resend (Email Service)
+  RESEND_API_KEY: getEnv("RESEND_API_KEY"),
 
   // ============ Anothers Configuration ============
   UPSTASH_REDIS_REST_URL: getEnv("UPSTASH_REDIS_REST_URL"),
