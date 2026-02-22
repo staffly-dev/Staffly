@@ -315,7 +315,7 @@ export class JobController {
 
       // Send "new application" email to job owner / HR so they receive the message when CV is uploaded
       const email_service = this.evaluation_service.get_email_service();
-      const notify_email = job_posting.hr_email || Env.GMAIL_USER;
+      const notify_email = job_posting.hr_email || Env.EMAIL_FROM;
       if (email_service && notify_email) {
         email_service.send_new_application_notification(
           notify_email,
