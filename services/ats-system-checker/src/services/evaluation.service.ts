@@ -88,7 +88,13 @@ export class EvaluationService {
 
       return this._generate_fallback_quiz(job_description);
     } catch (error: any) {
-      console.error("Error generating quiz:", error);
+      const msg = error?.message || "Unknown error";
+      const status = error?.response?.status;
+      const code = error?.code;
+      console.error(
+        "Error generating quiz:",
+        status ? `${msg} (HTTP ${status})` : code ? `${msg} (${code})` : msg
+      );
       return this._generate_fallback_quiz(job_description);
     }
   }
@@ -147,7 +153,13 @@ export class EvaluationService {
         candidate_name: response.data.candidate_name
       };
     } catch (error: any) {
-      console.error("Error evaluating CV:", error);
+      const msg = error?.message || "Unknown error";
+      const status = error?.response?.status;
+      const code = error?.code;
+      console.error(
+        "Error evaluating CV:",
+        status ? `${msg} (HTTP ${status})` : code ? `${msg} (${code})` : msg
+      );
       return this._evaluate_cv_fallback(cv_text, job_description, required_skills);
     }
   }
