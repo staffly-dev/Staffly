@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/lib/axiosInstance";
 import axios from "axios";
 import { useAuth } from "./useAuth";
-import { tokenStore } from "@/lib/token";
 
 // Job type definition
 export interface Job {
@@ -137,7 +136,6 @@ export const jobKeys = {
   quizUsers: () => [...jobKeys.all, "quizUsers"] as const,
 };
 
-const ATS_URL = process.env.NEXT_PUBLIC_ATS_ERL;
 const ATS_DIRECT_URL =
   "https://ats-system-checker-backend-production.up.railway.app";
 
@@ -162,12 +160,14 @@ export const useJobs = () => {
   });
 };
 
-// Fetch job by ID
+// Fetch job by ID (no Authorization - uses direct ATS URL)
 export const useJob = (id: string) => {
   return useQuery({
     queryKey: jobKeys.detail(id),
     queryFn: async (): Promise<Job> => {
-      const response = await axios.get(`${ATS_URL}/ats-checker/jobs/${id}`);
+      const response = await axios.get(
+        `${ATS_DIRECT_URL}/ats-checker/jobs/${id}`,
+      );
       return response.data;
     },
     enabled: !!id,
@@ -177,17 +177,23 @@ export const useJob = (id: string) => {
   });
 };
 
-// Create job
+// Create job (no Authorization - uses direct ATS URL, sends X-User-Id)
 export const useCreateJob = () => {
   const queryClient = useQueryClient();
+  const { userId } = useAuth();
 
   return useMutation({
     mutationFn: async (jobData: CreateJobData): Promise<Job> => {
-      const response = await axiosInstance.post(`/ats-checker/jobs`, jobData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+      const response = await axios.post(
+        `${ATS_DIRECT_URL}/ats-checker/jobs`,
+        jobData,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-User-Id": userId ?? "",
+          },
         },
-      });
+      );
       return response.data;
     },
     onSuccess: (newJob) => {
@@ -202,7 +208,7 @@ export const useCreateJob = () => {
   });
 };
 
-// Apply for job
+// Apply for job (no auth - uses direct ATS URL, public endpoint)
 export const useApplyForJob = () => {
   return useMutation({
     mutationFn: async ({
@@ -213,7 +219,7 @@ export const useApplyForJob = () => {
       application: JobApplicationData;
     }): Promise<unknown> => {
       const response = await axios.post(
-        `${ATS_URL}/ats-checker/jobs/${jobId}/apply`,
+        `${ATS_DIRECT_URL}/ats-checker/jobs/${jobId}/apply`,
         application,
       );
       return response.data;
@@ -250,21 +256,19 @@ export const useQuizUsers = () => {
   });
 };
 
-// Get candidates (backend expects POST for list, not GET)
+// Get candidates (no Authorization - uses direct ATS URL, sends X-User-Id)
 export const useCandidates = () => {
-  const { userId, isLoadingUser } = useAuth();
+  const { userId } = useAuth();
 
   return useQuery({
     queryKey: [...jobKeys.candidates(), userId],
     queryFn: async (): Promise<CandidateResponse> => {
       if (!userId) return { applications: [], total_applications: 0 };
-      const accessToken = tokenStore.getAccessToken();
-      const response = await axiosInstance.post<CandidateResponse>(
-        `/ats-checker/applications`,
+      const response = await axios.post<CandidateResponse>(
+        `${ATS_DIRECT_URL}/ats-checker/applications`,
         {
           user_id: userId,
           created_by: userId,
-          access_token: accessToken ?? "",
         },
         {
           headers: {
@@ -275,20 +279,28 @@ export const useCandidates = () => {
       );
       return response.data;
     },
-    enabled: !!userId && !isLoadingUser,
+    enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
 };
 
-// Get admin statistics
+// Get admin statistics (no Authorization - uses direct ATS URL, sends X-User-Id)
 export const useAdminStatistics = () => {
+  const { userId } = useAuth();
+
   return useQuery({
-    queryKey: jobKeys.statistics(),
+    queryKey: [...jobKeys.statistics(), userId],
     queryFn: async (): Promise<AdminStatistics> => {
-      const response = await axiosInstance.get(`/ats-checker/statistics`);
+      if (!userId) return {} as AdminStatistics;
+      const response = await axios.get(`${ATS_DIRECT_URL}/ats-checker/statistics`, {
+        headers: {
+          "X-User-Id": userId,
+        },
+      });
       return response.data;
     },
+    enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -331,15 +343,20 @@ export const useS3Params = (key: string) => {
   });
 };
 
-// Delete application
+// Delete application (no Authorization - uses direct ATS URL, sends X-User-Id)
 export const useDeleteApplication = () => {
   const queryClient = useQueryClient();
+  const { userId } = useAuth();
 
   return useMutation({
     mutationFn: async (id: string): Promise<void> => {
-      await axiosInstance.delete(`/ats-checker/applications/${id}`, {
+      if (!userId) throw new Error("User not authenticated");
+      await axios.delete(`${ATS_DIRECT_URL}/ats-checker/applications/${id}`, {
         data: {
           candidate_id: id,
+        },
+        headers: {
+          "X-User-Id": userId,
         },
       });
     },
@@ -350,7 +367,7 @@ export const useDeleteApplication = () => {
   });
 };
 
-// Delete job
+// Delete job (no Authorization - uses direct ATS URL, sends X-User-Id)
 export const useDeleteJob = () => {
   const queryClient = useQueryClient();
   const { userId } = useAuth();
@@ -358,7 +375,7 @@ export const useDeleteJob = () => {
   return useMutation({
     mutationFn: async (id: string): Promise<void> => {
       if (!userId) throw new Error("User not authenticated");
-      await axiosInstance.delete(`/ats-checker/jobs/${id}`, {
+      await axios.delete(`${ATS_DIRECT_URL}/ats-checker/jobs/${id}`, {
         headers: {
           "X-User-Id": userId,
         },
