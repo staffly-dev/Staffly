@@ -34,6 +34,25 @@ export class QuizController {
         });
       }
 
+      // Normalize answers to number[] (client may send JSON string or array, especially with multipart/form-data)
+      let answerArray: number[];
+      if (Array.isArray(answers)) {
+        answerArray = answers.map((a: unknown) => Number(a));
+      } else if (typeof answers === "string") {
+        try {
+          const parsed = JSON.parse(answers) as unknown;
+          answerArray = Array.isArray(parsed) ? parsed.map((a: unknown) => Number(a)) : [Number(answers)];
+        } catch {
+          return res.status(400).json({
+            success: false,
+            error: true,
+            message: "answers must be a valid JSON array of numbers"
+          });
+        }
+      } else {
+        answerArray = Object.values(answers).map((a: unknown) => Number(a));
+      }
+
       // Get quiz session
       const quiz_session = await this.database_service.get_quiz_session_by_id(quiz_session_id);
       if (!quiz_session) {
@@ -55,7 +74,6 @@ export class QuizController {
 
       // Evaluate answers
       const questions = quiz_session.questions as any[];
-      const answerArray = Array.isArray(answers) ? answers : Object.values(answers);
 
       let score = 0;
       for (let i = 0; i < questions.length && i < answerArray.length; i++) {

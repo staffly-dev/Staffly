@@ -48,13 +48,13 @@ const QuizPage = () => {
       return;
     }
 
-    const answersString = Object.values(answers).map((answer) =>
+    const answersArray = Object.values(answers).map((answer) =>
       Number(answer)
     );
 
     submitQuiz(
       {
-        answers: JSON.stringify(answersString),
+        answers: answersArray,
         email: quiz.candidate_email,
         quiz_session_id: id,
       },

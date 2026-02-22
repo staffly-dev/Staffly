@@ -87,7 +87,7 @@ interface QuizResult {
 }
 
 export interface QuizSubmitData {
-  answers: string;
+  answers: number[];
   quiz_session_id: string;
   email: string;
 }
@@ -307,8 +307,8 @@ export const useSubmitQuiz = () => {
         },
         {
           headers: {
-            "Content-Type": "multipart/form-data",
-            Accept: "*/*",
+            "Content-Type": "application/json",
+            Accept: "application/json",
           },
         }
       );
