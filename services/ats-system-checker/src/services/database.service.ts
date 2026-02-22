@@ -195,6 +195,17 @@ export class DatabaseService {
       .exec();
   }
 
+  /** Find an application by candidate email and optionally CV filename (e.g. from quiz session). Used to resolve candidate name for emails. */
+  async get_application_by_candidate_email_and_cv(
+    candidate_email: string,
+    cv_filename?: string
+  ): Promise<IApplication | null> {
+    const filter: any = { ...this._application_not_deleted_filter };
+    if (candidate_email) filter.candidate_email = candidate_email;
+    if (cv_filename) filter.cv_filename = cv_filename;
+    return await Application.findOne(filter).sort({ submitted_at: -1 }).exec();
+  }
+
   async get_all_applications(owner_user_id?: string): Promise<IApplication[]> {
     const filter = this._application_not_deleted_filter;
     if (owner_user_id) {

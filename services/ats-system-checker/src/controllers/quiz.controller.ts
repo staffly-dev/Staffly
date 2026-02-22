@@ -120,12 +120,24 @@ export class QuizController {
         }
       }
 
+      // Resolve candidate name from application (same as CV result email)
+      let candidate_name = "Candidate";
+      try {
+        const application = await this.database_service.get_application_by_candidate_email_and_cv(
+          email,
+          quiz_session.associated_cv_filename
+        );
+        if (application?.candidate_name) candidate_name = application.candidate_name;
+      } catch {
+        // keep default "Candidate"
+      }
+
       // Send email notification
       if (this.email_service && email) {
         try {
           const emailSent = await this.email_service.send_quiz_result_email(
             email,
-            "Candidate", // candidate_name could be extracted from quiz_session if available
+            candidate_name,
             job_title,
             score,
             questions.length,

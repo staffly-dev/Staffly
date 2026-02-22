@@ -173,6 +173,7 @@ export class EmailService {
       <p>Your score: <strong>${score}/${total_questions}</strong></p>
       <p>Status: <strong>${passed ? "PASSED" : "FAILED"}</strong></p>
       <p>Best regards,<br/>Staffly Team</p>
+      <p>Please wait for an email from HR with your interview date and next steps.</p>
     `;
 
     return await this.send_email_async(to_email, subject, body, "QUIZ_RESULT");
