@@ -73,14 +73,14 @@ Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 
 ### AWS S3 File Operations
 
-| Endpoint                    | Method | Description                |
-| --------------------------- | ------ | -------------------------- |
-| `/ats-checker/s3/upload`    | POST   | Upload file to S3 bucket   |
-| `/ats-checker/s3/status`     | GET    | Check S3 service status    |
-| `/ats-checker/s3/debug`     | GET    | Debug S3 service status    |
-| `/ats-checker/s3/{s3_key}`  | DELETE | Delete file from S3 bucket |
-| `/ats-checker/s3/presign/{s3_key}` | GET | Get presigned URL for file |
-| `/ats-checker/s3/file/{s3_key}` | GET | Stream file via backend |
+| Endpoint                              | Method | Description                |
+| ------------------------------------- | ------ | -------------------------- |
+| `/ats-checker/s3/upload`              | POST   | Upload file to S3 bucket   |
+| `/ats-checker/s3/status`              | GET    | Check S3 service status    |
+| `/ats-checker/s3/debug`               | GET    | Debug S3 service status    |
+| `/ats-checker/s3/{s3_key}`            | DELETE | Delete file from S3 bucket |
+| `/ats-checker/s3/presign/{s3_key}`    | GET    | Get presigned URL for file |
+| `/ats-checker/s3/file/{s3_key}`       | GET    | Stream file via backend    |
 
 ### Quiz System
 
@@ -256,7 +256,7 @@ curl -X POST http://localhost:4002/ats-checker/jobs/{job_id}/apply \
 
 ### Project Structure
 
-```
+```text
 src/
 ├── config/          # Settings and configuration
 │   ├── env.config.ts       # Environment configuration

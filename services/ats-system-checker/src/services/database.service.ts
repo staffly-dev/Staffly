@@ -176,23 +176,35 @@ export class DatabaseService {
     return await application.save();
   }
 
+  /** Excludes soft-deleted (status DELETED) applications from read paths. */
+  private _application_not_deleted_filter = { status: { $ne: "DELETED" } };
+
   async get_application_by_id(application_id: string): Promise<IApplication | null> {
-    return await Application.findOne({ application_id }).exec();
+    return await Application.findOne({
+      application_id,
+      ...this._application_not_deleted_filter
+    }).exec();
   }
 
   async get_applications_by_job_id(job_id: string): Promise<IApplication[]> {
-    return await Application.find({ job_id }).sort({ submitted_at: -1 }).exec();
+    return await Application.find({
+      job_id,
+      ...this._application_not_deleted_filter
+    })
+      .sort({ submitted_at: -1 })
+      .exec();
   }
 
   async get_all_applications(owner_user_id?: string): Promise<IApplication[]> {
+    const filter = this._application_not_deleted_filter;
     if (owner_user_id) {
-      // Get all job IDs owned by this user
       const user_jobs = await JobPosting.find({ owner_user_id }).select('job_id').exec();
       const job_ids = user_jobs.map(job => job.job_id);
-      // Filter applications by job_ids
-      return await Application.find({ job_id: { $in: job_ids } }).sort({ submitted_at: -1 }).exec();
+      return await Application.find({ job_id: { $in: job_ids }, ...filter })
+        .sort({ submitted_at: -1 })
+        .exec();
     }
-    return await Application.find().sort({ submitted_at: -1 }).exec();
+    return await Application.find(filter).sort({ submitted_at: -1 }).exec();
   }
 
   async update_application(application_id: string, updates: Partial<IApplication>): Promise<IApplication | null> {

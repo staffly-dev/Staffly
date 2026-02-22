@@ -125,6 +125,89 @@
  *                   example: false
  *                 message:
  *                   type: string
+ *   delete:
+ *     summary: Delete application
+ *     description: Delete an application by ID. Only the job owner can delete applications. Requires user_id (X-User-Id header or body).
+ *     tags: [Applications]
+ *     parameters:
+ *       - in: path
+ *         name: app_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Application ID
+ *       - in: header
+ *         name: X-User-Id
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: User ID (24 character MongoDB ObjectId). Alternatively provide in request body.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *                 description: User ID (optional if X-User-Id header is set)
+ *     responses:
+ *       200:
+ *         description: Application deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Application deleted successfully"
+ *       400:
+ *         description: Bad request (missing or invalid user_id)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *       403:
+ *         description: Forbidden (user does not own the job)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Application not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
  *
  * /ats-checker/applications/{app_id}/schedule-interview:
  *   post:
