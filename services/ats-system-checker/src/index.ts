@@ -194,8 +194,7 @@ const startServer = async () => {
     await databaseService.connect();
 
     emailService = new EmailService(
-      Env.GMAIL_USER,
-      Env.GMAIL_PASSWORD,
+      Env.RESEND_API_KEY,
       databaseService,
       Env.BACKEND_URL
     );

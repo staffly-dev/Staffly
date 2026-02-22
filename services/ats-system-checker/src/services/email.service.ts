@@ -3,7 +3,7 @@ import { Env } from "../config/env.config";
 import { DatabaseService } from "./database.service";
 
 export class EmailService {
-  private resend: Resend;
+  private resend: Resend | null = null;
   private database_service: DatabaseService | null = null;
   private backend_url: string;
 
@@ -14,9 +14,9 @@ export class EmailService {
   ) {
     this.backend_url = frontend_url || Env.BACKEND_URL;
     this.database_service = database_service || null;
-    
-    if (resend_api_key) {
-      this.resend = new Resend(resend_api_key);
+
+    if (resend_api_key && resend_api_key.trim()) {
+      this.resend = new Resend(resend_api_key.trim());
     }
   }
 
