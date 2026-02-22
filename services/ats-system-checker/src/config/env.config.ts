@@ -26,6 +26,7 @@ const envConfig = () => ({
   AI_SERVICE_URL: getEnv("AI_SERVICE_URL"),
   AI_SERVICE_ENABLED: getEnv("AI_SERVICE_ENABLED") === "true",
   AI_SERVICE_FALLBACK: getEnv("AI_SERVICE_FALLBACK" ) === "true",
+  AI_SERVICE_TIMEOUT_MS: parseInt(getEnv("AI_SERVICE_TIMEOUT_MS", "120000"), 10),
   COHERE_API_KEY: getEnv("COHERE_API_KEY"),
 
   // Database Configuration

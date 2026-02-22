@@ -70,7 +70,7 @@ export class EvaluationService {
               job_description,
               num_questions: 10
             },
-            { timeout: 60000 }
+            { timeout: Env.AI_SERVICE_TIMEOUT_MS }
           );
 
           const quiz_questions = response.data.questions || [];
@@ -88,13 +88,7 @@ export class EvaluationService {
 
       return this._generate_fallback_quiz(job_description);
     } catch (error: any) {
-      const msg = error?.message || "Unknown error";
-      const status = error?.response?.status;
-      const code = error?.code;
-      console.error(
-        "Error generating quiz:",
-        status ? `${msg} (HTTP ${status})` : code ? `${msg} (${code})` : msg
-      );
+      console.error("Error generating quiz:", error);
       return this._generate_fallback_quiz(job_description);
     }
   }
@@ -141,7 +135,7 @@ export class EvaluationService {
           cv_text,
           job_description
         },
-        { timeout: 60000 }
+        { timeout: Env.AI_SERVICE_TIMEOUT_MS }
       );
 
       return {
