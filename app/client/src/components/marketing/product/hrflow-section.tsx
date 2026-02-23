@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Users, Calendar, FileText, DollarSign, User, BarChart2 } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { Users, Calendar, FileText, DollarSign } from "lucide-react";
 
 interface HRItem {
   id: string;
@@ -17,32 +17,32 @@ export default function HRFlowSection() {
 
   const hrItems: HRItem[] = [
     {
-      id: 'people',
-      title: 'People',
-      description: 'Manage your team members and their information',
+      id: "people",
+      title: "People",
+      description: "Manage your team members and their information",
       icon: <Users className="size-5" />,
-      image: '/imgs/frame.png',
+      image: "/imgs/people2.png",
     },
     {
-      id: 'leave',
-      title: 'Leave Management',
-      description: 'Handle time-off requests and approvals',
+      id: "leave",
+      title: "Leave Management",
+      description: "Handle time-off requests and approvals",
       icon: <Calendar className="size-5" />,
-      image: '/imgs/frame.png',
+      image: "/imgs/leave.png",
     },
     {
-      id: 'contracts',
-      title: 'Contracts',
-      description: 'Digital contract management and signing',
+      id: "contracts",
+      title: "Contracts",
+      description: "Digital contract management and signing",
       icon: <FileText className="size-5" />,
-      image: '/imgs/frame.png',
+      image: "/imgs/contracts.png",
     },
     {
-      id: 'salary',
-      title: 'Salary',
-      description: 'Payroll and compensation management',
+      id: "salary",
+      title: "Salary",
+      description: "Payroll and compensation management",
       icon: <DollarSign className="size-5" />,
-      image: '/imgs/frame.png',
+      image: "/imgs/salary.png",
     },
     // {
     //   id: 'profile',
@@ -78,22 +78,30 @@ export default function HRFlowSection() {
         <div className="grid items-center gap-12 md:grid-cols-2 md:gap-12 lg:grid-cols-5 lg:gap-24">
           <div className="lg:col-span-2">
             <div className="md:pr-6 lg:pr-0">
-              <h2 className="text-4xl font-semibold lg:text-5xl">Staffly Flow</h2>
-              <p className="mt-6">Closing the gap between HR and employees, one step at a time!</p>
+              <h2 className="text-4xl font-semibold lg:text-5xl">
+                Staffly Flow
+              </h2>
+              <p className="mt-6">
+                Closing the gap between HR and employees, one step at a time!
+              </p>
             </div>
             <ul className="mt-8 divide-y border-y">
               {hrItems.map((item, index) => (
                 <li
                   key={item.id}
                   onClick={() => handleItemClick(index)}
-                  className={`flex cursor-pointer items-center gap-3 py-3 transition-colors ${activeIndex === index ? 'text-primary' : ''}`}
+                  className={`flex cursor-pointer items-center gap-3 py-3 transition-colors ${activeIndex === index ? "text-primary" : ""}`}
                 >
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-full ${activeIndex === index ? 'text-primary' : 'text-hrms-gray/80'}`}>
+                  <span
+                    className={`flex h-8 w-8 items-center justify-center rounded-full ${activeIndex === index ? "text-primary" : "text-hrms-gray/80"}`}
+                  >
                     {item.icon}
                   </span>
                   <div>
                     <h3 className="font-medium">{item.title}</h3>
-                    <p className="text-sm text-hrms-gray/80">{item.description}</p>
+                    <p className="text-sm text-hrms-gray/80">
+                      {item.description}
+                    </p>
                   </div>
                 </li>
               ))}
@@ -111,7 +119,9 @@ export default function HRFlowSection() {
                   priority
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
-                  <h3 className="text-2xl font-bold">{hrItems[activeIndex].title}</h3>
+                  <h3 className="text-2xl font-bold">
+                    {hrItems[activeIndex].title}
+                  </h3>
                   <p>{hrItems[activeIndex].description}</p>
                 </div>
               </div>
@@ -122,7 +132,7 @@ export default function HRFlowSection() {
                 <button
                   key={index}
                   onClick={() => handleItemClick(index)}
-                  className={`h-2 rounded-full transition-all ${activeIndex === index ? 'w-6 bg-primary' : 'w-2 bg-hrms-gray/80'}`}
+                  className={`h-2 rounded-full transition-all ${activeIndex === index ? "w-6 bg-primary" : "w-2 bg-hrms-gray/80"}`}
                   aria-label={`Show ${hrItems[index].title}`}
                 />
               ))}
@@ -132,4 +142,4 @@ export default function HRFlowSection() {
       </div>
     </section>
   );
-};
+}
