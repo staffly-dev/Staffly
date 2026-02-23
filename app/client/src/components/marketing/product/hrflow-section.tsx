@@ -49,14 +49,14 @@ export default function HRFlowSection() {
     //   title: 'Profile',
     //   description: 'Employee profiles and documents',
     //   icon: <User className="size-5" />,
-    //   image: '/imgs/frame.png',
+    //   image: '/imgs/frame.jpg',
     // },
     // {
     //   id: 'enps',
     //   title: 'eNPS',
     //   description: 'Employee satisfaction and feedback',
     //   icon: <BarChart2 className="size-5" />,
-    //   image: '/imgs/frame.png',
+    //   image: '/imgs/frame.jpg',
     // },
   ];
 
