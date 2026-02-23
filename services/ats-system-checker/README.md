@@ -306,9 +306,8 @@ src/
 
 ## 📖 Additional Resources
 
-- **[S3 Setup Guide](./S3_SETUP.md)** - Complete AWS S3 configuration
-- **[Environment Template](./env.example)** - Sample environment variables
-- **[Test Script](./test_s3_integration.py)** - S3 integration testing
+- **[S3 Setup Guide](./docs/S3_SETUP.md)** - Complete AWS S3 configuration (see [`docs/`](./docs/))
+- **Environment variables** - Use the template in the [Environment Variables](#️-environment-variables) section above; copy to `.env` in this directory (`.env` and `.env.production` are gitignored).
 - **[API Documentation](http://localhost:4002/docs)** - Interactive API docs
 
 ## 🤝 Contributing

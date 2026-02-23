@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import mongoose from "mongoose";
 import axios from "axios";
 import { asyncHandler } from "../utils/asyncHandler";
+import { getErrorMessage, getErrorCode } from "../utils/errorUtils";
 import { Env } from "../config/env.config";
 import {
   CVEvaluation,
@@ -77,10 +78,10 @@ router.get(
         },
         timestamp: new Date().toISOString()
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       return res.status(500).json({
         error: "Failed to retrieve database info",
-        message: error.message
+        message: getErrorMessage(error, "Failed to retrieve database info")
       });
     }
   })
@@ -149,10 +150,10 @@ router.get(
         },
         timestamp: new Date().toISOString()
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       return res.status(500).json({
         error: "Failed to retrieve sample data",
-        message: error.message
+        message: getErrorMessage(error, "Failed to retrieve sample data")
       });
     }
   })
@@ -165,8 +166,8 @@ router.get(
     let aiHealthy = false;
     let aiPingTime = 0;
     let aiError: string | null = null;
-    let aiServiceInfo: any = null;
-    let testResults: any = {};
+    let aiServiceInfo: Record<string, unknown> | null = null;
+    const testResults: Record<string, unknown> = {};
 
     if (!Env.AI_SERVICE_URL || !Env.AI_SERVICE_ENABLED) {
       return res.status(200).json({
@@ -205,18 +206,19 @@ router.get(
           data: healthResponse.data
         };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       aiHealthy = false;
-      aiError = error.message || "Connection failed";
-      if (error.code === "ECONNREFUSED") {
+      const code = getErrorCode(error);
+      aiError = getErrorMessage(error, "Connection failed");
+      if (code === "ECONNREFUSED") {
         aiError = "Connection refused - AI service may be down";
-      } else if (error.code === "ETIMEDOUT") {
+      } else if (code === "ETIMEDOUT") {
         aiError = "Connection timeout - AI service may be slow or unreachable";
       }
       testResults.health_check = {
         success: false,
         error: aiError,
-        code: error.code
+        code
       };
     }
 
@@ -242,11 +244,11 @@ router.get(
           score: testResponse.data.score,
           decision: testResponse.data.decision
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         testResults.evaluate_cv_test = {
           success: false,
-          error: error.message || "Test failed",
-          code: error.code
+          error: getErrorMessage(error, "Test failed"),
+          code: getErrorCode(error)
         };
       }
     }
@@ -271,11 +273,11 @@ router.get(
           questions_count: testResponse.data.questions?.length || 0,
           has_questions: Array.isArray(testResponse.data.questions) && testResponse.data.questions.length > 0
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         testResults.generate_quiz_test = {
           success: false,
-          error: error.message || "Test failed",
-          code: error.code
+          error: getErrorMessage(error, "Test failed"),
+          code: getErrorCode(error)
         };
       }
     }
@@ -320,7 +322,7 @@ router.get(
     let aiHealthy = false;
     let aiPingTime = 0;
     let aiError: string | null = null;
-    let aiServiceInfo: any = null;
+    let aiServiceInfo: Record<string, unknown> | null = null;
 
     if (Env.AI_SERVICE_URL && Env.AI_SERVICE_ENABLED) {
       try {
@@ -331,22 +333,25 @@ router.get(
         aiPingTime = Date.now() - startTime;
 
         if (response.status === 200 && response.data) {
-          aiHealthy = response.data.status === "healthy" || response.data.status === "degraded";
+          const data = response.data as Record<string, unknown>;
+          aiHealthy = data.status === "healthy" || data.status === "degraded";
+          const aiService = data.ai_service as Record<string, unknown> | undefined;
           aiServiceInfo = {
-            status: response.data.status,
-            service: response.data.service,
-            version: response.data.version,
-            environment: response.data.environment,
-            ai_service: response.data.ai_service,
-            cohere_configured: response.data.ai_service?.cohere_configured || false
+            status: data.status,
+            service: data.service,
+            version: data.version,
+            environment: data.environment,
+            ai_service: aiService,
+            cohere_configured: aiService?.cohere_configured ?? false
           };
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         aiHealthy = false;
-        aiError = error.message || "Connection failed";
-        if (error.code === "ECONNREFUSED") {
+        const code = getErrorCode(error);
+        aiError = getErrorMessage(error, "Connection failed");
+        if (code === "ECONNREFUSED") {
           aiError = "Connection refused - AI service may be down";
-        } else if (error.code === "ETIMEDOUT") {
+        } else if (code === "ETIMEDOUT") {
           aiError = "Connection timeout - AI service may be slow or unreachable";
         }
       }

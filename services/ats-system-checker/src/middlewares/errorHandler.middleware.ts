@@ -7,30 +7,33 @@ export const errorHandler: ErrorRequestHandler = (
   req,
   res,
   next
-): any => {
+): void => {
   console.error(`Error occurred on PATH: ${req.path}`, error);
 
   if (error instanceof ZodError) {
-    return formatZodError(res, error);
+    formatZodError(res, error);
+    return;
   }
 
   if (error instanceof Error.CastError) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Invalid data type",
       error: `Invalid value '${error.value}' for field '${error.path}'`,
     });
+    return;
   }
 
   if (error instanceof Error.ValidationError) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Validation failed",
       error: error.message,
     });
+    return;
   }
 
-  return res.status(500).json({
+  res.status(500).json({
     message: "Internal Server Error",
-    error: error?.message || "Unknown error occurred",
+    error: error instanceof Error ? error.message : "Unknown error occurred",
   });
 };
 

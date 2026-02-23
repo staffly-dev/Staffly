@@ -44,10 +44,11 @@ yarn-error.log*
 dist/
 build/
 
-# Environment variables
+# Environment variables (never commit secrets)
 .env
 .env.local
 .env.*.local
+.env.production
 
 # IDE
 .vscode/

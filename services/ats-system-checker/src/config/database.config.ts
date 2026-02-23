@@ -3,11 +3,11 @@ import { Env } from "./env.config";
 
 // Suppress Mongoose duplicate index warnings
 const originalWarn = process.emitWarning;
-process.emitWarning = function (warning: string | Error, ...args: any[]) {
-  if (warning && typeof warning === 'object' && 'name' in warning && warning.name === 'MongooseWarning') {
-    return; // Suppress Mongoose warnings
+process.emitWarning = function (warning: string | Error, ...args: unknown[]): void {
+  if (warning && typeof warning === "object" && "name" in warning && (warning as { name: string }).name === "MongooseWarning") {
+    return;
   }
-  return (originalWarn as any).apply(process, [warning, ...args]);
+  Reflect.apply(originalWarn, process, [warning, ...args]);
 };
 
 const connectDatabase = async () => {
