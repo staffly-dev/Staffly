@@ -245,9 +245,15 @@ export class QuizController {
         });
       }
 
+      // Strip correct_answer from questions so it is never sent to the client (prevents cheating via Network tab)
+      const questionsForClient = (quiz_session.questions as any[]).map((q: any) => {
+        const { correct_answer: _omit, ...rest } = q;
+        return rest;
+      });
+
       const response: QuizDisplayResponse = {
         quiz_session_id: session_id as string,
-        questions: quiz_session.questions,
+        questions: questionsForClient,
         total_questions: quiz_session.total_questions,
         time_limit_seconds: quiz_session.time_limit_seconds,
         pass_threshold: quiz_session.pass_threshold,

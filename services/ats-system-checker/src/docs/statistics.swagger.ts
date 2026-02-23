@@ -120,7 +120,7 @@
  * /ats-checker/user-statistics:
  *   get:
  *     summary: Get user statistics
- *     description: Retrieve statistics for a specific user
+ *     description: Retrieve statistics for the authenticated user (via X-User-Id). Returns totals and rates for applications, evaluations, and quiz.
  *     tags: [Statistics]
  *     parameters:
  *       - in: header
@@ -128,7 +128,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: User ID (24 character MongoDB ObjectId)
+ *         description: User ID (24 character MongoDB ObjectId) - statistics are returned for this user
  *       - in: header
  *         name: X-Created-By
  *         required: false
@@ -137,7 +137,7 @@
  *         description: Created by user ID (optional, defaults to X-User-Id)
  *     responses:
  *       200:
- *         description: User statistics
+ *         description: User statistics for the given user
  *         content:
  *           application/json:
  *             schema:
@@ -145,27 +145,29 @@
  *               properties:
  *                 user_id:
  *                   type: string
- *                 total_jobs:
- *                   type: number
- *                   example: 25
- *                 active_jobs:
- *                   type: number
- *                   example: 20
+ *                   example: "699b2eadee07dc8bae1ae233"
+ *                 created_by:
+ *                   type: string
+ *                   example: "699b2eadee07dc8bae1ae233"
  *                 total_applications:
  *                   type: number
- *                   example: 150
- *                 pending_applications:
+ *                   example: 2
+ *                 total_evaluations:
  *                   type: number
- *                   example: 30
- *                 accepted_applications:
+ *                   example: 0
+ *                 acceptance_rate:
  *                   type: number
- *                   example: 50
- *                 rejected_applications:
+ *                   example: 0
+ *                 average_score:
  *                   type: number
- *                   example: 70
- *                 average_evaluation_score:
+ *                   example: 0
+ *                 quiz_pass_rate:
  *                   type: number
- *                   example: 78.5
+ *                   example: 0
+ *                 daily_stats:
+ *                   type: object
+ *                   additionalProperties: true
+ *                   example: {}
  *       401:
  *         description: Unauthorized
  *         content:

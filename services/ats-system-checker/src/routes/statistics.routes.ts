@@ -123,8 +123,17 @@ router.get(
     const databaseService = get_database_service(req);
     const controller = new StatisticsController(databaseService);
     const stats = await controller.get_user_statistics(x_user_id, created_by);
-    
-    return res.status(200).json(stats);
+
+    return res.status(200).json({
+      user_id: stats.user_id,
+      created_by: stats.created_by,
+      total_applications: stats.total_applications,
+      total_evaluations: stats.total_evaluations,
+      acceptance_rate: stats.acceptance_rate,
+      average_score: stats.average_score,
+      quiz_pass_rate: stats.quiz_pass_rate ?? 0,
+      daily_stats: stats.daily_stats ?? {}
+    });
   })
 );
 

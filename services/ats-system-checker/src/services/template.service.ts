@@ -156,7 +156,12 @@ export class TemplateService {
         TOTAL_QUESTIONS: quiz_session.questions.length,
         PASS_THRESHOLD: quiz_session.pass_threshold,
         QUIZ_QUESTIONS: questions_html,
-        QUIZ_DATA: JSON.stringify(quiz_session.questions),
+        QUIZ_DATA: JSON.stringify(
+          quiz_session.questions.map((q: any) => {
+            const { correct_answer: _omit, ...rest } = q;
+            return rest;
+          })
+        ),
         CANDIDATE_EMAIL: quiz_session.candidate_email || "",
         APPLICATION_ID: application_id || ""
       };
