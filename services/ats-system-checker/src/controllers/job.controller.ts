@@ -475,7 +475,8 @@ export class JobController {
           candidate_email || "",
           job_posting.quiz_time_limit || 300,
           job_posting.quiz_pass_threshold || 7,
-          job_posting.owner_user_id
+          job_posting.owner_user_id,
+          application.application_id
         );
 
         quiz_link = `${Env.FRONTEND_URL_QUIZ}/quiz/${quiz_session._id}`;

@@ -230,7 +230,8 @@ export class DatabaseService {
     candidate_email?: string,
     time_limit_seconds: number = 300,
     pass_threshold: number = 7,
-    created_by?: string
+    created_by?: string,
+    application_id?: string
   ): Promise<IQuizSession> {
     const job_description_hash = this._generate_hash(job_description);
 
@@ -241,6 +242,7 @@ export class DatabaseService {
       total_questions: questions.length,
       associated_cv_filename,
       candidate_email,
+      application_id,
       time_limit_seconds,
       pass_threshold,
       status: "GENERATED",
@@ -307,6 +309,13 @@ export class DatabaseService {
 
   async get_quiz_result_by_session_id(quiz_session_id: string): Promise<IQuizResult | null> {
     return await QuizResult.findOne({ quiz_session_id }).sort({ submitted_at: -1 }).exec();
+  }
+
+  /** Get quiz result for an application (if the quiz session was linked to this application_id). */
+  async get_quiz_result_by_application_id(application_id: string): Promise<IQuizResult | null> {
+    const session = await QuizSession.findOne({ application_id }).sort({ created_at: -1 }).exec();
+    if (!session) return null;
+    return await this.get_quiz_result_by_session_id(session._id.toString());
   }
 
   // Email Notification methods

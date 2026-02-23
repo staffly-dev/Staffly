@@ -74,6 +74,13 @@ export class ApplicationController {
       
       const cv_filename = this._fix_cv_filename_url(application.cv_filename);
       const s3_key = this._extract_s3_key(application.cv_filename);
+
+      // Resolve quiz score from application or from linked quiz result
+      let quiz_score = application.quiz_score;
+      if (quiz_score === undefined || quiz_score === null) {
+        const quiz_result = await this.database_service.get_quiz_result_by_application_id(application.application_id);
+        quiz_score = quiz_result?.score;
+      }
       
       const response: SingleApplicationResponse = {
         application_id: application.application_id,
@@ -84,7 +91,7 @@ export class ApplicationController {
         s3_key,
         decision: application.decision || "PENDING",
         job_id: application.job_id,
-        quiz_score: application.quiz_score,
+        quiz_score,
         status: application.status
       };
       

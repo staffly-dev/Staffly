@@ -85,34 +85,37 @@
  *         description: Application ID
  *     responses:
  *       200:
- *         description: Application details
+ *         description: Application details (includes quiz_score when the candidate took the quiz)
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     job_id:
- *                       type: string
- *                     candidate_email:
- *                       type: string
- *                     candidate_name:
- *                       type: string
- *                     cv_file_url:
- *                       type: string
- *                     status:
- *                       type: string
- *                     evaluation_score:
- *                       type: number
- *                     quiz_score:
- *                       type: number
+ *                 application_id:
+ *                   type: string
+ *                   example: "9479e0cc-a84d-46ab-83c9-d55756fa5fc8"
+ *                 candidate_email:
+ *                   type: string
+ *                 candidate_name:
+ *                   type: string
+ *                 cv_score:
+ *                   type: number
+ *                 cv_filename:
+ *                   type: string
+ *                   description: Full URL to the CV file
+ *                 s3_key:
+ *                   type: string
+ *                 decision:
+ *                   type: string
+ *                   example: "ACCEPTED"
+ *                 job_id:
+ *                   type: string
+ *                 quiz_score:
+ *                   type: number
+ *                   description: Quiz score (number of correct answers) when the candidate completed the quiz
+ *                   example: 7
+ *                 status:
+ *                   type: string
  *       404:
  *         description: Application not found
  *         content:

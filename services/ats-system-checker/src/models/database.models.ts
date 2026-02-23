@@ -60,6 +60,7 @@ export interface IQuizSession extends Document {
   job_description_hash: string;
   associated_cv_filename?: string;
   candidate_email?: string;
+  application_id?: string;
   questions: any[];
   total_questions: number;
   time_limit_seconds: number;
@@ -76,6 +77,7 @@ const QuizSessionSchema = new Schema<IQuizSession>({
   job_description_hash: { type: String, required: true, index: true },
   associated_cv_filename: { type: String },
   candidate_email: { type: String, index: true },
+  application_id: { type: String, index: true },
   questions: { type: [{}], required: true },
   total_questions: { type: Number, required: true },
   time_limit_seconds: { type: Number, default: 300 },
@@ -89,6 +91,7 @@ const QuizSessionSchema = new Schema<IQuizSession>({
 
 QuizSessionSchema.index({ job_description_hash: 1 });
 QuizSessionSchema.index({ candidate_email: 1 });
+QuizSessionSchema.index({ application_id: 1 });
 QuizSessionSchema.index({ status: 1 });
 QuizSessionSchema.index({ created_at: -1 });
 QuizSessionSchema.index({ created_by: 1 });
@@ -234,7 +237,7 @@ const ApplicationSchema = new Schema<IApplication>({
   cv_filename: { type: String, required: true },
   cv_score: { type: Number, min: 0, max: 100, index: true },
   decision: { type: String },
-  quiz_score: { type: Number, min: 0, max: 10 },
+  quiz_score: { type: Number, min: 0, max: 100 },
   status: { type: String, default: "SUBMITTED", index: true },
   submitted_at: { type: Date, default: Date.now, index: true },
   interview_date: { type: String },

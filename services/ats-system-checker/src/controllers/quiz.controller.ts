@@ -103,6 +103,12 @@ export class QuizController {
         completed_at: new Date()
       });
 
+      // Persist quiz score on the application when linked
+      const application_id = (quiz_session as any).application_id;
+      if (application_id) {
+        await this.database_service.update_application(application_id, { quiz_score: score });
+      }
+
       // Get job posting info for email
       let job_title = "Job Position";
       if (quiz_session.job_description) {
