@@ -24,14 +24,14 @@ export interface ICVEvaluation extends Document {
 }
 
 const CVEvaluationSchema = new Schema<ICVEvaluation>({
-  filename: { type: String, required: true, index: true },
-  job_description_hash: { type: String, required: true, index: true },
+  filename: { type: String, required: true },
+  job_description_hash: { type: String, required: true },
   job_description: { type: String, required: true },
   decision: { type: String, required: true, enum: Object.values(EvaluationDecision) },
   score: { type: Number, required: true, min: 0, max: 100 },
   evaluation_text: { type: String, required: true },
   cv_text_length: { type: Number, required: true },
-  email: { type: String, index: true },
+  email: { type: String },
   technical_skills_score: { type: Number, min: 0, max: 25 },
   experience_score: { type: Number, min: 0, max: 25 },
   education_score: { type: Number, min: 0, max: 15 },
@@ -41,7 +41,7 @@ const CVEvaluationSchema = new Schema<ICVEvaluation>({
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date },
   processing_time_ms: { type: Number },
-  created_by: { type: String, index: true }
+  created_by: { type: String }
 });
 
 CVEvaluationSchema.index({ filename: 1 });
@@ -74,19 +74,19 @@ export interface IQuizSession extends Document {
 
 const QuizSessionSchema = new Schema<IQuizSession>({
   job_description: { type: String, required: true },
-  job_description_hash: { type: String, required: true, index: true },
+  job_description_hash: { type: String, required: true },
   associated_cv_filename: { type: String },
-  candidate_email: { type: String, index: true },
-  application_id: { type: String, index: true },
+  candidate_email: { type: String },
+  application_id: { type: String },
   questions: { type: [{}], required: true },
   total_questions: { type: Number, required: true },
   time_limit_seconds: { type: Number, default: 300 },
   pass_threshold: { type: Number, default: 7 },
-  status: { type: String, default: "GENERATED", index: true },
+  status: { type: String, default: "GENERATED" },
   started_at: { type: Date },
   completed_at: { type: Date },
   created_at: { type: Date, default: Date.now },
-  created_by: { type: String, index: true }
+  created_by: { type: String }
 });
 
 QuizSessionSchema.index({ job_description_hash: 1 });
@@ -115,18 +115,18 @@ export interface IQuizResult extends Document {
 }
 
 const QuizResultSchema = new Schema<IQuizResult>({
-  quiz_session_id: { type: String, required: true, index: true },
-  candidate_email: { type: String, index: true },
+  quiz_session_id: { type: String, required: true },
+  candidate_email: { type: String },
   associated_cv_filename: { type: String },
   answers: { type: [Number], required: true },
   score: { type: Number, required: true },
   total_questions: { type: Number, required: true },
   percentage: { type: Number, required: true },
-  status: { type: String, required: true, index: true },
+  status: { type: String, required: true },
   time_taken_seconds: { type: Number },
   submitted_at: { type: Date, default: Date.now },
   question_analysis: { type: [Schema.Types.Mixed] },
-  created_by: { type: String, index: true }
+  created_by: { type: String }
 });
 
 QuizResultSchema.index({ quiz_session_id: 1 });
@@ -170,14 +170,14 @@ export interface IJobPosting extends Document {
 }
 
 const JobPostingSchema = new Schema<IJobPosting>({
-  title: { type: String, required: true, index: true },
+  title: { type: String, required: true },
   description: { type: String, required: true },
   required_skills: { type: [String], default: [] },
   additional_details: { type: String },
-  job_id: { type: String, required: true, unique: true, sparse: true, index: true },
-  description_hash: { type: String, required: true, index: true },
-  owner_user_id: { type: String, index: true },
-  owner_username: { type: String, index: true },
+  job_id: { type: String, required: true, unique: true, sparse: true },
+  description_hash: { type: String, required: true },
+  owner_user_id: { type: String },
+  owner_username: { type: String },
   evaluation_threshold: { type: Number, default: 70, min: 0, max: 100 },
   quiz_required: { type: Boolean, default: true },
   quiz_pass_threshold: { type: Number, default: 7, min: 0, max: 10 },
@@ -196,10 +196,9 @@ const JobPostingSchema = new Schema<IJobPosting>({
   average_score: { type: Number, default: 0.0 },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date },
-  is_active: { type: Boolean, default: true, index: true }
+  is_active: { type: Boolean, default: true }
 });
 
-JobPostingSchema.index({ job_id: 1 }, { unique: true, sparse: true });
 JobPostingSchema.index({ title: 1 });
 JobPostingSchema.index({ description_hash: 1 });
 JobPostingSchema.index({ is_active: 1 });
@@ -230,16 +229,16 @@ export interface IApplication extends Document {
 }
 
 const ApplicationSchema = new Schema<IApplication>({
-  application_id: { type: String, required: true, unique: true, sparse: true, index: true },
-  job_id: { type: String, required: true, index: true },
-  candidate_email: { type: String, index: true },
+  application_id: { type: String, required: true, unique: true, sparse: true },
+  job_id: { type: String, required: true },
+  candidate_email: { type: String },
   candidate_name: { type: String },
   cv_filename: { type: String, required: true },
-  cv_score: { type: Number, min: 0, max: 100, index: true },
+  cv_score: { type: Number, min: 0, max: 100 },
   decision: { type: String },
   quiz_score: { type: Number, min: 0, max: 100 },
-  status: { type: String, default: "SUBMITTED", index: true },
-  submitted_at: { type: Date, default: Date.now, index: true },
+  status: { type: String, default: "SUBMITTED" },
+  submitted_at: { type: Date, default: Date.now },
   interview_date: { type: String },
   interview_time: { type: String },
   interview_type: { type: String },
@@ -248,7 +247,6 @@ const ApplicationSchema = new Schema<IApplication>({
   interview_scheduled_at: { type: Date }
 });
 
-ApplicationSchema.index({ application_id: 1 }, { unique: true, sparse: true });
 ApplicationSchema.index({ job_id: 1 });
 ApplicationSchema.index({ candidate_email: 1 });
 ApplicationSchema.index({ status: 1 });
@@ -278,7 +276,7 @@ export interface ISystemMetrics extends Document {
 }
 
 const SystemMetricsSchema = new Schema<ISystemMetrics>({
-  date: { type: String, required: true, unique: true, index: true },
+  date: { type: String, required: true, unique: true },
   evaluations_count: { type: Number, default: 0 },
   quizzes_generated: { type: Number, default: 0 },
   quizzes_completed: { type: Number, default: 0 },
@@ -296,7 +294,6 @@ const SystemMetricsSchema = new Schema<ISystemMetrics>({
   updated_at: { type: Date }
 });
 
-SystemMetricsSchema.index({ date: 1 }, { unique: true });
 SystemMetricsSchema.index({ created_at: -1 });
 
 export const SystemMetrics = mongoose.model<ISystemMetrics>("SystemMetrics", SystemMetricsSchema, "system_metrics");
@@ -317,13 +314,13 @@ export interface IEmailNotification extends Document {
 }
 
 const EmailNotificationSchema = new Schema<IEmailNotification>({
-  recipient_email: { type: String, required: true, index: true },
-  notification_type: { type: String, required: true, index: true },
+  recipient_email: { type: String, required: true },
+  notification_type: { type: String, required: true },
   subject: { type: String, required: true },
   body: { type: String, required: true },
   cv_evaluation_id: { type: String },
   quiz_result_id: { type: String },
-  status: { type: String, default: "PENDING", index: true },
+  status: { type: String, default: "PENDING" },
   sent_at: { type: Date },
   error_message: { type: String },
   retry_count: { type: Number, default: 0 },

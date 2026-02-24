@@ -1,3 +1,10 @@
+// Suppress Mongoose duplicate-index warnings so startup shows only the banner
+const origWarn = console.warn;
+console.warn = (...args: unknown[]) => {
+  if (args[0] && typeof args[0] === "string" && args[0].includes("[MONGOOSE]")) return;
+  origWarn.apply(console, args);
+};
+
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
