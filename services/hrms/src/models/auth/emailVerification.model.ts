@@ -42,9 +42,8 @@ const emailVerificationSchema = new Schema<EmailVerificationDocument>(
 emailVerificationSchema.index({ email: 1, verificationCode: 1 });
 emailVerificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-const EmailVerificationModel = mongoose.model<EmailVerificationDocument>(
-  "EmailVerification",
-  emailVerificationSchema
-);
+const EmailVerificationModel =
+  (mongoose.models.EmailVerification as mongoose.Model<EmailVerificationDocument>) ||
+  mongoose.model<EmailVerificationDocument>("EmailVerification", emailVerificationSchema);
 
 export default EmailVerificationModel;

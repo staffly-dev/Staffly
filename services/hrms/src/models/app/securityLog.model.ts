@@ -20,4 +20,8 @@ const SecurityLogSchema = new Schema<ISecurityLog>({
   details: { type: Schema.Types.Mixed }
 });
 
-export default mongoose.model<ISecurityLog>('SecurityLog', SecurityLogSchema); 
+const SecurityLogModel =
+  (mongoose.models.SecurityLog as mongoose.Model<ISecurityLog>) ||
+  mongoose.model<ISecurityLog>('SecurityLog', SecurityLogSchema);
+
+export default SecurityLogModel;

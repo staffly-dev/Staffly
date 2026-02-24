@@ -39,9 +39,8 @@ const refreshTokenSchema = new Schema<RefreshTokenDocument>({
 
 refreshTokenSchema.index({ jti: 1, userId: 1 });
 
-const RefreshTokenModel = mongoose.model<RefreshTokenDocument>(
-  "RefreshToken",
-  refreshTokenSchema
-);
+const RefreshTokenModel =
+  (mongoose.models.RefreshToken as mongoose.Model<RefreshTokenDocument>) ||
+  mongoose.model<RefreshTokenDocument>("RefreshToken", refreshTokenSchema);
 
 export default RefreshTokenModel;

@@ -42,9 +42,8 @@ const passwordResetSchema = new Schema<PasswordResetDocument>(
 passwordResetSchema.index({ email: 1, resetCode: 1 });
 passwordResetSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-const PasswordResetModel = mongoose.model<PasswordResetDocument>(
-  "PasswordReset",
-  passwordResetSchema
-);
+const PasswordResetModel =
+  (mongoose.models.PasswordReset as mongoose.Model<PasswordResetDocument>) ||
+  mongoose.model<PasswordResetDocument>("PasswordReset", passwordResetSchema);
 
 export default PasswordResetModel;

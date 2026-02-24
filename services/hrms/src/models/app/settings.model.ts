@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import mongoose, { Schema, model, Document, Types } from 'mongoose';
 
 export interface INotificationSettings {
   email: boolean;
@@ -131,4 +131,8 @@ const settingsSchema = new Schema<ISettings>({
   toObject: { virtuals: true }
 });
 
-export default model<ISettings>('Settings', settingsSchema);
+const SettingsModel =
+  (mongoose.models.Settings as mongoose.Model<ISettings>) ||
+  model<ISettings>('Settings', settingsSchema);
+
+export default SettingsModel;

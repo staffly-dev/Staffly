@@ -135,6 +135,8 @@ const employeeSchema = new Schema<EmployeeDocument>({
   },
 }, { timestamps: true });
 
-const EmployeeModel = mongoose.model<EmployeeDocument>("Employee", employeeSchema);
+const EmployeeModel =
+  (mongoose.models.Employee as mongoose.Model<EmployeeDocument>) ||
+  mongoose.model<EmployeeDocument>("Employee", employeeSchema);
 
 export default EmployeeModel; 
