@@ -44,13 +44,9 @@ const CVEvaluationSchema = new Schema<ICVEvaluation>({
   created_by: { type: String }
 });
 
-CVEvaluationSchema.index({ filename: 1 });
 CVEvaluationSchema.index({ decision: 1 });
 CVEvaluationSchema.index({ score: -1 });
 CVEvaluationSchema.index({ created_at: -1 });
-CVEvaluationSchema.index({ job_description_hash: 1 });
-CVEvaluationSchema.index({ email: 1 });
-CVEvaluationSchema.index({ created_by: 1 });
 
 export const CVEvaluation =
   (mongoose.models.CVEvaluation as mongoose.Model<ICVEvaluation>) ||
@@ -91,12 +87,7 @@ const QuizSessionSchema = new Schema<IQuizSession>({
   created_by: { type: String }
 });
 
-QuizSessionSchema.index({ job_description_hash: 1 });
-QuizSessionSchema.index({ candidate_email: 1 });
-QuizSessionSchema.index({ application_id: 1 });
-QuizSessionSchema.index({ status: 1 });
 QuizSessionSchema.index({ created_at: -1 });
-QuizSessionSchema.index({ created_by: 1 });
 
 export const QuizSession =
   (mongoose.models.QuizSession as mongoose.Model<IQuizSession>) ||
@@ -133,12 +124,8 @@ const QuizResultSchema = new Schema<IQuizResult>({
   created_by: { type: String }
 });
 
-QuizResultSchema.index({ quiz_session_id: 1 });
-QuizResultSchema.index({ candidate_email: 1 });
-QuizResultSchema.index({ status: 1 });
 QuizResultSchema.index({ score: -1 });
 QuizResultSchema.index({ submitted_at: -1 });
-QuizResultSchema.index({ created_by: 1 });
 
 export const QuizResult =
   (mongoose.models.QuizResult as mongoose.Model<IQuizResult>) ||
@@ -205,11 +192,6 @@ const JobPostingSchema = new Schema<IJobPosting>({
   is_active: { type: Boolean, default: true }
 });
 
-JobPostingSchema.index({ title: 1 });
-JobPostingSchema.index({ description_hash: 1 });
-JobPostingSchema.index({ is_active: 1 });
-JobPostingSchema.index({ owner_user_id: 1 });
-JobPostingSchema.index({ owner_username: 1 });
 JobPostingSchema.index({ created_at: -1 });
 
 export const JobPosting =
@@ -255,9 +237,6 @@ const ApplicationSchema = new Schema<IApplication>({
   interview_scheduled_at: { type: Date }
 });
 
-ApplicationSchema.index({ job_id: 1 });
-ApplicationSchema.index({ candidate_email: 1 });
-ApplicationSchema.index({ status: 1 });
 ApplicationSchema.index({ submitted_at: -1 });
 ApplicationSchema.index({ cv_score: -1 });
 
@@ -340,8 +319,6 @@ const EmailNotificationSchema = new Schema<IEmailNotification>({
 });
 
 EmailNotificationSchema.index({ recipient_email: 1 });
-EmailNotificationSchema.index({ status: 1 });
-EmailNotificationSchema.index({ notification_type: 1 });
 EmailNotificationSchema.index({ created_at: -1 });
 
 export const EmailNotification =
