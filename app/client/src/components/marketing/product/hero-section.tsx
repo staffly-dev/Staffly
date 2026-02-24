@@ -43,7 +43,7 @@ export default function HeroSection() {
           <div className="relative mx-auto max-w-6xl overflow-hidden px-4">
             <Image
               className="z-2 border-border/25 relative rounded-2xl border"
-              src="/imgs/frame.jpg"
+              src="/imgs/frame.png"
               alt="app screen"
               width={2796}
               height={2008}

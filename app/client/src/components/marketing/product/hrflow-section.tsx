@@ -35,7 +35,7 @@ export default function HRFlowSection() {
       title: "Contracts",
       description: "Digital contract management and signing",
       icon: <FileText className="size-5" />,
-      image: "/imgs/theManger.png",
+      image: "/imgs/people2.png",
     },
     {
       id: "salary",
@@ -49,14 +49,14 @@ export default function HRFlowSection() {
     //   title: 'Profile',
     //   description: 'Employee profiles and documents',
     //   icon: <User className="size-5" />,
-    //   image: '/imgs/frame.jpg',
+    //   image: '/imgs/frame.png',
     // },
     // {
     //   id: 'enps',
     //   title: 'eNPS',
     //   description: 'Employee satisfaction and feedback',
     //   icon: <BarChart2 className="size-5" />,
-    //   image: '/imgs/frame.jpg',
+    //   image: '/imgs/frame.png',
     // },
   ];
 
