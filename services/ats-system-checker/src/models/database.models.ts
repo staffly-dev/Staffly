@@ -52,7 +52,9 @@ CVEvaluationSchema.index({ job_description_hash: 1 });
 CVEvaluationSchema.index({ email: 1 });
 CVEvaluationSchema.index({ created_by: 1 });
 
-export const CVEvaluation = mongoose.model<ICVEvaluation>("CVEvaluation", CVEvaluationSchema, "cv_evaluations");
+export const CVEvaluation =
+  (mongoose.models.CVEvaluation as mongoose.Model<ICVEvaluation>) ||
+  mongoose.model<ICVEvaluation>("CVEvaluation", CVEvaluationSchema, "cv_evaluations");
 
 // QuizSession Model
 export interface IQuizSession extends Document {
@@ -96,7 +98,9 @@ QuizSessionSchema.index({ status: 1 });
 QuizSessionSchema.index({ created_at: -1 });
 QuizSessionSchema.index({ created_by: 1 });
 
-export const QuizSession = mongoose.model<IQuizSession>("QuizSession", QuizSessionSchema, "quiz_sessions");
+export const QuizSession =
+  (mongoose.models.QuizSession as mongoose.Model<IQuizSession>) ||
+  mongoose.model<IQuizSession>("QuizSession", QuizSessionSchema, "quiz_sessions");
 
 // QuizResult Model
 export interface IQuizResult extends Document {
@@ -136,7 +140,9 @@ QuizResultSchema.index({ score: -1 });
 QuizResultSchema.index({ submitted_at: -1 });
 QuizResultSchema.index({ created_by: 1 });
 
-export const QuizResult = mongoose.model<IQuizResult>("QuizResult", QuizResultSchema, "quiz_results");
+export const QuizResult =
+  (mongoose.models.QuizResult as mongoose.Model<IQuizResult>) ||
+  mongoose.model<IQuizResult>("QuizResult", QuizResultSchema, "quiz_results");
 
 // JobPosting Model
 export interface IJobPosting extends Document {
@@ -206,7 +212,9 @@ JobPostingSchema.index({ owner_user_id: 1 });
 JobPostingSchema.index({ owner_username: 1 });
 JobPostingSchema.index({ created_at: -1 });
 
-export const JobPosting = mongoose.model<IJobPosting>("JobPosting", JobPostingSchema, "job_postings");
+export const JobPosting =
+  (mongoose.models.JobPosting as mongoose.Model<IJobPosting>) ||
+  mongoose.model<IJobPosting>("JobPosting", JobPostingSchema, "job_postings");
 
 // Application Model
 export interface IApplication extends Document {
@@ -253,7 +261,9 @@ ApplicationSchema.index({ status: 1 });
 ApplicationSchema.index({ submitted_at: -1 });
 ApplicationSchema.index({ cv_score: -1 });
 
-export const Application = mongoose.model<IApplication>("Application", ApplicationSchema, "applications");
+export const Application =
+  (mongoose.models.Application as mongoose.Model<IApplication>) ||
+  mongoose.model<IApplication>("Application", ApplicationSchema, "applications");
 
 // SystemMetrics Model
 export interface ISystemMetrics extends Document {
@@ -296,7 +306,9 @@ const SystemMetricsSchema = new Schema<ISystemMetrics>({
 
 SystemMetricsSchema.index({ created_at: -1 });
 
-export const SystemMetrics = mongoose.model<ISystemMetrics>("SystemMetrics", SystemMetricsSchema, "system_metrics");
+export const SystemMetrics =
+  (mongoose.models.SystemMetrics as mongoose.Model<ISystemMetrics>) ||
+  mongoose.model<ISystemMetrics>("SystemMetrics", SystemMetricsSchema, "system_metrics");
 
 // EmailNotification Model
 export interface IEmailNotification extends Document {
@@ -332,5 +344,7 @@ EmailNotificationSchema.index({ status: 1 });
 EmailNotificationSchema.index({ notification_type: 1 });
 EmailNotificationSchema.index({ created_at: -1 });
 
-export const EmailNotification = mongoose.model<IEmailNotification>("EmailNotification", EmailNotificationSchema, "email_notifications");
-
+export const EmailNotification =
+  (mongoose.models.EmailNotification as mongoose.Model<IEmailNotification>) ||
+  mongoose.model<IEmailNotification>("EmailNotification", EmailNotificationSchema, "email_notifications");
+ 
