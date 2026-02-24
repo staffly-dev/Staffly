@@ -35,7 +35,7 @@ export default function HRFlowSection() {
       title: "Contracts",
       description: "Digital contract management and signing",
       icon: <FileText className="size-5" />,
-      image: "/imgs/contracts.png",
+      image: "/imgs/theManger.png",
     },
     {
       id: "salary",
