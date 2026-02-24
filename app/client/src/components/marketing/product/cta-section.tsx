@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export default function CTASection() {
   return (
@@ -12,26 +12,18 @@ export default function CTASection() {
             Ready to transform your HR experience?
           </h2>
           <p className="text-lg mb-8">
-            Join thousands of businesses that trust Staffly HR to streamline their HR processes and boost team productivity.
+            Join thousands of businesses that trust Staffly HR to streamline
+            their HR processes and boost team productivity.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button
-              size="lg"
-              asChild
-            >
+            <Button size="lg" asChild>
               <Link href="/sign-up" className="flex items-center gap-2">
                 Get Started Now
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              asChild
-            >
-              <Link href="#">
-                Request a Demo
-              </Link>
+            <Button variant="outline" size="lg" asChild>
+              <Link href="#">Request a Demo</Link>
             </Button>
           </div>
         </div>

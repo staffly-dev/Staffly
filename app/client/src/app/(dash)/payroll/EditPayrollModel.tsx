@@ -63,10 +63,10 @@ export function EditPayrollModal({
   useEffect(() => {
     if (payroll) {
       reset({
-        employeeId: payroll.employeeId._id,
-        ctc: payroll.ctc,
-        salaryByMonth: payroll.salaryByMonth,
-        deduction: payroll.deduction || 0,
+        employeeId: payroll.employeeId,
+        ctc: Number(payroll.ctc) || 0,
+        salaryByMonth: Number(payroll.salaryByMonth) || 0,
+        deduction: payroll.deduction != null ? Number(payroll.deduction) : 0,
       });
     }
   }, [payroll, reset]);

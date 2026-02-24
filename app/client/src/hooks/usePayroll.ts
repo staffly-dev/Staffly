@@ -9,23 +9,24 @@ export interface CreatePayRollRequest {
   deduction: number;
 }
 
-interface Employee {
+export interface PayrollEmployee {
   _id: string;
   firstName: string;
   lastName: string;
-  profilePicture: string | null;
+  profilePicture?: string | null;
 }
 
 export interface Payroll {
   _id: string;
   employeeId: string;
-  employee: Employee;
-  ctc: number;
-  salaryByMonth: number;
-  deduction?: number;
+  employee: PayrollEmployee;
+  ctc: number | string;
+  salaryByMonth: number | string;
+  deduction?: number | string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
 }
 
 // interface PayrollResponse {
@@ -52,13 +53,45 @@ export const payrollKeys = {
   detail: (id: string) => [...payrollKeys.details(), id] as const,
 };
 
+// Normalize payroll from API (employeeId can be populated object or string)
+function normalizePayroll(p: Record<string, unknown>): Payroll {
+  const employeeId =
+    p.employeeId && typeof p.employeeId === "object"
+      ? (p.employeeId as { _id?: string })._id ?? ""
+      : String(p.employeeId ?? "");
+  const employee: PayrollEmployee =
+    p.employeeId && typeof p.employeeId === "object"
+      ? {
+          _id: (p.employeeId as { _id?: string })._id ?? "",
+          firstName: (p.employeeId as { firstName?: string }).firstName ?? "",
+          lastName: (p.employeeId as { lastName?: string }).lastName ?? "",
+          profilePicture:
+            (p.employeeId as { profilePicture?: string }).profilePicture ?? null,
+        }
+      : { _id: employeeId, firstName: "", lastName: "", profilePicture: null };
+
+  return {
+    _id: String(p._id ?? ""),
+    employeeId,
+    employee,
+    ctc: p.ctc ?? 0,
+    salaryByMonth: p.salaryByMonth ?? 0,
+    deduction: p.deduction,
+    status: String(p.status ?? "pending"),
+    createdAt: p.createdAt as string | undefined,
+    updatedAt: p.updatedAt as string | undefined,
+    createdBy: p.createdBy as string | undefined,
+  };
+}
+
 // Fetch all payrolls
 export const usePayrolls = () => {
   return useQuery({
     queryKey: payrollKeys.lists(),
     queryFn: async (): Promise<Payroll[]> => {
       const response = await axiosInstance.get("/hrms/payroll/getAllPayroll");
-      return response.data.payroll;
+      const raw = response.data.payroll ?? [];
+      return raw.map((p: Record<string, unknown>) => normalizePayroll(p));
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
@@ -73,7 +106,8 @@ export const usePayrollSearch = (params?: PayrollsSearchParams) => {
       const response = await axiosInstance.get("/hrms/payroll/search", {
         params,
       });
-      return response.data.payroll;
+      const raw = response.data.payroll ?? [];
+      return raw.map((p: Record<string, unknown>) => normalizePayroll(p));
     },
     enabled: !!params,
     staleTime: 5 * 60 * 1000, // 5 minutes

@@ -1,9 +1,9 @@
-'use client'
-import React from 'react'
-import Link from 'next/link'
-import { Rocket, Zap } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import Image from 'next/image'
+"use client";
+import React from "react";
+import Link from "next/link";
+import { Rocket, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export default function HeroSection() {
   return (
@@ -11,23 +11,22 @@ export default function HeroSection() {
       <div className="relative pt-24">
         <div className="mx-auto max-w-7xl px-6">
           <div className="max-w-3xl text-center sm:mx-auto lg:mr-auto lg:mt-0 lg:w-4/5">
-
-            <h1 className="mt-8 text-balance text-4xl font-semibold md:text-5xl xl:text-6xl xl:[line-height:1.125]">Simplify the way you manage</h1>
-            <p className="mx-auto mt-8 hidden max-w-2xl text-wrap text-lg sm:block">Because you deserve a solution that drives growth not holds you back.</p>
+            <h1 className="mt-8 text-balance text-4xl font-semibold md:text-5xl xl:text-6xl xl:[line-height:1.125]">
+              Simplify the way you manage
+            </h1>
+            <p className="mx-auto mt-8 hidden max-w-2xl text-wrap text-lg sm:block">
+              Because you deserve a solution that drives growth not holds you
+              back.
+            </p>
 
             <div className="mt-8 flex justify-center gap-4">
-              <Button
-                size="lg"
-                variant="outline"
-                asChild>
+              <Button size="lg" variant="outline" asChild>
                 <Link href="#">
                   <Rocket className="relative size-4" />
                   <span className="text-nowrap">Start Building</span>
                 </Link>
               </Button>
-              <Button
-                size="lg"
-                asChild>
+              <Button size="lg" asChild>
                 <Link href="#">
                   <Zap className="relative size-4" />
                   <span className="text-nowrap">Get Started</span>

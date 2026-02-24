@@ -5,14 +5,14 @@ const members = [
   {
     name: "Mazin Emad",
     role: "Frontend Developer",
-    avatar: "/avatars/Mazin Emad.webp",
+    avatar: "/avatars/IMG_8802.JPG",
     linkedin: "https://www.linkedin.com/in/mazin0emd",
     portfolio: "https://mazin-emad.netlify.app/",
   },
   {
     name: "Mohamed Abolyazeed",
     role: "Backend Developer",
-    avatar: "/avatars/Abolyazeed.jpg",
+    avatar: "/avatars/aboalyazeed2.jpg",
     linkedin:
       "https://www.linkedin.com/in/mohamed-abolyazeed-hashem-139ba0358/",
     portfolio: "http://abolyazeed.vercel.app/",

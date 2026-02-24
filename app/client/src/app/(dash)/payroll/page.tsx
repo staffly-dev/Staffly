@@ -28,13 +28,21 @@ export default function PayrollPage() {
   const { data, isLoading: isLoadingPayrolls, error } = usePayrolls();
   const { data: employees } = useEmployees();
 
-  // Use useMemo to prevent unnecessary recalculations
+  // Use useMemo - data already has normalized employee; fallback to employees list when empty
   const payrolls = useMemo(() => {
-    if (!data || !employees) return [];
+    if (!data) return [];
     return data.map((payroll) => {
-      const employee = employees.find(
-        (employee) => employee._id === payroll.employeeId
-      );
+      const fallback = employees?.find((e) => e._id === payroll.employeeId);
+      const employee = payroll.employee?.firstName
+        ? payroll.employee
+        : fallback
+          ? {
+              _id: fallback._id,
+              firstName: fallback.firstName,
+              lastName: fallback.lastName,
+              profilePicture: fallback.profilePicture ?? null,
+            }
+          : payroll.employee;
       return { ...payroll, employee };
     });
   }, [data, employees]);
@@ -181,28 +189,30 @@ function PayrollTable({ payrolls }: { payrolls: Payroll[] }) {
                   <Avatar className="h-8 w-8">
                     <AvatarImage
                       className="object-cover"
-                      src={payroll.employee.profilePicture || ""}
+                      src={payroll.employee?.profilePicture || ""}
                       alt={
-                        payroll.employee.firstName +
+                        (payroll.employee?.firstName ?? "") +
                         " " +
-                        payroll.employee.lastName
+                        (payroll.employee?.lastName ?? "")
                       }
                     />
                     <AvatarFallback>
-                      {payroll.employee?.firstName.charAt(0) +
-                        payroll.employee?.lastName.charAt(0)}
+                      {(payroll.employee?.firstName ?? "").charAt(0)}
+                      {(payroll.employee?.lastName ?? "").charAt(0) || "?"}
                     </AvatarFallback>
                   </Avatar>
-                  {payroll.employee.firstName + " " + payroll.employee.lastName}
+                  {(payroll.employee?.firstName ?? "") +
+                    " " +
+                    (payroll.employee?.lastName ?? "-")}
                 </div>
               </td>
-              <td>{payroll.ctc}</td>
-              <td>{payroll.salaryByMonth}</td>
-              <td>{payroll.deduction}</td>
+              <td>{String(payroll.ctc ?? "")}</td>
+              <td>{String(payroll.salaryByMonth ?? "")}</td>
+              <td>{payroll.deduction != null ? String(payroll.deduction) : "-"}</td>
               <td className="  px-4 py-2">
                 <span
                   className={`rounded-lg text-xs px-2 py-1 ${
-                    colors[payroll.status]
+                    colors[payroll.status as keyof typeof colors] ?? ""
                   }`}
                 >
                   {payroll.status}
