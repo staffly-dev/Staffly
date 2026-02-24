@@ -19,6 +19,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy so req.ip is set from X-Forwarded-For when behind API Gateway/reverse proxy
+app.set('trust proxy', 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

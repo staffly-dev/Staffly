@@ -49,15 +49,26 @@ export interface RateLimitInfo {
 }
 
 /**
+ * Get client IP from request (works behind proxy when trust proxy is set)
+ */
+function getClientIp(req: Request): string {
+  const forwarded = req.get('X-Forwarded-For');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip || (req.connection && req.connection.remoteAddress) || 'unknown';
+}
+
+/**
  * Default configuration
  */
 const DEFAULT_CONFIG: Required<RateLimitConfig> = {
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 100,
+  maxRequests: 500,
   redisClient: null as any,
   keyGenerator: (req: Request) => {
-    // Use IP address as default key
-    return req.ip || req.connection.remoteAddress || 'unknown';
+    const ip = getClientIp(req);
+    return `${ip}:${req.method}:${req.path}`;
   },
   handler: (req: Request, res: Response) => {
     res.status(429).json({
@@ -68,11 +79,13 @@ const DEFAULT_CONFIG: Required<RateLimitConfig> = {
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skipRoutes: [],
+  skipRoutes: [
+    '/hrms/auth/verify-token',
+  ],
   limits: {
-    default: 100,
-    authenticated: 200,
-    admin: 500,
+    default: 500,
+    authenticated: 1000,
+    admin: 2000,
   },
 };
 
@@ -176,7 +189,7 @@ export function createRateLimitMiddleware(
       if (data.count > limit) {
         res.set('Retry-After', retryAfter.toString());
         logSecurityEvent({
-          ip: req.ip || req.connection.remoteAddress || 'unknown',
+          ip: getClientIp(req),
           userAgent: req.get('User-Agent'),
           method: req.method,
           route: req.originalUrl || req.path,
