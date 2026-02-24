@@ -22,12 +22,6 @@ const nextConfig: NextConfig = {
         hostname: "**",
       },
     ],
-    localPatterns: [
-      {
-        pathname: "/imgs/**",
-        search: "",
-      },
-    ],
   },
 };
 
