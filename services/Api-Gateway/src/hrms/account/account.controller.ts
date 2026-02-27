@@ -15,10 +15,10 @@ import { UpdateAccountDto } from './dto/update-account.dto';
 import { firstValueFrom } from 'rxjs';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
-@Controller('api/v1/app/account')
+@Controller('api/v1/hrms/account')
 @UseGuards(JwtAuthGuard)
 export class AccountGatewayController {
-  constructor(private readonly accountService: AccountGatewayService) {}
+  constructor(private readonly accountService: AccountGatewayService) { }
 
   @Get('user/:userId')
   async findOne(@Param('userId') userId: string, @Request() req: any) {

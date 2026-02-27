@@ -18,7 +18,7 @@ import { EmployeesGatewayService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 
-@Controller('api/v1/app/employees')
+@Controller('api/v1/hrms/employees')
 @UseGuards(JwtAuthGuard)
 export class EmployeesGatewayController {
   constructor(private readonly employeesService: EmployeesGatewayService) {}
@@ -47,10 +47,9 @@ export class EmployeesGatewayController {
     return firstValueFrom(this.employeesService.findAll(userId));
   }
 
-  @Get('user/:userId/:id')
-  async findOne(
+  @Get('user/getAllEmployees/:userId')
+  async getAllEmployeesByUserId(
     @Param('userId') userId: string,
-    @Param('id') id: string,
     @Request() req: any,
   ) {
     if (req.user._id !== userId) {
@@ -58,13 +57,22 @@ export class EmployeesGatewayController {
         'Access denied: You can only access your own employees',
       );
     }
-    return firstValueFrom(this.employeesService.findOne(userId, id));
+    return firstValueFrom(this.employeesService.getAllEmployeesByUserId(userId));
   }
 
-  @Put('user/:userId/:id')
+  @Get('user/:userId')
+  async findOne(@Param('userId') userId: string, @Request() req: any) {
+    if (req.user._id !== userId) {
+      throw new ForbiddenException(
+        'Access denied: You can only access your own employees',
+      );
+    }
+    return firstValueFrom(this.employeesService.findOne(userId));
+  }
+
+  @Put('user/:userId')
   async update(
     @Param('userId') userId: string,
-    @Param('id') id: string,
     @Body() dto: UpdateEmployeeDto,
     @Request() req: any,
   ) {
@@ -73,20 +81,16 @@ export class EmployeesGatewayController {
         'Access denied: You can only update your own employees',
       );
     }
-    return firstValueFrom(this.employeesService.update(userId, id, dto));
+    return firstValueFrom(this.employeesService.update(userId, dto));
   }
 
-  @Delete('user/:userId/:id')
-  async remove(
-    @Param('userId') userId: string,
-    @Param('id') id: string,
-    @Request() req: any,
-  ) {
+  @Delete('user/:userId')
+  async remove(@Param('userId') userId: string, @Request() req: any) {
     if (req.user._id !== userId) {
       throw new ForbiddenException(
         'Access denied: You can only delete your own employees',
       );
     }
-    return firstValueFrom(this.employeesService.remove(userId, id));
+    return firstValueFrom(this.employeesService.remove(userId));
   }
 }

@@ -1,59 +1,70 @@
-# HRMS NestJS
+# HRMS NestJS Microservice
 
-Full NestJS port of the Staffly HRMS service. All features from the Express HRMS are implemented.
+Staffly's **HRMS** service implemented with NestJS as a **NATS microservice**.  
+It exposes message patterns consumed by the API Gateway (no public HTTP routes here).
 
 ## Setup
 
 ```bash
-cd services/hrms-nest
+cd services/hrms
 npm install
 ```
 
-Environment (copy from `services/hrms/.env` or root):
+Copy or create a `.env` in `services/hrms` with at least:
 
-- `PORT` – server port (default 4001)
-- `MONGO_URI_RMOTE` or `MONGODB_URI` – MongoDB connection
-- `JWT_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_SECRET`, `JWT_REFRESH_EXPIRES_IN`
-- `RESEND_API_KEY`, `EMAIL_FROM` – for auth emails
-- `CORS_ORIGIN` (optional)
+- **Core**
+  - `NODE_ENV` – e.g. `development` or `production`
+  - `NATS_URL` – NATS server URL (e.g. `nats://localhost:4222`)
+- **Database (MongoDB)**
+  - `MONGO_URI_LOCAL` – local MongoDB URI (used when `NODE_ENV=development`)
+  - `MONGO_URI_REMOTE` – remote MongoDB URI (used otherwise)
+  - `MONGO_DB_NAME` – database name
+- **JWT/Auth**
+  - `JWT_ACCESS_SECRET`, `JWT_ACCESS_EXPIRES_IN`
+  - `JWT_REFRESH_SECRET`, `JWT_REFRESH_EXPIRES_IN`
+- **Email (Resend)**
+  - `RESEND_API_KEY`, `EMAIL_FROM`
+- **AWS S3 (optional, for uploads)**
+  - `AWS_S3_REGION`, `AWS_S3_ACCESS_KEY_ID`, `AWS_S3_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET`
 
 ## Run
 
 ```bash
+# start NATS first, then run the service
 npm run start:dev
 ```
 
-- Base URL: `http://localhost:4001` (or your `PORT`)
-- Global prefix: `/hrms`
-- Swagger: `GET /hrms/api-docs`
+The service runs as a NestJS microservice and listens for **NATS messages**.  
+Health is exposed via the pattern `{ cmd: 'getHrmsHealth' }` handled in `AppController`.
 
-## API (all under `/hrms`)
+## Message Patterns
 
-| Area | Endpoints |
-|------|-----------|
-| **Health** | `GET /hrms/health` |
-| **Auth** | `POST /auth/register`, `POST /auth/verify-email`, `POST /auth/login`, `GET /auth/refresh`, `POST /auth/request-resetPass`, `POST /auth/verify-resetPass-code`, `POST /auth/reset-password`, `POST /auth/logout`, `POST /auth/logout-all`, `POST /auth/verify-token` |
-| **Users** | `GET /users/me` (Bearer) |
-| **Employees** | `POST /employees/addEmployee`, `GET /employees/getAllEmployees`, `GET /employees/getEmployee/:id`, `PUT /employees/updateEmployee/:id`, `DELETE /employees/deleteEmployee/:id` (Bearer) |
-| **Attendance** | `POST /attendance/checkin`, `GET /attendance/getAllAttendance`, `GET /attendance/getAttendance/:id`, `GET /attendance/search?firstName=&lastName=` (Bearer) |
-| **Payroll** | `POST /payroll/createPayroll`, `GET /payroll/getAllPayroll`, `GET /payroll/search?firstName=&lastName=`, `PUT /payroll/updatePayroll/:id`, `DELETE /payroll/deletePayroll/:id` (Bearer) |
-| **Dashboard** | `GET /dashboard`, `GET /dashboard/total-attendance` (Bearer) |
-| **Settings** | `GET /settings`, `PUT /settings`, `PATCH /settings/:section`, `DELETE /settings/reset` (Bearer) |
+These are the main patterns the API Gateway calls over NATS:
 
-Protected routes require `Authorization: Bearer <access_token>`.
+| Area | Pattern(s) |
+|------|------------|
+| **Health** | `{ cmd: 'getHrmsHealth' }` |
+| **Auth** | `{ cmd: 'register' }`, `{ cmd: 'verifyEmail' }`, `{ cmd: 'welcomeEmail' }`, `{ cmd: 'uploadProfilePicture' }`, `{ cmd: 'oAuthGoogleLogin' }`, `{ cmd: 'welcomeUserOAuthGoogle' }`, `{ cmd: 'login' }`, `{ cmd: 'refreshToken' }`, `{ cmd: 'logout' }`, `{ cmd: 'logoutAll' }`, `{ cmd: 'currentUser' }`, `{ cmd: 'requestResetPassword' }`, `{ cmd: 'verifyResetCode' }`, `{ cmd: 'resetPassword' }` |
+| **Employees** | `'hrms.employees.create'`, `'hrms.employees.findAll'`, `'hrms.employees.getAllEmployeesByUserId'`, `'hrms.employees.findOne'`, `'hrms.employees.update'`, `'hrms.employees.remove'` |
+| **Attendance** | `'hrms.attendance.checkin'`, `'hrms.attendance.findAll'`, `'hrms.attendance.findOne'`, `'hrms.attendance.search'` |
+| **Payroll** | `'hrms.payroll.create'`, `'hrms.payroll.findAll'`, `'hrms.payroll.search'`, `'hrms.payroll.update'`, `'hrms.payroll.remove'` |
+| **Dashboard** | `'hrms.dashboard.get'`, `'hrms.dashboard.totalAttendance'` |
+| **Settings** | `{ cmd: 'findOneSetting' }`, `{ cmd: 'updateSetting' }`, `{ cmd: 'deleteSetting' }` |
+| **Account** | `{ cmd: 'findAccount' }`, `{ cmd: 'updateAccount' }` |
+| **Billing** | `{ cmd: 'getUserBilling' }`, `{ cmd: 'updateUserBilling' }` |
 
 ## Structure
 
-- `src/main.ts` – bootstrap, global prefix `/hrms`, CORS, ValidationPipe, Swagger
-- `src/app.module.ts` – Config, Mongoose, Throttler, feature modules
-- `src/common/utils/bcrypt.ts` – hashing and device hash
-- `src/health/` – health check
-- `src/auth/` – auth (JWT access + refresh, email verification, password reset), guards, strategies, DTOs
-- `src/users/` – current user (GET /users/me)
-- `src/employees/` – employee CRUD
-- `src/attendance/` – check-in and attendance list/search
+- `src/app.module.ts` – Config, Mongo connection, and feature modules
+- `src/app.controller.ts` – basic HRMS health pattern
+- `src/common/config/*` – configuration and Mongo setup
+- `src/auth/` – auth flows, JWT, Google OAuth
+- `src/employees/` – employee CRUD and queries
+- `src/attendance/` – attendance check‑in, list, and search
 - `src/payroll/` – payroll CRUD and search
-- `src/dashboard/` – stats and total attendance
-- `src/settings/` – user settings (notifications, appearance, privacy, workspace)
+- `src/dashboard/` – HRMS dashboard statistics
+- `src/settings/` – user settings (theme, language, notification preferences)
+- `src/account/` – organization/account profile
+- `src/billing/` – subscription and billing details
 
-See repo root `REFACTOR-NESTJS.md` for the full NestJS migration plan.
+The API Gateway (`services/Api-Gateway`) is responsible for exposing public HTTP routes and translating them into these message patterns.

@@ -16,7 +16,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AttendanceGatewayService } from './attendance.service';
 import { CheckInDto } from './dto/checkin.dto';
 
-@Controller('api/v1/app/attendance')
+@Controller('api/v1/hrms/attendance')
 @UseGuards(JwtAuthGuard)
 export class AttendanceGatewayController {
   constructor(private readonly attendanceService: AttendanceGatewayService) {}
@@ -36,27 +36,16 @@ export class AttendanceGatewayController {
   }
 
   @Get('user/:userId')
-  async findAll(@Param('userId') userId: string, @Request() req: any) {
-    if (req.user._id !== userId) {
-      throw new ForbiddenException(
-        'Access denied: You can only access your own attendance records',
-      );
-    }
-    return firstValueFrom(this.attendanceService.findAll(userId));
-  }
-
-  @Get('user/:userId/:id')
-  async findOne(
+  async getEmployeeAccount(
     @Param('userId') userId: string,
-    @Param('id') id: string,
     @Request() req: any,
-  ) {
+  ): Promise<EmployeeAccount> {
     if (req.user._id !== userId) {
       throw new ForbiddenException(
-        'Access denied: You can only access your own attendance records',
+        'Access denied: You can only access your own employee account',
       );
     }
-    return firstValueFrom(this.attendanceService.findOne(userId, id));
+    return firstValueFrom(this.attendanceService.getEmployeeAccount(userId));
   }
 
   @Get('user/:userId/search')

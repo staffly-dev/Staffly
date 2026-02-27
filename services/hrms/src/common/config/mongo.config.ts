@@ -10,7 +10,7 @@ export const getMongoConfig = (
   const uri =
     backendEnv === 'development'
       ? configuration().MONGO_URI_LOCAL
-      : configuration().MONGO_URI_LOCAL;
+      : configuration().MONGO_URI_REMOTE;
 
   if (!uri) {
     throw new Error('MongoDB URI is not defined in environment variables');

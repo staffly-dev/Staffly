@@ -1,20 +1,20 @@
-# 🚀 Vonova API Gateway
+# 🚀 Staffly API Gateway
 
-> **The Central Nervous System of Vonova**  
+> **The Central Nervous System of Staffly**  
 > A powerful, secure, and intelligent API Gateway built with NestJS that orchestrates all microservices under one unified entry point.
 
 ---
 
 ## ✨ What is This?
 
-Imagine a **masterful conductor** 🎼 leading a symphony of microservices, or a **brilliant traffic controller** 🚦 managing the digital highways of your application. The Vonova API Gateway is exactly that – your intelligent orchestrator that:
+Imagine a **masterful conductor** 🎼 leading a symphony of microservices, or a **brilliant traffic controller** 🚦 managing the digital highways of your application. The Staffly API Gateway is exactly that – your intelligent orchestrator that:
 
 - 🎯 **Routes with Precision** - Like a GPS that never gets lost, intelligently directing every request to its perfect destination
 - 🔐 **Guards the Gates** - A digital bouncer that knows who's who, ensuring only the right people get through
 - 💫 **Transforms on the Fly** - A shape-shifting middleware that adapts requests and responses in real-time
 - 🌊 **Flows Like Water** - Seamlessly connecting services like rivers flowing into an ocean of functionality
 
-Built with NestJS, this gateway isn't just code – it's the **beating heart** 💓 of the Vonova ecosystem, pumping data, requests, and responses through every microservice with grace and precision.
+Built with NestJS, this gateway isn't just code – it's the **beating heart** 💓 of the Staffly ecosystem, pumping data, requests, and responses through every microservice with grace and precision.
 
 ---
 
@@ -37,7 +37,7 @@ Built with NestJS, this gateway isn't just code – it's the **beating heart** �
 
 ```bash
 # Choose your weapon of choice ⚔️
-npm install
+pnpm install
 # or
 bun install
 ```
@@ -48,36 +48,18 @@ bun install
 
 ```bash
 # 🛠️ Development Mode (with hot-reload magic ✨)
-npm run dev
+pnpm run dev
 # or
 bun run dev
 
 # 🏭 Production Mode (time to shine! 🌟)
-npm run build
-npm run start:prod
+pnpm run build
+pnpm run start:prod
 ```
 
 > 🚀 **Ready to launch?** The gateway will come alive and start orchestrating your microservices like a maestro! 🎼
 
 ---
-
-## 📁 Project Architecture
-
-```
-src/
-├── 🚪 main.ts                 # The grand entrance – where the magic begins ✨
-├── 🧩 app.module.ts            # The master blueprint – orchestrating all modules
-├── 📦 modules/                 # Feature modules (the building blocks 🧱)
-│   ├── 🔐 auth/                # The security fortress – authentication & authorization
-│   └── 🌉 gateway/             # The bridge builder – gateway & proxy logic
-├── 🔧 common/                  # The shared toolbox – utilities & cross-cutting concerns
-│   ├── 🛡️ guards/              # The sentinels – protecting routes like digital knights
-│   ├── 🚨 filters/             # The safety nets – catching exceptions gracefully
-│   ├── 🔄 middleware/          # The transformers – shaping requests & responses
-│   └── 🎮 controllers/         # The command center – health checks & status reports
-├── 📊 models/                  # The data architects – Mongoose schemas & data models
-└── ⚙️ config/                  # The control panel – configuration & environment setup
-```
 
 > 🏗️ **Architecture Insight**: Each folder is a carefully crafted piece of the puzzle, working together to create a seamless, powerful gateway experience!
 
@@ -85,7 +67,7 @@ src/
 
 ## 🗺️ API Routes Map
 
-> 🧭 **Your Navigation Guide**: Explore the digital landscape of Vonova's API Gateway. Every route is a journey, and we're here to guide you! 🗺️
+> 🧭 **Your Navigation Guide**: Explore the digital landscape of Staffly's API Gateway. Every route is a journey, and we're here to guide you! 🗺️
 
 ### 🔐 Authentication Hub (`/auth`)
 
@@ -109,15 +91,21 @@ The **security command center** 🛡️ – where identities are verified, token
 
 ---
 
-### 📱 App Service Routes (`/api/v1/app/*`)
+### 📱 HRMS Service Routes (`/api/v1/hrms/*`)
 
-The **user experience layer** 🎨 – proxied seamlessly to the app service like a teleportation portal:
+The **Staffly HRMS experience layer** 🎨 – routes proxied seamlessly to the HRMS microservice:
 
-- **Settings** → `/api/v1/app/settings/*` - 🎛️ Your personal control panel – customize your experience
-- **Account** → `/api/v1/app/account/*` - 👤 Your digital identity hub – manage your presence
-- **Billing** → `/api/v1/app/billing/*` - 💳 The payment portal – where subscriptions come to life
-- **Support** → `/api/v1/app/support/*` - 🎧 Your help desk – get assistance when you need it
-- **Feedback** → `/api/v1/app/feedback/*` - 💬 Your voice matters – share your thoughts and ideas
+- **Settings** → `/api/v1/hrms/settings/*` - **User-level preferences & localization**
+  - `GET /api/v1/hrms/settings/user/{userId}` – **Get current settings** for the authenticated user
+  - `PATCH /api/v1/hrms/settings/user/{userId}` – **Update settings** (e.g. `language`, `theme`, notification flags)
+- **Attendance** → `/api/v1/hrms/attendance/*` - **Employee attendance management**
+  - `POST /api/v1/hrms/attendance/user/{userId}/checkin` – Record a **check‑in** for one of your employees
+  - `GET /api/v1/hrms/attendance/user/{userId}` – Get **your employee account list** (employees under this user)
+  - `GET /api/v1/hrms/attendance/user/{userId}/search` – **Search attendance records** by employee `firstName`/`lastName`
+- **Account** → `/api/v1/hrms/account/*` - 👤 Your digital identity hub – manage organization and owner profile
+- **Billing** → `/api/v1/hrms/billing/*` - 💳 The payment portal – where subscriptions come to life
+- **Support** → `/api/v1/hrms/support/*` - 🎧 Your help desk – get assistance when you need it
+- **Feedback** → `/api/v1/hrms/feedback/*` - 💬 Your voice matters – share your thoughts and ideas
 
 ---
 
@@ -175,7 +163,7 @@ The **digital wellness center** 🏥 – keep your finger on the pulse of the en
 | `GET /` | 🏠 Gateway status & welcome – your first hello from the gateway |
 | `GET /services` | 📋 List all registered services – see who's in the orchestra |
 | `GET /services/status` | 📊 Health status of all services – the complete system vitals |
-| `GET /health` | 💓 Overall platform health check (public) – the heartbeat of Vonova |
+| `GET /health` | 💓 Overall platform health check (public) – the heartbeat of Staffly |
 
 ---
 
@@ -216,7 +204,7 @@ The gateway implements a **sophisticated authentication ballet** 🩰 – a chor
 3. **✍️ Signed Forwarding** - The secure handoff – signs and forwards auth context to downstream services with cryptographic precision
 4. **♻️ Auto Refresh** - The renewal magic – handles token refresh automatically, keeping you logged in without interruption
 
-> 💡 **Security Note**: Most routes require JWT authentication – think of it as a VIP pass to the Vonova ecosystem. Public routes (like health checks) are explicitly marked and open to all! 🎫
+> 💡 **Security Note**: Most routes require JWT authentication – think of it as a VIP pass to the Staffly ecosystem. Public routes (like health checks) are explicitly marked and open to all! 🎫
 
 ---
 
@@ -245,16 +233,16 @@ The **tech stack that powers the magic** ✨:
 
 ## 📝 License
 
-Part of the **Vonova project ecosystem** – a constellation of microservices working in perfect harmony. 🌌
+Part of the **Staffly project ecosystem** – a constellation of microservices working in perfect harmony. 🌌
 
 ---
 
 ## 🎉 Ready to Build?
 
-You're now equipped with everything you need to understand, deploy, and extend the Vonova API Gateway. Whether you're routing requests, securing endpoints, or monitoring services, remember: **every line of code is a step toward building something amazing!** 🚀
+You're now equipped with everything you need to understand, deploy, and extend the Staffly API Gateway. Whether you're routing requests, securing endpoints, or monitoring services, remember: **every line of code is a step toward building something amazing!** 🚀
 
 ---
 
-**Made with ❤️, ☕, and lots of 🎨 creativity for Vonova**
+**Made with ❤️, ☕, and lots of 🎨 creativity for Staffly**
 
 > 💫 *"In the world of microservices, the gateway is the bridge that connects everything – and this one is built to last."*
