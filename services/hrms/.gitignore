@@ -1,5 +1,9 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# IDE
+.vscode
+.cursor
+
 # dependencies
 /node_modules
 /.pnp
@@ -35,8 +39,8 @@ yarn-error.log*
 # local env files
 # do not commit any .env files to git, except for the .env.example file. https://create.t3.gg/en/usage/env-variables#using-environment-variables
 .env
-.env.production
 .env*.local
+.env.production
 
 # vercel
 .vercel
@@ -50,3 +54,7 @@ yarn-error.log*
 # temporary folders
 tasks/
 temp/
+
+# logs
+logs/
+*.log

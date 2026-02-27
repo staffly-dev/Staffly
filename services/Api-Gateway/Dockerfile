@@ -1,24 +1,38 @@
-# Use the official Bun image
-FROM oven/bun:1.1.13
+# Use Node.js LTS and install pnpm
+FROM node:20-alpine
+
+# Install pnpm
+RUN npm install -g pnpm
 
 # Set working directory
 WORKDIR /app
 
 # Copy package files first for layer caching
-COPY package.json bun.lock ./
+COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies (including devDependencies for TypeScript)
-RUN bun install
+# Install all dependencies (including dev for build)
+RUN pnpm install --frozen-lockfile
 
 # Copy all source files
 COPY src/ ./src/
-COPY tsconfig.json ./
+COPY tsconfig.json tsconfig.build.json nest-cli.json ./
 
 # Build the TypeScript project
-RUN bun run build && cp ./package.json ./dist/
+RUN pnpm run build
 
-# Expose the port your app runs on
+# Remove dev dependencies to reduce image size
+RUN pnpm prune --prod
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs && \
+  adduser --system --uid 1001 nestjs
+
+# Set proper permissions
+RUN chown -R nestjs:nodejs /app
+USER nestjs
+
+# Expose the port
 EXPOSE 4000
 
-# Start the compiled application
-CMD ["bun", "run", "start"]
+# Start the application
+CMD ["pnpm", "run", "start:prod"]

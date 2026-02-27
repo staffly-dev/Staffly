@@ -52,6 +52,7 @@ next-env.d.ts
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -77,3 +78,7 @@ yarn-error.log*
 # temporary folders
 tasks/
 temp/
+
+# Ats System Checker folders
+evaluations/
+uploads/
