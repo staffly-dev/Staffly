@@ -18,7 +18,7 @@ import { EmployeesGatewayService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 
-@Controller('api/v1/app/employees')
+@Controller('api/v1/hrms/employees')
 @UseGuards(JwtAuthGuard)
 export class EmployeesGatewayController {
   constructor(private readonly employeesService: EmployeesGatewayService) {}

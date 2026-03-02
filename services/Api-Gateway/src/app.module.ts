@@ -15,6 +15,10 @@ import { AttendanceGatewayModule } from './hrms/attendance/attendance.module';
 import { DashboardGatewayModule } from './hrms/dashboard/dashboard.module';
 import { EmployeesGatewayModule } from './hrms/employees/employees.module';
 import { PayrollGatewayModule } from './hrms/payroll/payroll.module';
+import { QuizGatewayModule } from './ats-system-checker/quiz/quiz.module';
+import { JobsGatewayModule } from './ats-system-checker/jobs/jobs.module';
+import { StatisticsGatewayModule } from './ats-system-checker/statistics/statistics.module';
+import { ApplicationsGatewayModule } from './ats-system-checker/applications/applications.module';
 
 @Module({
   imports: [
@@ -34,6 +38,11 @@ import { PayrollGatewayModule } from './hrms/payroll/payroll.module';
     EmployeesGatewayModule,
     PayrollGatewayModule,
     SettingsGatewayModule,
+    //* ATS Services
+    QuizGatewayModule,
+    JobsGatewayModule,
+    StatisticsGatewayModule,
+    ApplicationsGatewayModule,
     //* Generative AI Services
   ],
   controllers: [AppController],
@@ -47,7 +56,8 @@ export class AppModule {
       .apply(BotProtectionMiddleware)
       .exclude(
         { path: 'health', method: RequestMethod.GET },
-        { path: 'app/health', method: RequestMethod.GET },
+        { path: 'hrms/health', method: RequestMethod.GET },
+        { path: 'ats-checker/health', method: RequestMethod.GET },
       )
       .forRoutes('*');
   }

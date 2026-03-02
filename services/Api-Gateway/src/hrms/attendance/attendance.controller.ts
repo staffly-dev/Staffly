@@ -16,7 +16,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AttendanceGatewayService } from './attendance.service';
 import { CheckInDto } from './dto/checkin.dto';
 
-@Controller('api/v1/app/attendance')
+@Controller('api/v1/hrms/attendance')
 @UseGuards(JwtAuthGuard)
 export class AttendanceGatewayController {
   constructor(private readonly attendanceService: AttendanceGatewayService) {}

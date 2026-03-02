@@ -1,17 +1,21 @@
-import { BadRequestException, Controller, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  ForbiddenException,
+} from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { DatabaseService } from '../database/database.service';
 import { UserIdDto } from './dto/user-id.dto';
 import { UserStatsDto } from './dto/user-stats.dto';
+import { StatisticsService } from './statistics.service';
 
 @Controller()
 export class StatisticsController {
-  constructor(private db: DatabaseService) {}
+  constructor(private readonly statistics: StatisticsService) {}
 
   @MessagePattern('ats.statistics.get')
   async getStats() {
-    const evalStats = await this.db.getEvaluationStatistics();
-    const quizStats = await this.db.getQuizStatistics();
+    const evalStats = await this.statistics.getEvaluationStatistics();
+    const quizStats = await this.statistics.getQuizStatistics();
     return {
       total_applications: evalStats.total_evaluations || 0,
       total_evaluations: evalStats.total_evaluations || 0,
@@ -26,8 +30,9 @@ export class StatisticsController {
   async getQuizStats(@Payload() payload: UserIdDto) {
     const userId = payload?.user_id;
     if (userId && userId.length === 24 && /^[0-9a-f]{24}$/i.test(userId)) {
-      const userStats = await this.db.getUserQuizStatistics(userId);
-      const evalStats = await this.db.getUserEvaluationStatistics(userId);
+      const userStats = await this.statistics.getUserQuizStatistics(userId);
+      const evalStats =
+        await this.statistics.getUserEvaluationStatistics(userId);
       return {
         total_quizzes: userStats.total_quizzes,
         quiz_pass_rate: userStats.pass_rate,
@@ -37,39 +42,43 @@ export class StatisticsController {
         user_id: userId,
       };
     }
-    return this.db.getQuizStatistics();
+    return this.statistics.getQuizStatistics();
   }
 
   @MessagePattern('ats.statistics.jobs')
   async getJobStats(@Payload() payload: UserIdDto) {
     const userId = payload?.user_id;
     if (userId && userId.length === 24 && /^[0-9a-f]{24}$/i.test(userId)) {
-      const userJobs = await this.db.getAllJobPostings(userId, true);
-      const applications = await this.db.getAllApplications(userId);
+      const userJobs = await this.statistics.getAllJobPostings(userId, true);
+      const applications = await this.statistics.getAllApplications(userId);
       return {
         total_jobs: userJobs.length,
         total_applications: applications.length,
-        total_accepted: applications.filter((a) => a.status === 'ACCEPTED').length,
-        total_rejected: applications.filter((a) => a.status === 'REJECTED').length,
+        total_accepted: applications.filter((a) => a.status === 'ACCEPTED')
+          .length,
+        total_rejected: applications.filter((a) => a.status === 'REJECTED')
+          .length,
         user_id: userId,
       };
     }
-    return this.db.getJobStatistics();
+    return this.statistics.getJobStatistics();
   }
 
   @MessagePattern('ats.statistics.applications')
   async getAppStats(@Payload() payload: UserIdDto) {
     const userId = payload?.user_id;
     if (userId && userId.length === 24 && /^[0-9a-f]{24}$/i.test(userId)) {
-      const applications = await this.db.getAllApplications(userId);
+      const applications = await this.statistics.getAllApplications(userId);
       return {
         total_applications: applications.length,
-        total_accepted: applications.filter((a) => a.status === 'ACCEPTED').length,
-        total_rejected: applications.filter((a) => a.status === 'REJECTED').length,
+        total_accepted: applications.filter((a) => a.status === 'ACCEPTED')
+          .length,
+        total_rejected: applications.filter((a) => a.status === 'REJECTED')
+          .length,
         user_id: userId,
       };
     }
-    const jobStats = await this.db.getJobStatistics();
+    const jobStats = await this.statistics.getJobStatistics();
     return {
       total_applications: jobStats.total_applications,
       total_accepted: jobStats.total_accepted,
@@ -80,7 +89,7 @@ export class StatisticsController {
 
 @Controller()
 export class UserStatisticsController {
-  constructor(private db: DatabaseService) { }
+  constructor(private readonly statistics: StatisticsService) {}
 
   @MessagePattern('ats.userStatistics.get')
   async getUserStats(@Payload() payload: UserStatsDto) {
@@ -94,9 +103,9 @@ export class UserStatisticsController {
       throw new ForbiddenException('created_by must match user_id');
     }
     const effectiveCreatedBy = createdBy || userId;
-    const applications = await this.db.getAllApplications(userId);
-    const evalStats = await this.db.getUserEvaluationStatistics(userId);
-    const quizStats = await this.db.getUserQuizStatistics(userId);
+    const applications = await this.statistics.getAllApplications(userId);
+    const evalStats = await this.statistics.getUserEvaluationStatistics(userId);
+    const quizStats = await this.statistics.getUserQuizStatistics(userId);
     return {
       user_id: userId,
       created_by: effectiveCreatedBy,

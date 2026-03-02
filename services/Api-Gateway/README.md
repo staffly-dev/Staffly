@@ -109,15 +109,15 @@ The **security command center** 🛡️ – where identities are verified, token
 
 ---
 
-### 📱 App Service Routes (`/api/v1/app/*`)
+### 📱 App Service Routes (`/api/v1/hrms/*`)
 
 The **user experience layer** 🎨 – proxied seamlessly to the app service like a teleportation portal:
 
-- **Settings** → `/api/v1/app/settings/*` - 🎛️ Your personal control panel – customize your experience
-- **Account** → `/api/v1/app/account/*` - 👤 Your digital identity hub – manage your presence
-- **Billing** → `/api/v1/app/billing/*` - 💳 The payment portal – where subscriptions come to life
-- **Support** → `/api/v1/app/support/*` - 🎧 Your help desk – get assistance when you need it
-- **Feedback** → `/api/v1/app/feedback/*` - 💬 Your voice matters – share your thoughts and ideas
+- **Settings** → `/api/v1/hrms/settings/*` - 🎛️ Your personal control panel – customize your experience
+- **Account** → `/api/v1/hrms/account/*` - 👤 Your digital identity hub – manage your presence
+- **Billing** → `/api/v1/hrms/billing/*` - 💳 The payment portal – where subscriptions come to life
+- **Support** → `/api/v1/hrms/support/*` - 🎧 Your help desk – get assistance when you need it
+- **Feedback** → `/api/v1/hrms/feedback/*` - 💬 Your voice matters – share your thoughts and ideas
 
 ---
 

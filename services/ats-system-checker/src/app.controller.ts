@@ -3,7 +3,7 @@ import { MessagePattern } from '@nestjs/microservices';
 
 @Controller()
 export class AppController {
-  @MessagePattern({ cmd: 'getAppHealth' })
+  @MessagePattern({ cmd: 'getAtsCheckerHealth' })
   getHealth(): object {
     return {
       status: 'Healthy!',

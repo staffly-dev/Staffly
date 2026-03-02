@@ -68,7 +68,7 @@ export class S3Service {
     } finally {
       try {
         fs.rmSync(tmpDir, { recursive: true, force: true });
-      } catch { }
+      } catch {}
     }
   }
 

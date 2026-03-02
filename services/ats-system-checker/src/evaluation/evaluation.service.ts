@@ -1,44 +1,51 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { EmailService } from '../email/email.service';
-import { DatabaseService } from '../database/database.service';
-import { EvaluationDecision } from '../common/evaluation-decision';
+import { EvaluationDecision } from './evaluation-decision';
 
 @Injectable()
 export class EvaluationService {
   private readonly aiServiceUrl: string;
   private readonly timeoutMs: number;
 
-  constructor(
-    private config: ConfigService,
-    private emailService: EmailService,
-    private databaseService: DatabaseService,
-  ) {
+  constructor(private readonly config: ConfigService) {
     this.aiServiceUrl = this.config.get<string>('AI_SERVICE_URL') || '';
-    this.timeoutMs = parseInt(this.config.get<string>('AI_SERVICE_TIMEOUT_MS') || '120000', 10);
+    this.timeoutMs = parseInt(
+      this.config.get<string>('AI_SERVICE_TIMEOUT_MS') || '120000',
+      10,
+    );
   }
 
-  getEmailService(): EmailService {
-    return this.emailService;
-  }
-
-  async checkAiServiceHealth(): Promise<{ healthy: boolean; message: string; response_time_ms?: number }> {
+  async checkAiServiceHealth(): Promise<{
+    healthy: boolean;
+    message: string;
+    response_time_ms?: number;
+  }> {
     try {
       if (!this.aiServiceUrl?.trim()) {
         return { healthy: false, message: 'AI service URL not configured' };
       }
       const start = Date.now();
-      const response = await axios.get(`${this.aiServiceUrl}/health`, { timeout: 10000 });
+      const response = await axios.get(`${this.aiServiceUrl}/health`, {
+        timeout: 10000,
+      });
       const responseTime = Date.now() - start;
-      const isHealthy = response.data?.status === 'healthy' || response.data?.status === 'degraded';
+      const isHealthy =
+        response.data?.status === 'healthy' ||
+        response.data?.status === 'degraded';
       return {
         healthy: isHealthy,
         message: `AI service is ${response.data?.status || 'unknown'}`,
         response_time_ms: responseTime,
       };
     } catch (err: any) {
-      return { healthy: false, message: err?.message || 'Failed to connect to AI service' };
+      return {
+        healthy: false,
+        message: err?.message || 'Failed to connect to AI service',
+      };
     }
   }
 
@@ -56,11 +63,11 @@ export class EvaluationService {
           );
           const questions = response.data?.questions || [];
           if (questions.length > 0) return { questions };
-        } catch (e: any) {
+        } catch {
           if (attempt === 2) return this.generateFallbackQuiz(jobDescription);
         }
       }
-    } catch (e) {
+    } catch {
       return this.generateFallbackQuiz(jobDescription);
     }
     return this.generateFallbackQuiz(jobDescription);
@@ -69,8 +76,16 @@ export class EvaluationService {
   private generateFallbackQuiz(_jobDescription: string): { questions: any[] } {
     return {
       questions: [
-        { question: 'What is your primary programming language?', options: ['Python', 'JavaScript', 'Java', 'C++'], correct_answer: 0 },
-        { question: 'How many years of experience do you have?', options: ['0-1', '2-3', '4-5', '5+'], correct_answer: 3 },
+        {
+          question: 'What is your primary programming language?',
+          options: ['Python', 'JavaScript', 'Java', 'C++'],
+          correct_answer: 0,
+        },
+        {
+          question: 'How many years of experience do you have?',
+          options: ['0-1', '2-3', '4-5', '5+'],
+          correct_answer: 3,
+        },
       ],
     };
   }
@@ -97,7 +112,9 @@ export class EvaluationService {
         { timeout: this.timeoutMs },
       );
       return {
-        decision: (response.data?.decision as EvaluationDecision) || EvaluationDecision.REVIEW,
+        decision:
+          (response.data?.decision as EvaluationDecision) ||
+          EvaluationDecision.REVIEW,
         score: response.data?.score ?? 50,
         evaluation_text: response.data?.reasoning || 'Evaluation completed',
         text_length: cvText.length,
@@ -120,9 +137,15 @@ export class EvaluationService {
     text_length: number;
   } {
     const textLower = cvText.toLowerCase();
-    const skillsFound = requiredSkills.filter((s) => textLower.includes(s.toLowerCase())).length;
-    const score = Math.min(100, requiredSkills.length ? (skillsFound / requiredSkills.length) * 100 : 0);
-    const decision = score >= 70 ? EvaluationDecision.ACCEPT : EvaluationDecision.REJECT;
+    const skillsFound = requiredSkills.filter((s) =>
+      textLower.includes(s.toLowerCase()),
+    ).length;
+    const score = Math.min(
+      100,
+      requiredSkills.length ? (skillsFound / requiredSkills.length) * 100 : 0,
+    );
+    const decision =
+      score >= 70 ? EvaluationDecision.ACCEPT : EvaluationDecision.REJECT;
     return {
       decision,
       score: Math.round(score),

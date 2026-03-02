@@ -19,7 +19,7 @@ import { PayrollGatewayService } from './payroll.service';
 import { CreatePayrollDto } from './dto/create-payroll.dto';
 import { UpdatePayrollDto } from './dto/update-payroll.dto';
 
-@Controller('api/v1/app/payroll')
+@Controller('api/v1/hrms/payroll')
 @UseGuards(JwtAuthGuard)
 export class PayrollGatewayController {
   constructor(private readonly payrollService: PayrollGatewayService) {}

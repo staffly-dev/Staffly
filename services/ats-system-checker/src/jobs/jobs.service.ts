@@ -1,14 +1,40 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DatabaseService } from '../database/database.service';
+import { ClientProxy } from '@nestjs/microservices';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { EvaluationService } from '../evaluation/evaluation.service';
-import { S3Service } from '../s3/s3.service';
-import { EvaluationDecision } from '../common/evaluation-decision';
+import { S3Service } from '../common/s3/s3.service';
+import { EvaluationDecision } from '../evaluation/evaluation-decision';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import pdfParse from 'pdf-parse';
 import { v4 as uuidv4 } from 'uuid';
+import { JobPosting, JobPostingDocument } from './schemas/job-posting.schema';
+import {
+  Application,
+  ApplicationDocument,
+} from '../applications/schemas/application.schema';
+import {
+  CVEvaluation,
+  CVEvaluationDocument,
+} from '../evaluation/schemas/cv-evaluation.schema';
+import {
+  QuizSession,
+  QuizSessionDocument,
+} from '../quiz/schemas/quiz-session.schema';
 
 @Injectable()
 export class JobsService {
@@ -16,13 +42,25 @@ export class JobsService {
   private frontendQuizUrl: string;
 
   constructor(
-    private config: ConfigService,
-    private db: DatabaseService,
-    private evaluation: EvaluationService,
-    private s3: S3Service,
+    private readonly config: ConfigService,
+    @InjectModel(JobPosting.name)
+    private readonly jobPostingModel: Model<JobPostingDocument>,
+    @InjectModel(Application.name)
+    private readonly applicationModel: Model<ApplicationDocument>,
+    @InjectModel(CVEvaluation.name)
+    private readonly cvEvaluationModel: Model<CVEvaluationDocument>,
+    @InjectModel(QuizSession.name)
+    private readonly quizSessionModel: Model<QuizSessionDocument>,
+    private readonly evaluation: EvaluationService,
+    private readonly s3: S3Service,
+    @Inject('NATS_SERVICE') private readonly natsClient: ClientProxy,
   ) {
-    this.backendUrl = this.config.get<string>('BACKEND_URL') || 'http://localhost:4002';
-    this.frontendQuizUrl = this.config.get<string>('FRONTEND_URL_QUIZ') || this.config.get<string>('FRONTEND_ORIGIN') || 'http://localhost:3000';
+    this.backendUrl =
+      this.config.get<string>('BACKEND_URL') || 'http://localhost:4002';
+    this.frontendQuizUrl =
+      this.config.get<string>('FRONTEND_URL_QUIZ') ||
+      this.config.get<string>('FRONTEND_ORIGIN') ||
+      'http://localhost:3000';
   }
 
   async createJob(body: any): Promise<any> {
@@ -40,17 +78,23 @@ export class JobsService {
       quiz_pass_threshold = 7,
     } = body;
     if (!title?.trim() || !description?.trim() || !required_skills?.trim()) {
-      throw new BadRequestException('Job title, description, and required skills are required');
+      throw new BadRequestException(
+        'Job title, description, and required skills are required',
+      );
     }
     const skillsList = String(required_skills)
       .split(',')
       .map((s: string) => s.trim())
       .filter(Boolean);
-    const job = await this.db.createJobPosting(
+    const jobId = crypto.randomBytes(4).toString('hex');
+    const descriptionHash = this.generateHash(description);
+    const job = new this.jobPostingModel({
       title,
       description,
-      skillsList,
+      required_skills: skillsList,
       additional_details,
+      job_id: jobId,
+      description_hash: descriptionHash,
       hr_email,
       hr_name,
       evaluation_threshold,
@@ -58,7 +102,10 @@ export class JobsService {
       quiz_pass_threshold,
       owner_user_id,
       owner_username,
-    );
+      created_at: new Date(),
+      is_active: true,
+    });
+    await job.save();
     return {
       job_id: job.job_id,
       title: job.title,
@@ -75,7 +122,7 @@ export class JobsService {
   }
 
   async getJob(jobId: string, xUserId?: string): Promise<any> {
-    const job = await this.db.getJobPostingById(jobId);
+    const job = await this.jobPostingModel.findOne({ job_id: jobId }).exec();
     if (!job) throw new NotFoundException('Job posting not found');
     if (!job.is_active && (!xUserId || job.owner_user_id !== xUserId)) {
       throw new NotFoundException('Job posting not found');
@@ -95,8 +142,17 @@ export class JobsService {
     };
   }
 
-  async getAllJobs(ownerUserId?: string, includeInactive = false): Promise<any> {
-    const jobs = await this.db.getAllJobPostings(ownerUserId, includeInactive);
+  async getAllJobs(
+    ownerUserId?: string,
+    includeInactive = false,
+  ): Promise<any> {
+    const filter: any = {};
+    if (!includeInactive) filter.is_active = true;
+    if (ownerUserId) filter.owner_user_id = ownerUserId;
+    const jobs = await this.jobPostingModel
+      .find(filter)
+      .sort({ created_at: -1 })
+      .exec();
     return {
       total_jobs: jobs.length,
       jobs: jobs.map((j) => ({
@@ -115,13 +171,28 @@ export class JobsService {
     };
   }
 
-  async updateJob(jobId: string, updates: any, ownerUserId?: string): Promise<any> {
+  async updateJob(
+    jobId: string,
+    updates: any,
+    ownerUserId?: string,
+  ): Promise<any> {
     if (ownerUserId) {
-      const existing = await this.db.getJobPostingById(jobId);
+      const existing = await this.jobPostingModel
+        .findOne({ job_id: jobId })
+        .exec();
       if (!existing) throw new NotFoundException('Job posting not found');
-      if (existing.owner_user_id !== ownerUserId) throw new ForbiddenException('You can only update your own job postings');
+      if (existing.owner_user_id !== ownerUserId)
+        throw new ForbiddenException(
+          'You can only update your own job postings',
+        );
     }
-    const job = await this.db.updateJobPosting(jobId, updates);
+    const job = await this.jobPostingModel
+      .findOneAndUpdate(
+        { job_id: jobId },
+        { ...updates, updated_at: new Date() },
+        { new: true },
+      )
+      .exec();
     if (!job) throw new NotFoundException('Job posting not found');
     return {
       job_id: job.job_id,
@@ -140,12 +211,23 @@ export class JobsService {
 
   async deleteJob(jobId: string, ownerUserId?: string): Promise<void> {
     if (ownerUserId) {
-      const existing = await this.db.getJobPostingById(jobId);
+      const existing = await this.jobPostingModel
+        .findOne({ job_id: jobId })
+        .exec();
       if (!existing) throw new NotFoundException('Job posting not found');
-      if (existing.owner_user_id !== ownerUserId) throw new ForbiddenException('You can only delete your own job postings');
+      if (existing.owner_user_id !== ownerUserId)
+        throw new ForbiddenException(
+          'You can only delete your own job postings',
+        );
     }
-    const ok = await this.db.deleteJobPosting(jobId);
-    if (!ok) throw new NotFoundException('Job posting not found');
+    const result = await this.jobPostingModel
+      .findOneAndUpdate(
+        { job_id: jobId },
+        { is_active: false, updated_at: new Date() },
+        { new: true },
+      )
+      .exec();
+    if (!result) throw new NotFoundException('Job posting not found');
   }
 
   async applyForJob(
@@ -153,39 +235,50 @@ export class JobsService {
     candidateEmail: string,
     candidateName: string | undefined,
     file: Express.Multer.File,
-  ): Promise<{ application_id: string; job_id: string; status: string; quiz_required: boolean }> {
-    if (!candidateEmail?.trim()) throw new BadRequestException('candidate_email is required');
-    const job = await this.db.getJobPostingById(jobId);
-    if (!job || !job.is_active) throw new NotFoundException('Job posting not found or inactive');
+  ): Promise<{
+    application_id: string;
+    job_id: string;
+    status: string;
+    quiz_required: boolean;
+  }> {
+    if (!candidateEmail?.trim())
+      throw new BadRequestException('candidate_email is required');
+    const job = await this.jobPostingModel.findOne({ job_id: jobId }).exec();
+    if (!job || !job.is_active)
+      throw new NotFoundException('Job posting not found or inactive');
 
     const uploadResult = await this.s3.uploadFile(file);
     const applicationId = uuidv4();
-    const application = await this.db.createApplication(
-      applicationId,
-      jobId,
-      uploadResult.s3_key,
-      candidateEmail,
-      candidateName,
-    );
+    const application = new this.applicationModel({
+      application_id: applicationId,
+      job_id: jobId,
+      cv_filename: uploadResult.s3_key,
+      candidate_email: candidateEmail,
+      candidate_name: candidateName,
+      status: 'SUBMITTED',
+      submitted_at: new Date(),
+    });
+    await application.save();
 
-    const emailService = this.evaluation.getEmailService();
     const notifyEmail = job.hr_email || this.config.get<string>('EMAIL_FROM');
-    if (emailService && notifyEmail) {
-      emailService
-        .sendNewApplicationNotification(
-          notifyEmail,
-          job.title || 'Job Position',
-          candidateName || 'Candidate',
-          candidateEmail,
-          application.application_id,
-          this.backendUrl,
-        )
-        .catch((e) => console.error('New application email error:', e));
+    if (notifyEmail) {
+      // Notify HRMS notification service about new application
+      this.natsClient.emit('notification.ats.new_application', {
+        toEmail: notifyEmail,
+        jobTitle: job.title || 'Job Position',
+        candidateName: candidateName || 'Candidate',
+        candidateEmail,
+        applicationId: application.application_id,
+      });
     }
 
-    this.processCvEvaluationAsync(file, job, application, candidateEmail, candidateName).catch((e) =>
-      console.error('CV evaluation error:', e),
-    );
+    this.processCvEvaluationAsync(
+      file,
+      job,
+      application,
+      candidateEmail,
+      candidateName,
+    ).catch((e) => console.error('CV evaluation error:', e));
 
     return {
       application_id: application.application_id,
@@ -200,7 +293,12 @@ export class JobsService {
     candidateEmail: string,
     candidateName: string | undefined,
     file: { filename: string; mimetype?: string; data_base64: string },
-  ): Promise<{ application_id: string; job_id: string; status: string; quiz_required: boolean }> {
+  ): Promise<{
+    application_id: string;
+    job_id: string;
+    status: string;
+    quiz_required: boolean;
+  }> {
     const buf = Buffer.from(file.data_base64, 'base64');
 
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ats-apply-'));
@@ -215,11 +313,18 @@ export class JobsService {
         path: tmpPath,
       } as unknown as Express.Multer.File;
 
-      return await this.applyForJob(jobId, candidateEmail, candidateName, multerFile);
+      return await this.applyForJob(
+        jobId,
+        candidateEmail,
+        candidateName,
+        multerFile,
+      );
     } finally {
       try {
         fs.rmSync(tmpDir, { recursive: true, force: true });
-      } catch { }
+      } catch {
+        console.error('Failed to remove temporary directory:', tmpDir);
+      }
     }
   }
 
@@ -243,29 +348,16 @@ export class JobsService {
         const buf = fs.readFileSync(file.path);
         const result = await mammoth.extractRawText({ buffer: buf });
         cvText = result.value;
-      } catch (e: any) {
-        const emailService = this.evaluation.getEmailService();
-        if (emailService && candidateEmail) {
-          await emailService.sendEmailAsync(
-            candidateEmail,
-            'CV Submission Received',
-            `<p>Dear ${candidateName || 'Candidate'},</p><p>Thank you for submitting your CV. Please resubmit as PDF for automated evaluation.</p><p>Best regards,<br/>Staffly Team</p>`,
-            'CV_SUBMISSION',
-          );
-        }
+      } catch {
+        // For now, skip sending a specific failure email; ATS HRMS
+        // notification flow focuses on CV result and new application.
         return;
       }
     }
     if (!cvText?.trim()) {
-      const emailService = this.evaluation.getEmailService();
-      if (emailService && candidateEmail) {
-        await emailService.sendEmailAsync(
-          candidateEmail,
-          'CV Received - Manual Review',
-          `<p>Dear ${candidateName || 'Candidate'},</p><p>We have received your application. Your file could not be evaluated automatically and will be reviewed manually.</p><p>Best regards,<br/>Staffly Team</p>`,
-          'CV_RECEIVED',
-        );
-      }
+      // No text could be extracted; treat as manual review without
+      // sending a separate email from ATS. HRMS can handle any
+      // generic notifications if needed.
       return;
     }
 
@@ -275,55 +367,76 @@ export class JobsService {
       job.required_skills || [],
     );
     const processingTime = Date.now() - startTime;
-    await this.db.saveCvEvaluation(
-      file.originalname,
-      job.description || '',
-      result.decision,
-      result.score,
-      result.evaluation_text,
-      result.text_length,
-      candidateEmail,
-      processingTime,
-      job.owner_user_id,
-    );
-    const isAccepted =
-      result.decision === EvaluationDecision.ACCEPT || result.decision === EvaluationDecision.ACCEPTED;
-    await this.db.updateApplication(application.application_id, {
-      cv_score: result.score,
-      decision: String(result.decision),
-      status: isAccepted ? 'ACCEPTED' : 'REJECTED',
+    const jobDescriptionHash = this.generateHash(job.description || '');
+    const cvEval = new this.cvEvaluationModel({
+      filename: file.originalname,
+      job_description_hash: jobDescriptionHash,
+      job_description: job.description || '',
+      decision: result.decision,
+      score: result.score,
+      evaluation_text: result.evaluation_text,
+      cv_text_length: result.text_length,
+      email: candidateEmail,
+      processing_time_ms: processingTime,
+      created_by: job.owner_user_id,
+      created_at: new Date(),
     });
+    await cvEval.save();
+    const isAccepted =
+      result.decision === EvaluationDecision.ACCEPT ||
+      result.decision === EvaluationDecision.ACCEPTED;
+    await this.applicationModel
+      .findOneAndUpdate(
+        { application_id: application.application_id },
+        {
+          cv_score: result.score,
+          decision: String(result.decision),
+          status: isAccepted ? 'ACCEPTED' : 'REJECTED',
+        },
+      )
+      .exec();
 
     let quizLink: string | undefined;
     if (
       job.quiz_required &&
-      (result.decision === EvaluationDecision.ACCEPT || result.decision === EvaluationDecision.ACCEPTED)
+      (result.decision === EvaluationDecision.ACCEPT ||
+        result.decision === EvaluationDecision.ACCEPTED)
     ) {
       const quiz = await this.evaluation.generateQuiz(job.description || '');
-      const quizSession = await this.db.saveQuizSession(
-        job.description || '',
-        quiz.questions || [],
-        file.originalname,
-        candidateEmail,
-        300,
-        job.quiz_pass_threshold ?? 7,
-        job.owner_user_id,
-        application.application_id,
-      );
-      quizLink = `${this.frontendQuizUrl}/quiz/${quizSession._id}`;
+      const jobDescriptionHash = this.generateHash(job.description || '');
+      const quizSession = new this.quizSessionModel({
+        job_description: job.description || '',
+        job_description_hash: jobDescriptionHash,
+        questions: quiz.questions || [],
+        total_questions: (quiz.questions || []).length,
+        associated_cv_filename: file.originalname,
+        candidate_email: candidateEmail,
+        application_id: application.application_id,
+        time_limit_seconds: 300,
+        pass_threshold: job.quiz_pass_threshold ?? 7,
+        status: 'GENERATED',
+        created_at: new Date(),
+        created_by: job.owner_user_id,
+      });
+      await quizSession.save();
+      quizLink = `${this.frontendQuizUrl}/quiz/${quizSession._id.toString()}`;
     }
 
-    const emailService = this.evaluation.getEmailService();
-    if (emailService && candidateEmail) {
-      await emailService.sendCvResultEmail(
-        candidateEmail,
-        candidateName || 'Candidate',
-        job.title || 'Job Position',
-        String(result.decision),
-        result.score,
+    if (candidateEmail) {
+      // Notify HRMS notification service about CV evaluation result
+      this.natsClient.emit('notification.ats.cv_result', {
+        toEmail: candidateEmail,
+        candidateName: candidateName || 'Candidate',
+        jobTitle: job.title || 'Job Position',
+        decision: String(result.decision),
+        score: result.score,
         quizLink,
-        result.evaluation_text,
-      );
+        evaluationText: result.evaluation_text,
+      });
     }
+  }
+
+  private generateHash(text: string): string {
+    return crypto.createHash('md5').update(text).digest('hex');
   }
 }
