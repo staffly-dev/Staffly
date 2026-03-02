@@ -18,7 +18,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 @Controller('api/v1/hrms/billing')
 @UseGuards(JwtAuthGuard)
 export class BillingGatewayController {
-  constructor(private readonly billingService: BillingGatewayService) {}
+  constructor(private readonly billingService: BillingGatewayService) { }
 
   @Get('user/:userId')
   async findOne(@Param('userId') userId: string, @Request() req: any) {

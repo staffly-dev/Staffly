@@ -42,6 +42,12 @@ export class EmployeesController {
     return { message: 'Employees fetched successfully', employees };
   }
 
+  @MessagePattern('hrms.employees.getAllEmployeesByUserId')
+  async getAllEmployeesByUserId(@Payload() payload: UserIdPayload) {
+    const employees = await this.employeesService.findAll(payload.user_id);
+    return { message: 'Employees fetched successfully', employees };
+  }
+
   @MessagePattern('hrms.employees.findOne')
   async findOne(@Payload() payload: EmployeeIdPayload) {
     const employee = await this.employeesService.findOne(payload.id, payload.user_id);

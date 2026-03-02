@@ -16,6 +16,12 @@ export class AttendanceGatewayService {
     });
   }
 
+  getEmployeeAccount(userId: string) {
+    return this.client.send('hrms.employees.findAll', {
+      user_id: userId,
+    });
+  }
+
   findAll(userId: string) {
     return this.client.send('hrms.attendance.findAll', { user_id: userId });
   }

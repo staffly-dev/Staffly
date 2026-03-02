@@ -33,7 +33,7 @@ import type { UploadedFile as CustomUploadedFile } from '../../common/interfaces
 
 @Controller('api/v1/hrms/auth')
 export class AuthGatewayController {
-  constructor(private readonly authService: AuthGatewayService) {}
+  constructor(private readonly authService: AuthGatewayService) { }
 
   // Register Flow
   @Post('register')

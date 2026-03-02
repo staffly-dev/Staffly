@@ -23,24 +23,27 @@ export class EmployeesGatewayService {
     });
   }
 
-  findOne(userId: string, id: string) {
-    return this.client.send('hrms.employees.findOne', {
-      id,
+  getAllEmployeesByUserId(userId: string) {
+    return this.client.send('hrms.employees.getAllEmployeesByUserId', {
       user_id: userId,
     });
   }
 
-  update(userId: string, id: string, dto: UpdateEmployeeDto) {
+  findOne(userId: string) {
+    return this.client.send('hrms.employees.findOne', {
+      user_id: userId,
+    });
+  }
+
+  update(userId: string, dto: UpdateEmployeeDto) {
     return this.client.send('hrms.employees.update', {
-      id,
       dto,
       user_id: userId,
     });
   }
 
-  remove(userId: string, id: string) {
+  remove(userId: string) {
     return this.client.send('hrms.employees.remove', {
-      id,
       user_id: userId,
     });
   }

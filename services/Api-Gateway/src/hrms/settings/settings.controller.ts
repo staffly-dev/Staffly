@@ -19,7 +19,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 @Controller('api/v1/hrms/settings')
 @UseGuards(JwtAuthGuard)
 export class SettingsGatewayController {
-  constructor(private readonly settingsService: SettingsGatewayService) {}
+  constructor(private readonly settingsService: SettingsGatewayService) { }
 
   @Get('user/:userId')
   async findOne(@Param('userId') userId: string, @Request() req: any) {

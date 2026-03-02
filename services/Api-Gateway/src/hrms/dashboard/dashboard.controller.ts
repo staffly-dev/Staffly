@@ -15,7 +15,7 @@ import { DashboardGatewayService } from './dashboard.service';
 @Controller('api/v1/hrms/dashboard')
 @UseGuards(JwtAuthGuard)
 export class DashboardGatewayController {
-  constructor(private readonly dashboardService: DashboardGatewayService) {}
+  constructor(private readonly dashboardService: DashboardGatewayService) { }
 
   @Get('user/:userId')
   async getDashboard(@Param('userId') userId: string, @Request() req: any) {
