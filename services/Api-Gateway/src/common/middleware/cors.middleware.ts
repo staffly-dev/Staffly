@@ -12,9 +12,21 @@ export class CorsMiddleware implements NestMiddleware {
       'http://localhost:3000',
     ];
 
-    // Set CORS headers
-    if (allowedOrigins.includes(origin as string) || !origin) {
-      res.header('Access-Control-Allow-Origin', origin || '*');
+    // Set CORS headers - strict origin validation
+    if (allowedOrigins.includes(origin as string)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    } else if (origin) {
+      this.logger.warn(`CORS violation - origin not allowed: ${origin}`, {
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        path: req.path,
+        timestamp: new Date().toISOString(),
+      });
+      return res.status(403).json({
+        success: false,
+        message: 'CORS policy violation',
+        error: 'Origin not allowed',
+      });
     }
 
     res.header(

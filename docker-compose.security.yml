@@ -1,0 +1,245 @@
+version: '3.8'
+
+name: staffly-secure
+
+services:
+  # MongoDB with security
+  database:
+    image: mongo:7.0.12
+    container_name: staffly-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME}
+    volumes:
+      - mongo_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - staffly-internal
+    ports:
+      - "127.0.0.1:27017:27017"  # Bind to localhost only
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # MongoDB needs write access
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+
+  # API Gateway with security
+  api-gateway:
+    build:
+      context: ./services/Api-Gateway
+      dockerfile: Dockerfile
+      target: production
+    container_name: staffly-api-gateway
+    restart: unless-stopped
+    env_file:
+      - ./services/Api-Gateway/.env
+    environment:
+      NODE_ENV: production
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+    networks:
+      - staffly-internal
+      - staffly-external
+    ports:
+      - "127.0.0.1:3000:3000"  # Bind to localhost only
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    user: "1001:1001"  # Non-root user
+
+  # HRMS Service with security
+  hrms-service:
+    build:
+      context: ./services/hrms
+      dockerfile: Dockerfile
+      target: production
+    container_name: staffly-hrms-service
+    restart: unless-stopped
+    env_file:
+      - ./services/hrms/.env
+    environment:
+      NODE_ENV: production
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+    networks:
+      - staffly-internal
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    user: "1001:1001"  # Non-root user
+
+  # ATS Service with security
+  ats-service:
+    build:
+      context: ./services/ats-system-checker
+      dockerfile: Dockerfile
+      target: production
+    container_name: staffly-ats-service
+    restart: unless-stopped
+    env_file:
+      - ./services/ats-system-checker/.env
+    environment:
+      NODE_ENV: production
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+    networks:
+      - staffly-internal
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    user: "1001:1001"  # Non-root user
+
+  # NATS Server with security
+  nats-server:
+    image: nats:2.10-alpine
+    container_name: staffly-nats
+    restart: unless-stopped
+    command: ["-js", "-m", "8222", "-sd", "/data", "-tls", "-auth", "${NATS_AUTH_TOKEN}"]
+    volumes:
+      - nats_data:/data
+      - ./config/nats.conf:/etc/nats/nats.conf:ro
+    networks:
+      - staffly-internal
+    ports:
+      - "127.0.0.1:4222:4222"  # Bind to localhost only
+      - "127.0.0.1:8222:8222"  # Monitoring port
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8222/varz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    user: "1001:1001"  # Non-root user
+
+  # Reverse Proxy (Nginx) with security
+  reverse-proxy:
+    image: nginx:1.25-alpine
+    container_name: staffly-nginx
+    restart: unless-stopped
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - staffly-external
+      - staffly-internal
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - NET_BIND_SERVICE
+
+  # Security Monitoring (Prometheus)
+  prometheus:
+    image: prom/prometheus:v2.40.0
+    container_name: staffly-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - staffly-internal
+    ports:
+      - "127.0.0.1:9090:9090"  # Bind to localhost only
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    cap_drop:
+      - ALL
+    user: "1001:1001"
+
+volumes:
+  mongo_data:
+    driver: local
+  nats_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+
+networks:
+  staffly-internal:
+    driver: bridge
+    internal: true  # No external access
+  staffly-external:
+    driver: bridge

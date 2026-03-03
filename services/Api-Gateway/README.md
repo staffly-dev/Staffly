@@ -20,14 +20,14 @@ Built with NestJS, this gateway isn't just code – it's the **beating heart** �
 
 ## 🎯 Key Features
 
-| Feature | Description |
-|---------|-------------|
-| 🔐 **JWT Authentication** | Your digital passport system – secure token-based authentication that auto-refreshes like a renewable visa |
-| 🌐 **OAuth2 Integration** | One-click magic ✨ – seamless Google OAuth2 login that makes authentication feel like teleportation |
+| Feature                       | Description                                                                                                                            |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔐 **JWT Authentication**     | Your digital passport system – secure token-based authentication that auto-refreshes like a renewable visa                             |
+| 🌐 **OAuth2 Integration**     | One-click magic ✨ – seamless Google OAuth2 login that makes authentication feel like teleportation                                    |
 | 🔄 **Smart Request Proxying** | The ultimate request translator 🗣️ – intelligently routes to microservices while preserving every bit of context like a perfect memory |
-| 💓 **Health Monitoring** | The digital doctor 👨‍⚕️ – real-time service health checks that pulse through your infrastructure like a heartbeat |
-| 📚 **Swagger Documentation** | Your interactive API playground 🎮 – explore, test, and understand your APIs with beautiful, live documentation |
-| 🛡️ **Security Stack** | An impenetrable fortress 🏰 – comprehensive middleware that guards, validates, and protects like a digital army |
+| 💓 **Health Monitoring**      | The digital doctor 👨‍⚕️ – real-time service health checks that pulse through your infrastructure like a heartbeat                        |
+| 📚 **Swagger Documentation**  | Your interactive API playground 🎮 – explore, test, and understand your APIs with beautiful, live documentation                        |
+| 🛡️ **Security Stack**         | An impenetrable fortress 🏰 – comprehensive middleware that guards, validates, and protects like a digital army                        |
 
 ---
 
@@ -73,31 +73,34 @@ pnpm run start:prod
 
 The **security command center** 🛡️ – where identities are verified, tokens are born, and access is granted. All authentication flows are handled directly by the gateway with military precision:
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| `POST` | `/auth/register` | 🆕 Create a new user account |
-| `POST` | `/auth/verify-email` | ✉️ Verify email address |
-| `POST` | `/auth/login` | 🔑 User login |
-| `POST` | `/auth/welcome-email-user` | 👋 Complete registration flow |
-| `GET` | `/auth/google` | 🌐 Initiate Google OAuth |
-| `GET` | `/auth/google/callback` | 🔄 Handle OAuth callback |
-| `GET` | `/auth/refresh` | ♻️ Refresh access token |
-| `POST` | `/auth/logout` | 🚪 Logout current session |
-| `POST` | `/auth/logout-all` | 🚪🚪 Logout from all devices |
-| `GET` | `/auth/currentUser` | 👤 Get current user info |
-| `POST` | `/auth/request-resetPass` | 🔑 Request password reset |
-| `POST` | `/auth/verify-resetPass-code` | ✅ Verify reset code |
-| `POST` | `/auth/reset-password` | 🔄 Reset password |
+| Method | Endpoint                      | Purpose                       |
+| ------ | ----------------------------- | ----------------------------- |
+| `POST` | `/auth/register`              | 🆕 Create a new user account  |
+| `POST` | `/auth/verify-email`          | ✉️ Verify email address       |
+| `POST` | `/auth/login`                 | 🔑 User login                 |
+| `POST` | `/auth/welcome-email-user`    | 👋 Complete registration flow |
+| `GET`  | `/auth/google`                | 🌐 Initiate Google OAuth      |
+| `GET`  | `/auth/google/callback`       | 🔄 Handle OAuth callback      |
+| `GET`  | `/auth/refresh`               | ♻️ Refresh access token       |
+| `POST` | `/auth/logout`                | 🚪 Logout current session     |
+| `POST` | `/auth/logout-all`            | 🚪🚪 Logout from all devices  |
+| `GET`  | `/auth/currentUser`           | 👤 Get current user info      |
+| `POST` | `/auth/request-resetPass`     | 🔑 Request password reset     |
+| `POST` | `/auth/verify-resetPass-code` | ✅ Verify reset code          |
+| `POST` | `/auth/reset-password`        | 🔄 Reset password             |
 
 ---
 
 <<<<<<< HEAD
+
 ### 📱 App Service Routes (`/api/v1/hrms/*`)
+
 ### 📱 HRMS Service Routes (`/api/v1/hrms/*`)
 
 The **Staffly HRMS experience layer** 🎨 – routes proxied seamlessly to the HRMS microservice:
 
 <<<<<<< HEAD
+
 - **Settings** → `/api/v1/hrms/settings/*` - 🎛️ Your personal control panel – customize your experience
 - **Account** → `/api/v1/hrms/account/*` - 👤 Your digital identity hub – manage your presence
 - **Settings** → `/api/v1/hrms/settings/*` - **User-level preferences & localization**
@@ -108,7 +111,7 @@ The **Staffly HRMS experience layer** 🎨 – routes proxied seamlessly to the 
   - `GET /api/v1/hrms/attendance/user/{userId}` – Get **your employee account list** (employees under this user)
   - `GET /api/v1/hrms/attendance/user/{userId}/search` – **Search attendance records** by employee `firstName`/`lastName`
 - **Account** → `/api/v1/hrms/account/*` - 👤 Your digital identity hub – manage organization and owner profile
->>>>>>> 866c01641a2529deed696e90e3bc9447c47a4372
+  > > > > > > > 866c01641a2529deed696e90e3bc9447c47a4372
 - **Billing** → `/api/v1/hrms/billing/*` - 💳 The payment portal – where subscriptions come to life
 - **Support** → `/api/v1/hrms/support/*` - 🎧 Your help desk – get assistance when you need it
 - **Feedback** → `/api/v1/hrms/feedback/*` - 💬 Your voice matters – share your thoughts and ideas
@@ -136,27 +139,27 @@ The **AI-powered learning companion** 🤖 – where artificial intelligence mee
 
 Your **personalized learning GPS** 🧭 – AI-generated roadmaps that guide your educational journey:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/roadmap/generate` | 🎯 Create your personalized AI learning roadmap – your path to mastery |
-| `GET` | `/roadmap/:roadmapId/:userId` | 📋 Retrieve your custom roadmap – your learning blueprint |
-| `PUT` | `/roadmap/:roadmapId/progress/:userId` | 📈 Update your progress – mark milestones and celebrate wins |
-| `GET` | `/roadmap/:userId` | 📚 Get all your roadmaps – see your entire learning journey |
-| `DELETE` | `/roadmap/:roadmapId/:userId` | 🗑️ Delete a roadmap – clean up when needed |
-| `GET` | `/roadmap/health` | 💓 Service health check (public) – ensure the AI is alive and well |
+| Method   | Endpoint                               | Description                                                            |
+| -------- | -------------------------------------- | ---------------------------------------------------------------------- |
+| `POST`   | `/roadmap/generate`                    | 🎯 Create your personalized AI learning roadmap – your path to mastery |
+| `GET`    | `/roadmap/:roadmapId/:userId`          | 📋 Retrieve your custom roadmap – your learning blueprint              |
+| `PUT`    | `/roadmap/:roadmapId/progress/:userId` | 📈 Update your progress – mark milestones and celebrate wins           |
+| `GET`    | `/roadmap/:userId`                     | 📚 Get all your roadmaps – see your entire learning journey            |
+| `DELETE` | `/roadmap/:roadmapId/:userId`          | 🗑️ Delete a roadmap – clean up when needed                             |
+| `GET`    | `/roadmap/health`                      | 💓 Service health check (public) – ensure the AI is alive and well     |
 
 #### 📄 PDF Summary Routes (`/pdf-summary/*`)
 
 The **document intelligence center** 📄 – transform PDFs into interactive learning experiences:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/pdf-summary/upload` | 📤 Upload your PDF – let AI work its magic |
-| `POST` | `/pdf-summary/chat` | 💬 Chat with your PDF – ask questions, get answers |
-| `GET` | `/pdf-summary/summarize` | 📝 Get instant summaries – distill knowledge in seconds |
-| `GET` | `/pdf-summary/session/:sessionId/chat-history` | 📜 Retrieve chat history – never lose a conversation |
-| `DELETE` | `/pdf-summary/session/:sessionId` | 🗑️ Delete session – clear the slate |
-| `GET` | `/pdf-summary/health` | 💓 Service health check (public) – verify AI readiness |
+| Method   | Endpoint                                       | Description                                             |
+| -------- | ---------------------------------------------- | ------------------------------------------------------- |
+| `POST`   | `/pdf-summary/upload`                          | 📤 Upload your PDF – let AI work its magic              |
+| `POST`   | `/pdf-summary/chat`                            | 💬 Chat with your PDF – ask questions, get answers      |
+| `GET`    | `/pdf-summary/summarize`                       | 📝 Get instant summaries – distill knowledge in seconds |
+| `GET`    | `/pdf-summary/session/:sessionId/chat-history` | 📜 Retrieve chat history – never lose a conversation    |
+| `DELETE` | `/pdf-summary/session/:sessionId`              | 🗑️ Delete session – clear the slate                     |
+| `GET`    | `/pdf-summary/health`                          | 💓 Service health check (public) – verify AI readiness  |
 
 ---
 
@@ -164,12 +167,12 @@ The **document intelligence center** 📄 – transform PDFs into interactive le
 
 The **digital wellness center** 🏥 – keep your finger on the pulse of the entire system:
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /` | 🏠 Gateway status & welcome – your first hello from the gateway |
-| `GET /services` | 📋 List all registered services – see who's in the orchestra |
-| `GET /services/status` | 📊 Health status of all services – the complete system vitals |
-| `GET /health` | 💓 Overall platform health check (public) – the heartbeat of Staffly |
+| Endpoint               | Description                                                          |
+| ---------------------- | -------------------------------------------------------------------- |
+| `GET /`                | 🏠 Gateway status & welcome – your first hello from the gateway      |
+| `GET /services`        | 📋 List all registered services – see who's in the orchestra         |
+| `GET /services/status` | 📊 Health status of all services – the complete system vitals        |
+| `GET /health`          | 💓 Overall platform health check (public) – the heartbeat of Staffly |
 
 ---
 
@@ -183,7 +186,7 @@ PORT=4000                          # Gateway port
 NODE_ENV=development              # Environment mode
 
 # Database
-MONGO_URI_REMOTE=mongodb://...    # MongoDB connection string
+MONGO_URI_RMOTE=mongodb://...    # MongoDB connection string
 
 # Security
 JWT_ACCESS_SECRET=your-secret     # JWT access token secret
@@ -251,4 +254,4 @@ You're now equipped with everything you need to understand, deploy, and extend t
 
 **Made with ❤️, ☕, and lots of 🎨 creativity for Staffly**
 
-> 💫 *"In the world of microservices, the gateway is the bridge that connects everything – and this one is built to last."*
+> 💫 _"In the world of microservices, the gateway is the bridge that connects everything – and this one is built to last."_

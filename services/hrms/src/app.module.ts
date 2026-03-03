@@ -20,7 +20,7 @@ import { getMongoConfig } from './common/config/mongo.config';
       envFilePath: '.env',
       load: [configuration],
     }),
-    // MongooseModule.forRoot(configuration().MONGO_URI_REMOTE!),
+    // MongooseModule.forRoot(configuration().MONGO_URI_RMOTE!),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -39,4 +39,4 @@ import { getMongoConfig } from './common/config/mongo.config';
   controllers: [AppController],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }

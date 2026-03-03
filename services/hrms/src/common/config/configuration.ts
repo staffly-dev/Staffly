@@ -1,8 +1,12 @@
 export default () => ({
   //? =========== Backend Configuration ===========
   NATS_URL: process.env.NATS_URL,
-  // NATS_USER: process.env.NATS_USER,
-  // NATS_PASSWORD: process.env.NATS_PASSWORD,
+  NATS_AUTH_TOKEN: process.env.NATS_AUTH_TOKEN,
+  NATS_TLS_CA_FILE: process.env.NATS_TLS_CA_FILE,
+  NATS_TLS_CERT_FILE: process.env.NATS_TLS_CERT_FILE,
+  NATS_TLS_KEY_FILE: process.env.NATS_TLS_KEY_FILE,
+  INTERNAL_SERVICE_SECRET: process.env.INTERNAL_SERVICE_SECRET,
+  ENCRYPTION_SECRET: process.env.ENCRYPTION_SECRET,
   NODE_ENV: process.env.NODE_ENV,
 
   //* Database configuration (MongoDB),
