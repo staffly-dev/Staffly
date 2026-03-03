@@ -14,29 +14,29 @@ export class JobsGatewayService {
   constructor(
     @Inject('NATS_SERVICE')
     private readonly client: ClientProxy,
-  ) {}
+  ) { }
 
   getAll(query: GetAllJobsDto): Observable<JobsResponseDto> {
-    return this.client.send({ cmd: 'ats.jobs.getAll' }, query);
+    return this.client.send('ats.jobs.getAll', query);
   }
 
   create(body: CreateJobDto): Observable<JobsResponseDto> {
-    return this.client.send({ cmd: 'ats.jobs.create' }, body);
+    return this.client.send('ats.jobs.create', body);
   }
 
   getOne(query: GetOneJobDto): Observable<JobsResponseDto> {
-    return this.client.send({ cmd: 'ats.jobs.getOne' }, query);
+    return this.client.send('ats.jobs.getOne', query);
   }
 
   update(body: UpdateJobDto): Observable<JobsResponseDto> {
-    return this.client.send({ cmd: 'ats.jobs.update' }, body);
+    return this.client.send('ats.jobs.update', body);
   }
 
   delete(body: DeleteJobDto): Observable<JobsResponseDto> {
-    return this.client.send({ cmd: 'ats.jobs.delete' }, body);
+    return this.client.send('ats.jobs.delete', body);
   }
 
   apply(body: ApplyJobDto): Observable<JobsResponseDto> {
-    return this.client.send({ cmd: 'ats.jobs.apply' }, body);
+    return this.client.send('ats.jobs.apply', body);
   }
 }

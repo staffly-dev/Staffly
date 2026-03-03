@@ -49,7 +49,19 @@ export class SwaggerService {
       swaggerConfig.addServer(productionUrl, 'Production');
     }
     swaggerConfig
-      .addTag('Health', 'Health check endpoints for gateway and services')
+      .addTag('Health', 'Health check endpoints for gateway and microservices (HRMS, ATS).')
+      .addTag('HRMS Auth', 'Registration, login, logout, password reset, OAuth (Google), and current user.')
+      .addTag('HRMS Account', 'User account profile: get and update.')
+      .addTag('HRMS Attendance', 'Check-in/check-out and attendance records.')
+      .addTag('HRMS Billing', 'Billing and subscription info for the account.')
+      .addTag('HRMS Dashboard', 'Dashboard summary and attendance stats.')
+      .addTag('HRMS Employees', 'Employee CRUD for the organization.')
+      .addTag('HRMS Payroll', 'Payroll records: create, list, search, update, delete.')
+      .addTag('HRMS Settings', 'User settings and preferences.')
+      .addTag('ATS Jobs', 'Job postings: list, create, get one, update, delete, and apply.')
+      .addTag('ATS Applications', 'Job applications: list, get one, update, schedule interview, delete.')
+      .addTag('ATS Quiz', 'ATS quiz: submit answers, get users, get by session.')
+      .addTag('ATS Statistics', 'ATS analytics: global, quiz, jobs, applications, user stats.')
       // Cookie-based authentication (primary method)
       .addApiKey(
         {

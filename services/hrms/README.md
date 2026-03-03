@@ -30,11 +30,21 @@ Copy or create a `.env` in `services/hrms` with at least:
 ## Run
 
 ```bash
-# start NATS first, then run the service
+# 1. Start NATS (e.g. Docker: docker run -p 4222:4222 nats)
+# 2. Ensure .env has NATS_URL=nats://localhost:4222 (same as Api-Gateway)
 npm run start:dev
 ```
 
-The service runs as a NestJS microservice and listens for **NATS messages**.  
+The service runs as a NestJS microservice and listens for **NATS messages**.
+
+### Troubleshooting: `GET /api/v1/hrms/health` returns 503
+
+The API Gateway returns **503** when no HRMS instance is responding over NATS. To get **200**:
+
+1. **NATS is running** – e.g. `docker run -p 4222:4222 nats` or your NATS server.
+2. **Same NATS_URL** – In both `services/Api-Gateway/.env` and `services/hrms/.env` set the same value, e.g. `NATS_URL=nats://localhost:4222`.
+3. **HRMS is running** – From `services/hrms` run `npm run start:dev` (or `pnpm run start:dev`). Wait until the app logs that it is listening.
+4. Call `GET http://localhost:4000/api/v1/hrms/health` again; it should return 200 with `"service": "HRMS Service"`.  
 Health is exposed via the pattern `{ cmd: 'getHrmsHealth' }` handled in `AppController`.
 
 ## Message Patterns

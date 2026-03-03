@@ -13,30 +13,27 @@ export class ApplicationsGatewayService {
   constructor(
     @Inject('NATS_SERVICE')
     private readonly client: ClientProxy,
-  ) {}
+  ) { }
 
   getAll(query: GetAllApplicationsDto): Observable<ApplicationsResponseDto> {
-    return this.client.send({ cmd: 'ats.applications.getAll' }, query);
+    return this.client.send('ats.applications.getAll', query);
   }
 
   getOne(query: GetOneApplicationDto): Observable<ApplicationsResponseDto> {
-    return this.client.send({ cmd: 'ats.applications.getOne' }, query);
+    return this.client.send('ats.applications.getOne', query);
   }
 
   update(body: UpdateApplicationDto): Observable<ApplicationsResponseDto> {
-    return this.client.send({ cmd: 'ats.applications.update' }, body);
+    return this.client.send('ats.applications.update', body);
   }
 
   scheduleInterview(
     body: ScheduleInterviewDto,
   ): Observable<ApplicationsResponseDto> {
-    return this.client.send(
-      { cmd: 'ats.applications.scheduleInterview' },
-      body,
-    );
+    return this.client.send('ats.applications.scheduleInterview', body);
   }
 
   delete(body: DeleteApplicationDto): Observable<ApplicationsResponseDto> {
-    return this.client.send({ cmd: 'ats.applications.delete' }, body);
+    return this.client.send('ats.applications.delete', body);
   }
 }

@@ -11,17 +11,17 @@ export class QuizGatewayService {
   constructor(
     @Inject('NATS_SERVICE')
     private readonly client: ClientProxy,
-  ) {}
+  ) { }
 
   submit(payload: SubmitQuizDto): Observable<QuizResponseDto> {
     return this.client.send({ cmd: 'ats.quiz.submit' }, payload);
   }
 
   getUsers(query: GetUsersDto): Observable<QuizResponseDto> {
-    return this.client.send({ cmd: 'ats.quiz.getUsers' }, query);
+    return this.client.send({ cmd: 'ats.quiz.users' }, query);
   }
 
   getBySession(query: GetBySessionDto): Observable<QuizResponseDto> {
-    return this.client.send({ cmd: 'ats.quiz.getBySession' }, query);
+    return this.client.send({ cmd: 'ats.quiz.session.get' }, query);
   }
 }

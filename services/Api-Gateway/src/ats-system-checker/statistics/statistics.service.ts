@@ -12,25 +12,25 @@ export class StatisticsGatewayService {
   constructor(
     @Inject('NATS_SERVICE')
     private readonly client: ClientProxy,
-  ) {}
+  ) { }
 
   getStats(): Observable<StatisticsResponseDto> {
-    return this.client.send({ cmd: 'ats.statistics.get' }, {});
+    return this.client.send('ats.statistics.get', {});
   }
 
   getQuizStats(query: GetQuizStatsDto): Observable<StatisticsResponseDto> {
-    return this.client.send({ cmd: 'ats.statistics.quiz' }, query);
+    return this.client.send('ats.statistics.quiz', query);
   }
 
   getJobStats(query: GetJobStatsDto): Observable<StatisticsResponseDto> {
-    return this.client.send({ cmd: 'ats.statistics.jobs' }, query);
+    return this.client.send('ats.statistics.jobs', query);
   }
 
   getAppStats(query: GetAppStatsDto): Observable<StatisticsResponseDto> {
-    return this.client.send({ cmd: 'ats.statistics.applications' }, query);
+    return this.client.send('ats.statistics.applications', query);
   }
 
   getUserStats(query: GetUserStatsDto): Observable<StatisticsResponseDto> {
-    return this.client.send({ cmd: 'ats.userStatistics.get' }, query);
+    return this.client.send('ats.userStatistics.get', query);
   }
 }
