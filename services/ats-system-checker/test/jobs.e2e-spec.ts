@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from './../src/app.module';
 
-describe('ATS System Checker E2E Tests', () => {
+describe('JobsController E2E Tests', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -18,19 +18,12 @@ describe('ATS System Checker E2E Tests', () => {
     await app.close();
   });
 
-  describe('AppController', () => {
-    it('should have AppModule properly configured', () => {
+  describe('Jobs Message Patterns', () => {
+    it('should initialize jobs module', () => {
       expect(app).toBeDefined();
     });
 
-    it('should initialize without errors', () => {
-      expect(app).toBeDefined();
-    });
-  });
-
-  describe('Application Health', () => {
-    it('should have application modules loaded', () => {
-      // Test that modules are properly configured
+    it('should initialize jobs module', () => {
       expect(app).toBeDefined();
     });
 
